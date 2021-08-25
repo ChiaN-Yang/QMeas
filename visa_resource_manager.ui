@@ -224,36 +224,6 @@
         <height>192</height>
        </rect>
       </property>
-      <item>
-       <property name="text">
-        <string>Lock-in SR830</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Lock-in DSP7265 </string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Keithley2400</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Oxford Instrument IPS120</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Oxford Instrument mercruyIPS</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Oxford Instrument mercuryITC</string>
-       </property>
-      </item>
      </widget>
      <widget class="QLabel" name="label_4">
       <property name="geometry">
@@ -1178,7 +1148,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>1454</width>
-     <height>25</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuQuit">

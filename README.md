@@ -86,3 +86,30 @@ ins.close()
 ### Controller(main)
 1. 連接按鈕
 2. import driver並生成物件
+
+***
+## Installation
+Before run this program, you need to install package below:
+
+- Python 3.6 or later
+
+- PyQt5
+
+- Pymeasure
+
+- Numpy
+
+- Labdrivers
+
+- NIDAQmx
+
+In vscode, it can be installed with pip
+
+    python -m pip install package_name
+
+***
+
+### Hint
+you can transfer .ui to .py by this command
+
+    pyuic5 -x visa_resource_manager.ui -o visa_resource_manager.py
