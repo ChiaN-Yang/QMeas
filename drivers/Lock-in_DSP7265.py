@@ -5,25 +5,22 @@ from pymeasure.instruments.signalrecovery.dsp7265 import DSP7265
 class Driver(DSP7265, DriverInterface):
     METHOD = ['Voltage', 'Frequency', 'Current', 'Phase']
 
-    def __init__(self, VISA, name, type):
-        super().__init__(VISA)
-        self.Ins_name = name
-        self.Ins_type = type
-        self.Ins_VISA_add = VISA
+    def __init__(self, visa_address):
+        super().__init__(visa_address)
 
-    def performOpen(self, options={}):
+    def performOpen(self, option):
         """Perform the operation of opening the instrument connection"""
         pass
 
-    def performClose(self, options={}):
+    def performClose(self):
         """Perform the close instrument connection operation"""
         pass
 
-    def performSetValue(self, value, options={}, sweepRate=0.0):
+    def performSetValue(self, option, value, sweepRate=0.0):
         """Perform the Set Value instrument operation"""
         pass
 
-    def performGetValue(self, options={}):
+    def performGetValue(self, option):
         """Perform the Get Value instrument operation"""
         pass
 

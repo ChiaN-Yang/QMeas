@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'control_option_v1.ui'
+# Form implementation generated from reading ui file 'control_option_v2.ui'
 #
 # Created by: PyQt5 UI code generator 5.12
 #
@@ -43,27 +43,15 @@ class Ui_Dialog(object):
         self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_7.setObjectName("label_7")
-        self.label_8 = QtWidgets.QLabel(Dialog)
-        self.label_8.setGeometry(QtCore.QRect(10, 120, 171, 41))
-        font = QtGui.QFont()
-        font.setPointSize(9)
-        self.label_8.setFont(font)
-        self.label_8.setMouseTracking(False)
-        self.label_8.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_8.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_8.setObjectName("label_8")
         self.pushButton_6 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_6.setGeometry(QtCore.QRect(290, 180, 81, 31))
+        self.pushButton_6.setGeometry(QtCore.QRect(280, 180, 81, 31))
         self.pushButton_6.setObjectName("pushButton_6")
-        self.pushButton_5 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_5.setGeometry(QtCore.QRect(190, 180, 81, 31))
-        self.pushButton_5.setObjectName("pushButton_5")
-        self.checkBox_2 = QtWidgets.QCheckBox(Dialog)
-        self.checkBox_2.setGeometry(QtCore.QRect(280, 130, 85, 19))
-        self.checkBox_2.setObjectName("checkBox_2")
-        self.checkBox = QtWidgets.QCheckBox(Dialog)
-        self.checkBox.setGeometry(QtCore.QRect(190, 130, 85, 19))
-        self.checkBox.setObjectName("checkBox")
+        self.pushButton_8 = QtWidgets.QPushButton(Dialog)
+        self.pushButton_8.setGeometry(QtCore.QRect(150, 180, 101, 31))
+        self.pushButton_8.setObjectName("pushButton_8")
+        self.pushButton_9 = QtWidgets.QPushButton(Dialog)
+        self.pushButton_9.setGeometry(QtCore.QRect(20, 180, 101, 31))
+        self.pushButton_9.setObjectName("pushButton_9")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -75,11 +63,9 @@ class Ui_Dialog(object):
         self.lineEdit_3.setPlaceholderText(_translate("Dialog", "Speed (unit / hour)"))
         self.label_6.setText(_translate("Dialog", "Define the target value:"))
         self.label_7.setText(_translate("Dialog", "Define the speed:"))
-        self.label_8.setText(_translate("Dialog", "More function here"))
         self.pushButton_6.setText(_translate("Dialog", "Cancel"))
-        self.pushButton_5.setText(_translate("Dialog", "Confirm"))
-        self.checkBox_2.setText(_translate("Dialog", "No"))
-        self.checkBox.setText(_translate("Dialog", "Yes"))
+        self.pushButton_8.setText(_translate("Dialog", "Add Child"))
+        self.pushButton_9.setText(_translate("Dialog", "Add"))
 
 
 

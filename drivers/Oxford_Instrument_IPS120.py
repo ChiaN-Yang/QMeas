@@ -1,17 +1,15 @@
 from libs.driver_interface import DriverInterface
 from libs.ips120 import IPS120
+from time import sleep
 
 
 class Driver(IPS120, DriverInterface):
     METHOD = ['Magnetic field']
 
-    def __init__(self, VISA, name, type):
-        super().__init__(VISA)
-        self.Ins_name = name
-        self.Ins_type = type
-        self.Ins_VISA_add = VISA
+    def __init__(self, visa_address):
+        super().__init__(visa_address)
 
-    def performOpen(self, options={}):
+    def performOpen(self):
         """Perform the operation of opening the instrument connection"""
         self.setControl(3)
         # Set the LOCAL / REMOTE control state of the IPS 120
@@ -31,12 +29,12 @@ class Driver(IPS120, DriverInterface):
         # 1 - Heater On if PSU=Magnet (open switch)
         # 2 - Heater On, no checks    (open switch)
 
-    def performClose(self, options={}):
+    def performClose(self):
         """Perform the close instrument connection operation"""
         # Set the field to zero
         self.setActivity(2)
 
-    def performSetValue(self, value, sweepRate=0.3, options={}):
+    def performSetValue(self, value, sweepRate=0.3):
         """Perform the Set Value instrument operation"""
         # Set the magnetic field sweep rate, in Tesla/min
         self.setFieldSweepRate(sweepRate)
@@ -44,10 +42,12 @@ class Driver(IPS120, DriverInterface):
         self.setFieldSetpoint(value)
         # Set the field to Set Point
         self.setActivity(1)
+        while abs(value - self.performGetValue()) > 0.1:
+            sleep(1)
         now_value = self.performGetValue()
         return now_value
 
-    def performGetValue(self, options={}):
+    def performGetValue(self):
         """Perform the Get Value instrument operation"""
         return self.readField()
 

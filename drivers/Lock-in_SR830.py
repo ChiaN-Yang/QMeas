@@ -6,54 +6,51 @@ class Driver(SR830, DriverInterface):
     METHOD = ['Voltage', 'Frequency', 'Magnitude(R)',
               'Magnitude(X)', 'Phase', 'Analog in 1', 'Analog in 2']
 
-    def __init__(self, VISA, name, type):
-        super().__init__(VISA)
-        self.Ins_name = name
-        self.Ins_type = type
-        self.Ins_VISA_add = VISA
+    def __init__(self, visa_address):
+        SR830.__init__(self, visa_address)
 
-    def performOpen(self, options={}):
+    def performOpen(self, option):
         """Perform the operation of opening the instrument connection"""
         # Resets the instrument and clears the queue
         pass
 
-    def performClose(self, options={}):
+    def performClose(self):
         """Perform the close instrument connection operation"""
         self.shutdown()
 
-    def performSetValue(self, value, options={}, sweepRate=0.0):
+    def performSetValue(self, option, value, sweepRate=0.0):
         """Perform the Set Value instrument operation"""
-        if options == 'Voltage':
+        if option == 'Voltage':
             self.sine_voltage = value
-        elif options == 'Frequency':
+        elif option == 'Frequency':
             self.frequency = value
-        elif options == 'Magnitude(R)':
+        elif option == 'Magnitude(R)':
             self.magnitude = value
-        elif options == 'Magnitude(X)':
+        elif option == 'Magnitude(X)':
             self.x = value
-        elif options == 'Phase':
+        elif option == 'Phase':
             self.theta = value
-        elif options == 'Analog in 1':
+        elif option == 'Analog in 1':
             self.aux_in_1 = value
-        elif options == 'Analog in 2':
+        elif option == 'Analog in 2':
             self.aux_in_2 = value
         return value
 
-    def performGetValue(self, options={}):
+    def performGetValue(self, option):
         """Perform the Get Value instrument operation"""
-        if options == 'Voltage':
+        if option == 'Voltage':
             return self.sine_voltage
-        elif options == 'Frequency':
+        elif option == 'Frequency':
             return self.frequency
-        elif options == 'Magnitude(R)':
+        elif option == 'Magnitude(R)':
             return self.magnitude
-        elif options == 'Magnitude(X)':
+        elif option == 'Magnitude(X)':
             return self.x
-        elif options == 'Phase':
+        elif option == 'Phase':
             return self.theta
-        elif options == 'Analog in 1':
+        elif option == 'Analog in 1':
             return self.aux_in_1
-        elif options == 'Analog in 2':
+        elif option == 'Analog in 2':
             return self.aux_in_2
 
 
