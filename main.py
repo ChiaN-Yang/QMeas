@@ -68,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.read_panel.close)
         self.read_panel.sub_1_ui.pushButton_6.clicked.connect(
             self.read_panel.close)
-        
+
         self.ui.pushButton_3.clicked.connect(self.control_panel.show)
         self.control_panel.sub_ui.pushButton_9.clicked.connect(
             self.addLevel)
@@ -88,7 +88,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_25.clicked.connect(self.timeMeasurement)
         # Tables
         self.ui.tableWidget_2.cellClicked.connect(self.showMethod)
-        
+
         # treeWidget init
         self.tree = self.ui.treeWidget
 
@@ -361,9 +361,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pageTwoInformation(
                 'Time measurement - Please enter a number.')
         # Add new row if necessary
-        
-        
+
     # treeWidget
+
     def addLevel(self, level_name):
         self.root = QTreeWidgetItem(self.tree)
         self.root.setText(0, '0')
@@ -372,7 +372,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.root.setExpanded(True)
         self.updateInfo(self.root)
         self.tree_num, self.leve_position, self.child_num, self.check = self.checkState()
-        
+
     def chooseAddChild(self):
         # QTreeWidgetItem括號內放的物件是作為基礎(root)，child會往下一層放
         item = self.tree.currentItem()
@@ -381,34 +381,33 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             _, _, child_num = self.getIndexs(item.parent())
             target_item = item.parent().child(child_num - 1)
-            
+
         self.child1 = QTreeWidgetItem(target_item)
         self.child1.setText(0, '1')
         self.child1.setExpanded(True)
         self.updateInfo(self.child1)
-        self.child1.setFlags(self.child1.flags() | QtCore.Qt.ItemIsUserCheckable)
+        self.child1.setFlags(self.child1.flags() |
+                             QtCore.Qt.ItemIsUserCheckable)
         self.child1.setCheckState(0, QtCore.Qt.Checked)
         self.tree_num, self.leve_position, self.child_num, self.check = self.checkState()
-        
+
     def updateInfo(self, item):
         row = self.ui.tableWidget_2.currentRow()
         Ins_name = self.ui.tableWidget_2.item(row, 0).text()
         Ins_type = self.ui.tableWidget_2.item(row, 1).text()
         control_method = self.ui.listWidget_3.currentItem().text()
-        
+
         # TODO: restrict the the value to integer only or something related to the unit
         target = self.control_panel.sub_ui.lineEdit_2.text()
         speed = self.control_panel.sub_ui.lineEdit_3.text()
         control_list = [Ins_name, Ins_type, control_method, target, speed]
-        for i , element in enumerate(control_list):
+        for i, element in enumerate(control_list):
             item.setText((i+1), element)
-        
+
         self.instruments[row].setControlOption(target, speed, self.time_unit)
         self.instruments_control.append(self.instruments[row])
         self.options_control.append(control_method)
-        
-        
-            
+
     def checkState(self):
         global checklist
         iterator = QTreeWidgetItemIterator(self.tree)
@@ -418,51 +417,50 @@ class MainWindow(QtWidgets.QMainWindow):
 
         while iterator.value():
             item = iterator.value()
-            treeindex, childindex , child_num = self.getIndexs(item)
+            treeindex, childindex, child_num = self.getIndexs(item)
             checkstate = item.checkState(0)
- 
+
             # tree index
             checklist[0].append(treeindex)
             # item's child number
             checklist[1].append(child_num)
             # item index in parents view
             checklist[2].append(childindex)
-            # ischild or not, if not, it shows how many child it has; if yes, it shows -1, 
+            # ischild or not, if not, it shows how many child it has; if yes, it shows -1,
             checklist[3].append(child_num)
             # check
-            checklist[4].append(checkstate) 
+            checklist[4].append(checkstate)
             # temp
             checklist[5].append(treeindex)
 
             iterator += 1
-            
+
         for i in range(len(checklist[3])):
             if checklist[0][i] == -1:
                 checklist[0][i] = checklist[0][i-1]
             else:
                 checklist[0][i] = checklist[0][i]
-                
+
             if checklist[2][i] == -1:
                 checklist[2][i] = 0
-                
+
             if checklist[1][i] == 0 and checklist[5][i] == -1:
                 checklist[3][i] = checklist[5][i]
         del(checklist[5])
         del(checklist[1])
-        
-        return checklist[0], checklist[1], checklist[2], checklist[3]
-                
-    def getIndexs(self, item):
 
+        return checklist[0], checklist[1], checklist[2], checklist[3]
+
+    def getIndexs(self, item):
         """Returns Current top level item and child index.
         If no child is selected, returns -1. 
         """
         # TODO: check if two level will still work
-        #Check if top level item is selected or child selected
-        if self.tree.indexOfTopLevelItem(item)==-1:
+        # Check if top level item is selected or child selected
+        if self.tree.indexOfTopLevelItem(item) == -1:
             return self.tree.indexOfTopLevelItem(item), item.parent().indexOfChild(item), item.childCount()
-        else:   
-            return self.tree.indexOfTopLevelItem(item),-1, item.childCount()                
+        else:
+            return self.tree.indexOfTopLevelItem(item), -1, item.childCount()
     # =============================================================================
     # Page 3
     # =============================================================================
@@ -526,7 +524,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.procedureGo()
             else:
                 self.procedureGo()
-                
+
     def procedureGo(self):
         self.switchToPlotTab()
         # plotlines init
@@ -535,7 +533,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # porcedure start
         self.procedure = Procedure(
             self.instruments_control, self.instruments_read)
-        self.procedure.schedule(self.tree_num, self.child_num, self.leve_position, self.check)
+        self.procedure.schedule(
+            self.tree_num, self.child_num, self.leve_position, self.check)
         self.procedure.startMeasure()
         self.s_time = datetime.now()
 
@@ -546,10 +545,10 @@ class MainWindow(QtWidgets.QMainWindow):
         except:
             pass
 
-
     # =============================================================================
     # plot setting
     # =============================================================================
+
     def createEmptyLines(self):
         """
         creat the plotDataItem as data_line_%d where %d = 0, 1, 2... (reference)
@@ -565,19 +564,19 @@ class MainWindow(QtWidgets.QMainWindow):
             self.data_line[n].setData(x, y_n, pen=pg.mkPen(pg.intColor(n+1)))
         else:
             self.data_line[n].setData([])
-            
+
     def axisUpdate(self, x_show, y_show):
         # update x title (instrument name and method)
         # insturement name
         self.ui.tableWidget_5.setItem(
-                0, 0, QtWidgets.QTableWidgetItem(f'{x_show[1]}'))
+            0, 0, QtWidgets.QTableWidgetItem(f'{x_show[1]}'))
         # method
         self.ui.tableWidget_5.setItem(
-                1, 0, QtWidgets.QTableWidgetItem(f'{x_show[2]}'))
-        
+            1, 0, QtWidgets.QTableWidgetItem(f'{x_show[2]}'))
+
         # update x value
         self.ui.tableWidget_5.setItem(
-                2, 0, QtWidgets.QTableWidgetItem(f'{x_show[0]:g}'))
+            2, 0, QtWidgets.QTableWidgetItem(f'{x_show[0]:g}'))
         # update y value
         print('len_upDate')
         print(len(self.instruments_read))
@@ -587,13 +586,13 @@ class MainWindow(QtWidgets.QMainWindow):
         print(y_show)
 
         for i in range(len(self.instruments_read)):
-# =============================================================================
-#             print('y_value')
-#             print(f'{y_show[i]:g}')
-# =============================================================================
+            # =============================================================================
+            #             print('y_value')
+            #             print(f'{y_show[i]:g}')
+            # =============================================================================
             self.ui.tableWidget_5.setItem(
-                    2, (i + 1), QtWidgets.QTableWidgetItem(f'{y_show[i]:g}'))
-            
+                2, (i + 1), QtWidgets.QTableWidgetItem(f'{y_show[i]:g}'))
+
     def lineDisplaySwitchCreat(self):
         global switch_list
         switch_list = []
@@ -601,7 +600,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for _ in range(len(self.instruments_read)):
             self.switch_list.append(1)
             switch_list.append(1)
-        
+
     def lineDisplaySwitch(self):
         """ this function is connected to tableWidget_5 on page 3
             the function activates whenever the tablewidge_5 is clicked
@@ -622,7 +621,6 @@ class ControlPanel(QtWidgets.QDialog):
         super(ControlPanel, self).__init__()
         self.sub_ui = Ui_Dialog()
         self.sub_ui.setupUi(self)
-        
 
 
 class ReadlPanel(QtWidgets.QDialog):
@@ -655,7 +653,7 @@ class Procedure():
         """
         # Know how many trees there are
         tree_total = max(tree_num) + 1
-        
+
         # Create empty list to store tree info
         # [[], []]
         info_list = []
@@ -666,7 +664,7 @@ class Procedure():
         for n, i in enumerate(tree_num):
             info_list[i].append(
                 [child_num[n], leve_position[n], check[n], self.instruments_control[n], self.options_control[n]])
-            
+
         for n, i in enumerate(info_list):
             self.buildTree(n, i)
 
@@ -684,55 +682,60 @@ class Procedure():
                 continue
             level[level_count].append([info_tree[n][3], info_tree[n][4]])
             level_count += 1
-            
+
             if info[0] != 0:
                 for i in range(info[0]):
-                    level[level_count].append([info_tree[n+1+i][3], info_tree[n+1+i][4]])
+                    level[level_count].append(
+                        [info_tree[n+1+i][3], info_tree[n+1+i][4]])
 
             if level[0] and level[1] and level[2]:
                 for i in level[0]:
                     sleep(0.1)
                     for i_value in i[0].experimentLinspacer(i[1]):
-                        level_0_linspacer.append([i[0], i_value, i[1], i[0].instrumentName()])
+                        level_0_linspacer.append(
+                            [i[0], i_value, i[1], i[0].instrumentName()])
                 for j in level[1]:
                     sleep(0.1)
                     for j_value in j[0].experimentLinspacer(j[1]):
-                        level_1_linspacer.append([j[0], j_value, j[1], j[0].instrumentName()])
+                        level_1_linspacer.append(
+                            [j[0], j_value, j[1], j[0].instrumentName()])
                 for k in level[2]:
                     sleep(0.1)
                     for k_value in k[0].experimentLinspacer(k[1]):
-                        level_2_linspacer.append([j[0], j_value, j[1], j[0].instrumentName()])               
+                        level_2_linspacer.append(
+                            [k[0], k_value, k[1], k[0].instrumentName()])
                 for i in level_0_linspacer:
                     self.control_sequence[n].append(i)
                     for j in level_1_linspacer:
                         self.control_sequence[n].append(j)
                         for k in level_2_linspacer:
                             self.control_sequence[n].append(k)
-                        
+
             elif level[0] and level[1] and not level[2]:
                 for i in level[0]:
                     sleep(0.1)
                     for i_value in i[0].experimentLinspacer(i[1]):
-                        level_0_linspacer.append([i[0], i_value, i[1], i[0].instrumentName()])
+                        level_0_linspacer.append(
+                            [i[0], i_value, i[1], i[0].instrumentName()])
                 for j in level[1]:
                     sleep(0.1)
                     for j_value in j[0].experimentLinspacer(j[1]):
-                        level_1_linspacer.append([j[0], j_value, j[1], j[0].instrumentName()])
+                        level_1_linspacer.append(
+                            [j[0], j_value, j[1], j[0].instrumentName()])
                 for i in level_0_linspacer:
                     self.control_sequence[n].append(i)
                     for j in level_1_linspacer:
                         self.control_sequence[n].append(j)
 
-                            
             elif level[0] and not level[1] and not level[2]:
                 for i in level[0]:
                     sleep(0.1)
                     for i_value in i[0].experimentLinspacer(i[1]):
-                        level_0_linspacer.append([i[0], i_value, i[1], i[0].instrumentName()])
+                        level_0_linspacer.append(
+                            [i[0], i_value, i[1], i[0].instrumentName()])
                 for i in level_0_linspacer:
                     self.control_sequence[n].append(i)
         print('Schedule done!')
-                
 
     def startMeasure(self):
         global x, y
@@ -743,7 +746,7 @@ class Procedure():
         #
         self.timer.timeout.connect(self.measure)
         self.time_unit = window.time_unit * self.read_len
-        self.timer.start(100) # self.time_unit
+        self.timer.start(100)  # self.time_unit
         print('-------->')
         print(self.control_sequence)
 
@@ -761,7 +764,7 @@ class Procedure():
         self.sequence_num += 1
 
     def measure(self):
-        global x,y
+        global x, y
         # creat the empty 1D list x and 2D list y to record the value
         x_show = []
         y_show = []
@@ -770,12 +773,11 @@ class Procedure():
 
         try:
             i = self.control_sequence[self.sequence][self.sequence_num]
-                # [i, value, method, name]
+            # [i, value, method, name]
         except IndexError:
-            self.sequence +=1
+            self.sequence += 1
             self.x, self.y = self.createEmptyDataSet()
 
-            
         try:
             set_value = i[0].performSetValue(i[2], i[1])
             x_show = [set_value, i[3], i[2]]
@@ -796,12 +798,13 @@ class Procedure():
                 name_txt.append(instrument.instrumentName())
                 method_txt.append(self.options_read[n])
                 window.plotUpdate(n, self.x, self.y[n])
-                txtUpdate(self.sequence_num, name_txt, method_txt, x_show, y_show)
+                txtUpdate(self.sequence_num, name_txt,
+                          method_txt, x_show, y_show)
             # x_show = [value, name , method]
             window.axisUpdate(x_show, y_show)
         except UnboundLocalError:
             self.stopMeasure()
-            
+
         self.sequence_num += 1
 
     def createEmptyDataSet(self):
@@ -810,11 +813,10 @@ class Procedure():
         for _ in range(self.read_len):
             y.append([])
         return x.copy(), y.copy()
-    
+
     def stopMeasure(self):
         self.timer.stop()
         self.sequence_num = 0
-
 
 
 if __name__ == '__main__':
