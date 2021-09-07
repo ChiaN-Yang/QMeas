@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QMessageBox, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QThread, pyqtSignal, Qt, QTimer
+from PyQt5.QtWidgets import QMessageBox, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog, QApplication
 import pyqtgraph as pg
 import pyqtgraph.exporters
 from libs.visa_resource_manager import Ui_MainWindow
@@ -19,7 +20,7 @@ from time import sleep
 from libs.time_measurement import TimeMeasurement
 
 
-class MainWindow(QtWidgets.QMainWindow):
+class MainWindow(QMainWindow):
     """Main class"""
     # pointer
     name_count = 1
@@ -125,7 +126,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.actionQuit.triggered.connect(self.close)
 
         # Set Window Icon
-        self.setWindowIcon(QtGui.QIcon('Qfort.png'))
+        self.setWindowIcon(QIcon('Qfort.png'))
 
         # Set Window style
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
@@ -166,8 +167,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         row_len = self.ui.tableWidget.rowCount()
         # Check existance
-        if self.ui.tableWidget.findItems(visa_address, QtCore.Qt.MatchExactly) != [] or \
-                self.ui.tableWidget.findItems(instrument_personal_name, QtCore.Qt.MatchExactly) != []:
+        if self.ui.tableWidget.findItems(visa_address, Qt.MatchExactly) != [] or \
+                self.ui.tableWidget.findItems(instrument_personal_name, Qt.MatchExactly) != []:
             self.pageOneInformation('This VISA address or name has been used.')
         else:
             if instrument_type in self.driver_list.keys():
@@ -201,15 +202,15 @@ class MainWindow(QtWidgets.QMainWindow):
                             p = instrument_name
                         # Update the info to the table in page 1
                         self.ui.tableWidget.setItem(
-                            self.row_count - 1, i, QtWidgets.QTableWidgetItem(p))
+                            self.row_count - 1, i, QTableWidgetItem(p))
 
                     # Update the left top table in page 2
                     if instrument_personal_name == '':
                         instrument_personal_name = instrument_name
                     self.ui.tableWidget_2.setItem(
-                        self.row_count - 1, 0, QtWidgets.QTableWidgetItem(instrument_personal_name))
+                        self.row_count - 1, 0, QTableWidgetItem(instrument_personal_name))
                     self.ui.tableWidget_2.setItem(
-                        self.row_count - 1, 1, QtWidgets.QTableWidgetItem(instrument_type))
+                        self.row_count - 1, 1, QTableWidgetItem(instrument_type))
                     self.row_count += 1
 
                 except visa.VisaIOError or AttributeError:
@@ -255,15 +256,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Assign the variables to the table in page 2
         self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 0, QtWidgets.QTableWidgetItem(instrument_name))
+            self.read_row_count - 1, 0, QTableWidgetItem(instrument_name))
         self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 1, QtWidgets.QTableWidgetItem(instrument_type))
+            self.read_row_count - 1, 1, QTableWidgetItem(instrument_type))
         self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 2, QtWidgets.QTableWidgetItem(read_method))
+            self.read_row_count - 1, 2, QTableWidgetItem(read_method))
         self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 3, QtWidgets.QTableWidgetItem(magnification))
+            self.read_row_count - 1, 3, QTableWidgetItem(magnification))
         self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 4, QtWidgets.QTableWidgetItem(Unit))
+            self.read_row_count - 1, 4, QTableWidgetItem(Unit))
 
         # initialize the blocks in the read option
         self.read_panel.sub_1_ui.lineEdit_2.setText("1")
@@ -271,9 +272,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Assign the variables to the table in page 3
         self.ui.tableWidget_5.setItem(
-            0, self.read_row_count, QtWidgets.QTableWidgetItem(instrument_name))
+            0, self.read_row_count, QTableWidgetItem(instrument_name))
         self.ui.tableWidget_5.setItem(
-            1, self.read_row_count, QtWidgets.QTableWidgetItem(read_method))
+            1, self.read_row_count, QTableWidgetItem(read_method))
 
         method_row_len = self.ui.tableWidget_4.rowCount()
         self.pageTwoInformation(method_row_len)
@@ -294,9 +295,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if wait_time.isnumeric():
             self.root = QTreeWidgetItem(self.tree)
             self.root.setText(0, '0')
-            self.root.setFlags(self.root.flags() |
-                               QtCore.Qt.ItemIsUserCheckable)
-            self.root.setCheckState(0, QtCore.Qt.Checked)
+            self.root.setFlags(self.root.flags() | Qt.ItemIsUserCheckable)
+            self.root.setCheckState(0, Qt.Checked)
             self.root.setExpanded(True)
             self.updateTimeMeasurement(self.root)
             self.tree_num, self.leve_position, self.child_num, self.check = self.checkState()
@@ -318,8 +318,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def addLevel(self, level_name):
         self.root = QTreeWidgetItem(self.tree)
         self.root.setText(0, '0')
-        self.root.setFlags(self.root.flags() | QtCore.Qt.ItemIsUserCheckable)
-        self.root.setCheckState(0, QtCore.Qt.Checked)
+        self.root.setFlags(self.root.flags() | Qt.ItemIsUserCheckable)
+        self.root.setCheckState(0, Qt.Checked)
         self.root.setExpanded(True)
         self.updateInfo(self.root)
         self.control_panel.sub_ui.checkBox.setChecked(False)
@@ -338,9 +338,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.child1.setText(0, '1')
         self.child1.setExpanded(True)
         self.updateInfo(self.child1)
-        self.child1.setFlags(self.child1.flags() |
-                             QtCore.Qt.ItemIsUserCheckable)
-        self.child1.setCheckState(0, QtCore.Qt.Checked)
+        self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
+        self.child1.setCheckState(0, Qt.Checked)
         self.control_panel.sub_ui.checkBox.setChecked(False)
         self.tree_num, self.leve_position, self.child_num, self.check = self.checkState()
 
@@ -558,14 +557,14 @@ class MainWindow(QtWidgets.QMainWindow):
         # update x title (instrument name and method)
         # insturement name
         self.ui.tableWidget_5.setItem(
-            0, 0, QtWidgets.QTableWidgetItem(f'{x_show[1]}'))
+            0, 0, QTableWidgetItem(f'{x_show[1]}'))
         # method
         self.ui.tableWidget_5.setItem(
-            1, 0, QtWidgets.QTableWidgetItem(f'{x_show[2]}'))
+            1, 0, QTableWidgetItem(f'{x_show[2]}'))
 
         # update x value
         self.ui.tableWidget_5.setItem(
-            2, 0, QtWidgets.QTableWidgetItem(f'{x_show[0]:g}'))
+            2, 0, QTableWidgetItem(f'{x_show[0]:g}'))
         # update y value
         print('len_upDate')
         print(len(self.instruments_read))
@@ -576,7 +575,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for i in range(len(self.instruments_read)):
             self.ui.tableWidget_5.setItem(
-                2, (i + 1), QtWidgets.QTableWidgetItem(f'{y_show[i]:g}'))
+                2, (i + 1), QTableWidgetItem(f'{y_show[i]:g}'))
 
     def lineDisplaySwitchCreat(self):
         global switch_list
@@ -601,14 +600,14 @@ class MainWindow(QtWidgets.QMainWindow):
 # =============================================================================
 # Page 2 subwindow Control option panel
 # =============================================================================
-class ControlPanel(QtWidgets.QDialog):
+class ControlPanel(QDialog):
     def __init__(self):
         super(ControlPanel, self).__init__()
         self.sub_ui = Ui_Dialog()
         self.sub_ui.setupUi(self)
 
 
-class ReadlPanel(QtWidgets.QDialog):
+class ReadlPanel(QDialog):
     def __init__(self):
         super(ReadlPanel, self).__init__()
         self.sub_1_ui = read_Ui_Dialog()
@@ -695,7 +694,7 @@ class Procedure():
                     self.control_sequence.append(i)
 
     def startMeasure(self):
-        self.timer = QtCore.QTimer()
+        self.timer = QTimer()
         self.timer.timeout.connect(self.measure)
         self.time_unit = window.time_unit * self.read_len
         self.renewLinspacer()
@@ -770,7 +769,7 @@ class Procedure():
 
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
+    app = QApplication([])
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
