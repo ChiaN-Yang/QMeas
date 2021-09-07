@@ -34,7 +34,7 @@ class Driver(SR830, DriverInterface):
             self.aux_in_1 = value
         elif option == 'Analog in 2':
             self.aux_in_2 = value
-        return value
+        return self.performGetValue(option)
 
     def performGetValue(self, option):
         """Perform the Get Value instrument operation"""
