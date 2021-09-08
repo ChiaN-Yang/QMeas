@@ -12,7 +12,7 @@ class TimeMeasurement:
 
     def performSetValue(self, option, value, sweepRate=0.0):
         """Perform the Set Value instrument operation"""
-        return 0
+        return value
 
     def performGetValue(self, option):
         """Perform the Get Value instrument operation"""

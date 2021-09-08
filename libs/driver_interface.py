@@ -28,17 +28,17 @@ class DriverInterface(abc.ABC):
     def __str__(self):
         return self.instrument_name
 
-    def experimentLinspacer(self, option):
+    def experimentLinspacer(self, option, target):
         init = self.performGetValue(option)
+        print('init', init)
         step = float(self.speed) / 3600 * self.time_unit
-        if init > float(self.target):
+        if init > float(target):
             step = -step
-        result = np.arange(init, float(self.target), step)
-        result = list(np.append(result, float(self.target)))
+        result = np.arange(init, float(target), step)
+        result = list(np.append(result, float(target)))
         return result
 
-    def setControlOption(self, target, speed, time_unit):
-        self.target = target
+    def setControlOption(self, speed, time_unit):
         self.speed = speed
         self.time_unit = time_unit
 
