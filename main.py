@@ -14,10 +14,10 @@ import numpy as np
 import os
 from datetime import datetime
 from libs.load_driver import load_drivers
-import qdarkstyle
-from libs.txtFunction import txtUpdate, txtMerger
-from time import sleep
+from libs.txtFunction import txtUpdate, txtMerger, txtDeleter
 from libs.time_measurement import TimeMeasurement
+import qdarkstyle
+from time import sleep
 
 
 class MainWindow(QMainWindow):
@@ -32,11 +32,11 @@ class MainWindow(QMainWindow):
     # instruments
     instruments = []
     instruments_read = []
-    options_control = []
     options_read = []
 
     # PlotItem lines
     data_line = []
+    saved_line = []
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_8.clicked.connect(self.deleteReadRow)
         self.ui.pushButton_9.clicked.connect(self.chooseDelete)
         self.ui.pushButton_5.clicked.connect(self.timeGo)
-        self.ui.pushButton_11.clicked.connect(self.timeStop)
+        self.ui.pushButton_11.clicked.connect(self.procedureAbort)
         self.ui.pushButton_26.clicked.connect(self.timeAddLevel)
         self.ui.pushButton_27.clicked.connect(self.timeAddChild)
         # check box
@@ -326,16 +326,9 @@ class MainWindow(QMainWindow):
                 'Time measurement - Please enter a number.')
 
         self.ui.lineEdit_5.clear()
-# =============================================================================
-#         # Add new row if necessary
-#
-#         instrument = TimeMeasurement(wait_time)
-#
-#         self.instruments_control.insert(row+1, instrument)
-#         self.options_control.insert(row+1, None)
-# =============================================================================
 
     # treeWidget
+
     def addLevel(self, level_name):
         self.root = QTreeWidgetItem(self.tree)
         self.root.setText(0, '0')
@@ -404,12 +397,6 @@ class MainWindow(QMainWindow):
         for i, element in enumerate(control_list):
             item.setText((i+1), element)
         item.setText(7, row)
-
-        # TODO: discuss this part to add info to list
-
-        time_measurement = TimeMeasurement(target)
-        # self.instruments_control.insert(time_measurement)
-        # self.options_control.append(control_method)
 
     def checkState(self):
         global checklist
@@ -555,19 +542,27 @@ class MainWindow(QMainWindow):
         self.procedure.signal_txt.connect(txtUpdate)
         self.procedure.signal_axis.connect(self.axisUpdate)
         self.procedure.signal_plot.connect(self.plotUpdate)
+        self.procedure.signal_lines.connect(self.saveLines)
         self.thread.start()
         # final resets
         self.ui.pushButton_5.setEnabled(False)
-        self.thread.finished.connect(lambda: self.ui.pushButton_5.setEnabled(True))
+        self.thread.finished.connect(
+            lambda: self.ui.pushButton_5.setEnabled(True))
 
     def timeStop(self):
         # time stop
         print('measure stop')
-        self.procedure.stopMeasure()
+        self.procedure.quitMeasure()
+        sleep(1)
         self.thread.quit()
         self.thread.wait()
         self.procedure = None
 
+    def procedureAbort(self):
+        self.procedure.stopMeasure()
+
+    def procedureResume(self):
+        self.procedure.resumeMeasure()
 
     # =============================================================================
     # plot setting
@@ -582,10 +577,19 @@ class MainWindow(QMainWindow):
         for i in range(len(self.instruments_read)):
             self.data_line.append(self.ui.graphWidget.plot([]))
 
+    def saveLines(self, file_count, x, y):
+        read_len = len(y)
+        for i in range(read_len):
+            self.saved_line.append(self.ui.graphWidget.plot([]))
+            self.saved_line[i + read_len*(file_count)].setData(
+                x, y[i], pen=pg.mkPen(pg.intColor(i+1), width=1))
+            self.data_line[i].setData([])
+
     def plotUpdate(self, n, x, y_n):
         # setData to the PlotItems
         if self.switch_list[n] == 1:
-            self.data_line[n].setData(x, y_n, pen=pg.mkPen(pg.intColor(n+1)))
+            self.data_line[n].setData(
+                x, y_n, pen=pg.mkPen(pg.intColor(n+1), width=1))
         else:
             self.data_line[n].setData([])
 
@@ -649,6 +653,7 @@ class Procedure(QObject):
     signal_txt = pyqtSignal(int, list, list, list, list)
     signal_plot = pyqtSignal(int, list, list)
     signal_axis = pyqtSignal(list, list)
+    signal_lines = pyqtSignal(int, list, list)
 
     def __init__(self, instruments, instruments_read):
         super().__init__()
@@ -657,7 +662,7 @@ class Procedure(QObject):
         self.options_read = window.options_read
         self.control_sequence = []
         self.stop_running = False
-
+        self.quit_running = False
         # open instrument
         # for n, instrument in enumerate(instruments_control):
         #     instrument.performOpen(self.options_control[n])
@@ -676,7 +681,7 @@ class Procedure(QObject):
         print('method', method)
         print('ins_label', ins_label)
         print('target', target)
-        
+
         # Know how many trees there are
         tree_total = max(tree_num) + 1
 
@@ -687,8 +692,13 @@ class Procedure(QObject):
             info_list.append([])
 
         for n, tree, label in zip(range(len(tree_num)), tree_num, ins_label):
-            info_list[tree].append(
-                [child_num[n], leve_position[n], self.instruments[int(label)], method[n], check[n], target[n]])
+            if label != '-1':
+                info_list[tree].append([child_num[n], leve_position[n], self.instruments[int(
+                    label)], method[n], check[n], target[n]])
+            else:
+                timeMeasure = TimeMeasurement(target[n])
+                info_list[tree].append(
+                    [child_num[n], leve_position[n], timeMeasure, method[n], check[n], target[n]])
 
         for i in info_list:
             self.buildTree(i)
@@ -711,139 +721,167 @@ class Procedure(QObject):
                 for i in range(info[0]):
                     level[level_count].append(
                         [info_tree[n+1+i][2], info_tree[n+1+i][3], info_tree[n+1+i][4], info_tree[n+1+i][5]])
-                    
+
         self.control_sequence.append(level)
-
-            # if level[0] and level[1] and level[2]:
-            #     for i in level[0]:  # i = [instrument,method,check]
-            #         self.control_sequence.append(i)
-            #         for j in level[1]:
-            #             self.control_sequence.append(j)
-            #             for k in level[2]:
-            #                 self.control_sequence.append(k)
-
-            # elif level[0] and level[1] and not level[2]:
-            #     for i in level[0]:
-            #         self.control_sequence.append(i)
-            #         for j in level[1]:
-            #             self.control_sequence.append(j)
-
-            # elif level[0] and not level[1] and not level[2]:
-            #     for i in level[0]:
-            #         self.control_sequence.append(i)
 
     def startMeasure(self):
         print('startMeasure')
         print(self.control_sequence)
-        file_count = 0
-        
+        file_count = -1
+
         for level in self.control_sequence:
             if level[0] and level[1] and level[2]:
                 for i in level[0]:  # i = [instrument,method,check,target]
-                    for value_i in i[0].experimentLinspacer(i[1], i[3]):  
+                    for value_i in i[0].experimentLinspacer(i[1], i[3]):
                         set_value = i[0].performSetValue(i[1], value_i)
-                        
+
                         for j in level[1]:
-                            for value_j in j[0].experimentLinspacer(j[1], j[3]):  
+                            for value_j in j[0].experimentLinspacer(j[1], j[3]):
                                 set_value = j[0].performSetValue(j[1], value_j)
 
                                 for k in level[1]:
+
+                                    while self.stop_running:
+                                        QThread.sleep(1)
+                                        if self.quit_running:
+                                            return
+
                                     x, y = self.createEmptyDataSet()
                                     file_count += 1
                                     for value_k in k[0].experimentLinspacer(k[1], k[3]):
                                         y_show = []
                                         name_txt = []
                                         method_txt = []
-                                        
-                                        set_value = k[0].performSetValue(k[1], value_k)
+
+                                        if self.stop_running:
+                                            break
+
+                                        set_value = k[0].performSetValue(
+                                            k[1], value_k)
                                         sleep(0.1)
-                                        x_show = [set_value, k[0].instrumentName(), k[1]]
-                                        print(set_value)
+                                        x_show = [set_value,
+                                                  k[0].instrumentName(), k[1]]
                                         x.append(set_value)
                                         name_txt.append(k[0].instrumentName())
                                         method_txt.append(k[1])
-                                        
+
                                         for n, instrument_read in enumerate(self.instruments_read):
-                                            read_value = instrument_read.performGetValue(self.options_read[n])
+                                            read_value = instrument_read.performGetValue(
+                                                self.options_read[n])
                                             y_show.append(read_value)
                                             y[n].append(read_value)
-                                            name_txt.append(instrument_read.instrumentName())
-                                            method_txt.append(self.options_read[n])
+                                            name_txt.append(
+                                                instrument_read.instrumentName())
+                                            method_txt.append(
+                                                self.options_read[n])
                                             self.signal_plot.emit(n, x, y[n])
-                                            
+
                                         self.signal_axis.emit(x_show, y_show)
-                                        self.signal_txt.emit(file_count, name_txt, method_txt, x_show, y_show)
-                                        
-                                        
-                                        
+                                        self.signal_txt.emit(
+                                            file_count, name_txt, method_txt, x_show, y_show)
+                                    self.signal_lines.emit(file_count, x, y)
+
             elif level[0] and level[1] and not level[2]:
                 for i in level[0]:  # i = [instrument,method,check]
-                    for value_i in i[0].experimentLinspacer(i[1], i[3]):  
+                    for value_i in i[0].experimentLinspacer(i[1], i[3]):
                         set_value = i[0].performSetValue(i[1], value_i)
-                        
+
                         for j in level[1]:
+
+                            while self.stop_running:
+                                QThread.sleep(1)
+                                if self.quit_running:
+                                    return
+
                             x, y = self.createEmptyDataSet()
                             file_count += 1
-                            for value_j in j[0].experimentLinspacer(j[1], j[3]):  
+                            for value_j in j[0].experimentLinspacer(j[1], j[3]):
                                 y_show = []
                                 name_txt = []
                                 method_txt = []
-                                        
+
+                                if self.stop_running:
+                                    break
+
                                 set_value = j[0].performSetValue(j[1], value_j)
                                 sleep(0.1)
-                                x_show = [set_value, j[0].instrumentName(), j[1]]
+                                x_show = [set_value,
+                                          j[0].instrumentName(), j[1]]
                                 print(set_value)
                                 x.append(set_value)
                                 name_txt.append(j[0].instrumentName())
                                 method_txt.append(j[1])
-                                
-                                        
+
                                 for n, instrument_read in enumerate(self.instruments_read):
-                                    read_value = instrument_read.performGetValue(self.options_read[n])
+                                    read_value = instrument_read.performGetValue(
+                                        self.options_read[n])
                                     y_show.append(read_value)
                                     y[n].append(read_value)
-                                    name_txt.append(instrument_read.instrumentName())
+                                    name_txt.append(
+                                        instrument_read.instrumentName())
                                     method_txt.append(self.options_read[n])
                                     self.signal_plot.emit(n, x, y[n])
-                                            
+
                                 self.signal_axis.emit(x_show, y_show)
-                                self.signal_txt.emit(file_count, name_txt, method_txt, x_show, y_show)
-                                
+                                self.signal_txt.emit(
+                                    file_count, name_txt, method_txt, x_show, y_show)
+                            self.signal_lines.emit(file_count, x, y)
+
             elif level[0] and not level[1] and not level[2]:
                 for i in level[0]:  # i = [instrument,method,check]
+
+                    while self.stop_running:
+                        QThread.sleep(1)
+                        if self.quit_running:
+                            return
+
                     x, y = self.createEmptyDataSet()
                     file_count += 1
                     for value_i in i[0].experimentLinspacer(i[1], i[3]):
                         y_show = []
                         name_txt = []
                         method_txt = []
-                                        
+
+                        if self.stop_running:
+                            break
+
                         set_value = i[0].performSetValue(i[1], value_i)
                         sleep(0.1)
                         x_show = [set_value, i[0].instrumentName(), i[1]]
                         print(set_value)
                         x.append(set_value)
                         name_txt.append(i[0].instrumentName())
-                        method_txt.append(i[1])     
-                                        
+                        method_txt.append(i[1])
+
                         for n, instrument_read in enumerate(self.instruments_read):
-                            read_value = instrument_read.performGetValue(self.options_read[n])
+                            read_value = instrument_read.performGetValue(
+                                self.options_read[n])
                             y_show.append(read_value)
                             y[n].append(read_value)
                             name_txt.append(instrument_read.instrumentName())
                             method_txt.append(self.options_read[n])
                             self.signal_plot.emit(n, x, y[n])
-                                            
+
                         self.signal_axis.emit(x_show, y_show)
-                        self.signal_txt.emit(file_count, name_txt, method_txt, x_show, y_show)
-                        
-        txtMerger(file_count, len(self.instruments_read)+1)            
+                        self.signal_txt.emit(
+                            file_count, name_txt, method_txt, x_show, y_show)
+                    self.signal_lines.emit(file_count, x, y)
+
+        print('file count', file_count)
+        txtMerger(file_count, len(self.instruments_read)+1)
+        # txtDeleter(file_count)
         self.finished.emit()
-                                          
-        #if self.stop_running:   return            
-        
+
+        # if self.stop_running:   return
+
     def stopMeasure(self):
         self.stop_running = True
+
+    def quitMeasure(self):
+        self.quit_running = True
+
+    def resumeMeasure(self):
+        self.stop_running = False
 
     def createEmptyDataSet(self):
         x = []

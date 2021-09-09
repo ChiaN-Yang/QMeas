@@ -5,6 +5,8 @@ Created on Mon Aug 30 16:45:34 2021
 @author: Tsung-Lin
 """
 import pandas as pd
+import os
+
 # to check if the sequence is new for creating txt
 txt_count = 0
 
@@ -60,7 +62,7 @@ def txtMerger(sequence_length, channel_num):
 
     # creat a empty list named title to record <CHA> S1C1 S1C2....
     title = []
-    for j in range(sequence_length):
+    for j in range(sequence_length + 1):
         for k in range(channel_num):
             if k == 0:
                 title.append('<CHA>')
@@ -68,7 +70,7 @@ def txtMerger(sequence_length, channel_num):
                 title.append('S%dC%d'%(j+1,k))
     # creat a empty list name temp_txt to append every sub txt file
     temp_txt = []
-    for i in range(sequence_length):
+    for i in range(sequence_length + 1):
         temp_txt.append(pd.read_csv("%d.txt"%i, delimiter="\t"))
     # open the file and write the title first
     txtWriter('pandas.txt', title, 'w')
@@ -76,6 +78,10 @@ def txtMerger(sequence_length, channel_num):
     final_df = pd.concat(temp_txt, axis=1)
     # write the dataframe to the same txt file
     final_df.to_csv(r'pandas.txt', header=True, index = False, sep='\t', mode='a')
+
+def txtDeleter(sequence_length):
+    for i in range(sequence_length + 1):
+        os.remove("%d.txt"%i)
     
 def txtWriter(txtname, txtdata, option):
     # open file with name "txtname"
