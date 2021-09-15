@@ -8,32 +8,32 @@ class Driver(Keithley2400, DriverInterface):
     def __init__(self, visa_address):
         super().__init__(visa_address)
 
-    def performOpen(self, option):
+    def performOpen(self):
         """Perform the operation of opening the instrument connection"""
+        # Resets the instrument and clears the queue
+        # self.reset()
         # Enables the front terminals for measurement, and disables the rear terminals.
-        self.use_front_terminals
-
-        if self.option == 'Current':
-            # Configures the instrument to apply a source current
-            self.apply_current()
-            # Enables the source of voltage depending on the configuration of the instrument.
-            self.enable_source()
-        elif self.option == 'Voltage':
-            # Configures the instrument to apply a source current
-            self.apply_voltage()
-            # Enables the source of voltage depending on the configuration of the instrument.
-            self.enable_source()
+        self.use_front_terminals()
+        self.sample_continuously()
+        # Enables the source of voltage depending on the configuration of the instrument.
+        # self.enable_source()
 
     def performClose(self):
         """Perform the close instrument connection operation"""
-        self.shutdown()
+        self.stop_buffer()
 
     def performSetValue(self, option, value, sweepRate=0.0):
         """Perform the Set Value instrument operation"""
-        if self.option == 'Current':
+        if option == 'Current':
+            if self.source_mode != 'current':
+                # Configures the instrument to apply a source current
+                self.apply_current()
             # output current
             self.source_current = value
-        elif self.option == 'Voltage':
+        elif option == 'Voltage':
+            if self.source_mode != 'voltage':
+                # Configures the instrument to apply a source current
+                self.apply_voltage()
             # output voltage
             self.source_voltage = value
 
@@ -41,15 +41,18 @@ class Driver(Keithley2400, DriverInterface):
 
     def performGetValue(self, option):
         """Perform the Get Value instrument operation"""
-        self.sample_continuously()
-        if self.option == 'Current':
-            value = self.measure_current()
-        elif self.option == 'Voltage':
-            value = self.measure_voltage()
+        if option == 'Current':
+            if not self.current:
+                self.measure_current()
+            value = self.current[0]
+        elif option == 'Voltage':
+            if not self.voltage:
+                self.measure_voltage()
+            value = self.voltage[0]
 
         return value
 
 
 if __name__ == '__main__':
-    a = Driver('GPIB:1', 'K2400', 'Keithley2400')
+    a = Driver('GPIB:24', 'K2400', 'Keithley2400')
     a.performOpen

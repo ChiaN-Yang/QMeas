@@ -56,13 +56,13 @@ def txtSaver(sequence_num, x_show, y_show):
 # Merge file. activate when stopping
 # =============================================================================
 
-def txtMerger(sequence_length, channel_num):
+def txtMerger(file_name, sequence_length, channel_num):
     # channel_num is the total number of reading channel + 1 X channel
     # we get the channel number from y_show + 1
 
     # creat a empty list named title to record <CHA> S1C1 S1C2....
     title = []
-    for j in range(sequence_length + 1):
+    for j in range(sequence_length):
         for k in range(channel_num):
             if k == 0:
                 title.append('<CHA>')
@@ -70,17 +70,17 @@ def txtMerger(sequence_length, channel_num):
                 title.append('S%dC%d'%(j+1,k))
     # creat a empty list name temp_txt to append every sub txt file
     temp_txt = []
-    for i in range(sequence_length + 1):
+    for i in range(sequence_length):
         temp_txt.append(pd.read_csv("%d.txt"%i, delimiter="\t"))
     # open the file and write the title first
-    txtWriter('pandas.txt', title, 'w')
+    txtWriter('%s.txt'%file_name, title, 'w')
     # form the final dataframe from temp_txt
     final_df = pd.concat(temp_txt, axis=1)
     # write the dataframe to the same txt file
-    final_df.to_csv(r'pandas.txt', header=True, index = False, sep='\t', mode='a')
+    final_df.to_csv(r'%s.txt'%file_name, header=True, index = False, sep='\t', mode='a')
 
 def txtDeleter(sequence_length):
-    for i in range(sequence_length + 1):
+    for i in range(sequence_length):
         os.remove("%d.txt"%i)
     
 def txtWriter(txtname, txtdata, option):

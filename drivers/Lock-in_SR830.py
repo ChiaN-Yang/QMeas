@@ -1,17 +1,17 @@
 from libs.driver_interface import DriverInterface
 from pymeasure.instruments.srs.sr830 import SR830
+from time import sleep
 
 
 class Driver(SR830, DriverInterface):
-    METHOD = ['Voltage', 'Frequency', 'Magnitude(R)',
-              'Magnitude(X)', 'Phase', 'Analog in 1', 'Analog in 2']
+    METHOD = ['Voltage', 'Frequency', 'Magnitude(R)', 'Magnitude(X)', 'Phase', 'Analog in 1', 'Analog in 2',
+              'Magnitude(R) with auto sensitivity', 'Magnitude(X) with auto sensitivity']
 
     def __init__(self, visa_address):
         SR830.__init__(self, visa_address)
 
-    def performOpen(self, option):
+    def performOpen(self):
         """Perform the operation of opening the instrument connection"""
-        # Resets the instrument and clears the queue
         pass
 
     def performClose(self):
@@ -24,9 +24,9 @@ class Driver(SR830, DriverInterface):
             self.sine_voltage = value
         elif option == 'Frequency':
             self.frequency = value
-        elif option == 'Magnitude(R)':
+        elif option == 'Magnitude(R)' or option == 'Magnitude(R) with auto sensitivity':
             self.magnitude = value
-        elif option == 'Magnitude(X)':
+        elif option == 'Magnitude(X)' or option == 'Magnitude(X) with auto sensitivity':
             self.x = value
         elif option == 'Phase':
             self.theta = value
@@ -52,6 +52,37 @@ class Driver(SR830, DriverInterface):
             return self.aux_in_1
         elif option == 'Analog in 2':
             return self.aux_in_2
+        elif option == 'Magnitude(R) with auto sensitivity':
+            self.autoSensitivity()
+            return self.magnitude
+        elif option == 'Magnitude(X) with auto sensitivity':
+            self.autoSensitivity()
+            return self.x
+        
+    def autoSensitivity(self):
+        """Set voltage scale to current range"""
+        scale_range_L = 0.2
+        sacle_range_R = 0.8
+        adjust_scale_time =  1.5
+        if self.input_config == 'I (1 MOhm)':
+            vi_factor = 1e-6
+        else:
+            vi_factor = 1
+        pos_1 = self.SENSITIVITIES.index(self.sensitivity)
+        percent_1 = self.magnitude / (self.sensitivity*vi_factor)
+
+        #   Auto range        
+        # while (percent_1 < Scale_range_L or percent_1 > Sacle_range_R):
+            # pos_1 = self.SENSITIVITIES.index(self.sensitivity)
+            # percent_1 = self.magnitude / (self.sensitivity*vi_factor)
+        if percent_1 < scale_range_L:
+            self.sensitivity = self.SENSITIVITIES[pos_1 - 1]
+            sleep(adjust_scale_time)
+            print('\n',round(percent_1,2),'Sensitivity adjusted\n')
+        elif percent_1 > sacle_range_R:
+            self.sensitivity = self.SENSITIVITIES[pos_1 + 1]
+            sleep(adjust_scale_time)
+            print('\n',round(percent_1,2),'Sensitivity adjusted\n')
 
 
 if __name__ == '__main__':

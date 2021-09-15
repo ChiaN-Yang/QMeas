@@ -9,12 +9,12 @@ class DriverInterface(abc.ABC):
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
         return NotImplemented
-    
+
     @abc.abstractmethod
     def performClose(self):
         """Perform the close instrument connection operation"""
         return NotImplemented
-    
+
     @abc.abstractmethod
     def performSetValue(self):
         """Perform the Set Value instrument operation"""
@@ -24,7 +24,7 @@ class DriverInterface(abc.ABC):
     def performGetValue(self):
         """Perform the Get Value instrument operation"""
         return NotImplemented
-    
+
     def __str__(self):
         return self.instrument_name
 
@@ -45,14 +45,10 @@ class DriverInterface(abc.ABC):
     def setReadOption(self, magnification):
         self.magnification = magnification
 
-    def getLevel(self):
-        return self.level
-
     def setProperty(self, visa_address, instrument_name, instrument_type):
         self.instrument_name = instrument_name
         self.instrument_type = instrument_type
         self.instrument_VISA_add = visa_address
-        
+
     def instrumentName(self):
         return self.instrument_name
-        
