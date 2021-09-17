@@ -21,6 +21,7 @@ class Driver(Keithley2400, DriverInterface):
     def performClose(self):
         """Perform the close instrument connection operation"""
         self.stop_buffer()
+        self.local_switch()
 
     def performSetValue(self, option, value, sweepRate=0.0):
         """Perform the Set Value instrument operation"""
@@ -39,18 +40,17 @@ class Driver(Keithley2400, DriverInterface):
 
         return value
 
-    def performGetValue(self, option):
+    def performGetValue(self, option, magnification):
         """Perform the Get Value instrument operation"""
         if option == 'Current':
-            if not self.current:
-                self.measure_current()
-            value = self.current[0]
+            value = self.current[1] * magnification
         elif option == 'Voltage':
-            if not self.voltage:
-                self.measure_voltage()
-            value = self.voltage[0]
-
+            value = self.voltage[0] * magnification
         return value
+    
+    def local_switch(self):
+        """ Disables remote mode and switch the system to local mode"""
+        self.write(":SYSTEM:LOCAL")
 
 
 if __name__ == '__main__':

@@ -28,22 +28,25 @@ class DriverInterface(abc.ABC):
     def __str__(self):
         return self.instrument_name
 
-    def experimentLinspacer(self, option, target):
-        init = self.performGetValue(option)
-        print('init', init)
-        step = float(self.speed) / 3600 * self.time_unit
-        if init > float(target):
-            step = -step
-        result = np.arange(init, float(target), step)
-        result = list(np.append(result, float(target)))
-        return result
-
-    def setControlOption(self, speed, time_unit):
-        self.speed = speed
-        self.time_unit = time_unit
-
-    def setReadOption(self, magnification):
-        self.magnification = magnification
+    def experimentLinspacer(self, option, target, speed, increment):
+        time_unit = 0.1
+        if int(speed) and increment == '0':
+            init = self.performGetValue(option, 1)
+            print('speed', init)
+            step = float(speed) / 3600 * time_unit
+            if init > float(target):
+                step = -step
+            result = np.arange(init, float(target), step)
+            result = list(np.append(result, float(target)))
+            return result
+        elif int(speed) and increment != '0':
+            init = self.performGetValue(option, 1)
+            print('increment', init)
+            if init > float(target):
+                increment = -float(increment)
+            result = np.arange(init, float(target), float(increment))
+            result = list(np.append(result, float(target)))
+            return result
 
     def setProperty(self, visa_address, instrument_name, instrument_type):
         self.instrument_name = instrument_name

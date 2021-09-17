@@ -1,3 +1,5 @@
+import numpy as np
+
 class TimeMeasurement:
     def __init__(self, time):
         self.time = int(time)
@@ -19,18 +21,8 @@ class TimeMeasurement:
         """Perform the Get Value instrument operation"""
         pass
 
-    def experimentLinspacer(self, option, target):
-        return range(self.time*10)
-    
-    def setControlOption(self, speed, time_unit):
-        self.speed = speed
-        self.time_unit = time_unit
-
-    def setReadOption(self, magnification):
-        self.magnification = magnification
-
-    def getLevel(self):
-        return self.level
+    def experimentLinspacer(self, option, target, speed, increment):
+        return np.arange(0, self.time, 0.1)
 
     def setProperty(self, visa_address, instrument_name, instrument_type):
         self.instrument_name = instrument_name

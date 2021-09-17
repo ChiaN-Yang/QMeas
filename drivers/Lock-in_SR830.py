@@ -22,6 +22,7 @@ class Driver(SR830, DriverInterface):
         """Perform the Set Value instrument operation"""
         if option == 'Voltage':
             self.sine_voltage = value
+            return self.performGetValue(option, 1)
         elif option == 'Frequency':
             self.frequency = value
         elif option == 'Magnitude(R)' or option == 'Magnitude(R) with auto sensitivity':
@@ -34,36 +35,37 @@ class Driver(SR830, DriverInterface):
             self.aux_in_1 = value
         elif option == 'Analog in 2':
             self.aux_in_2 = value
-        return self.performGetValue(option)
+        return value
 
-    def performGetValue(self, option):
+    def performGetValue(self, option, magnification):
         """Perform the Get Value instrument operation"""
         if option == 'Voltage':
-            return self.sine_voltage
+            value = self.sine_voltage
         elif option == 'Frequency':
-            return self.frequency
+            value = self.frequency
         elif option == 'Magnitude(R)':
-            return self.magnitude
+            value = self.magnitude
         elif option == 'Magnitude(X)':
-            return self.x
+            value = self.x
         elif option == 'Phase':
-            return self.theta
+            value = self.theta
         elif option == 'Analog in 1':
-            return self.aux_in_1
+            value = self.aux_in_1
         elif option == 'Analog in 2':
-            return self.aux_in_2
+            value = self.aux_in_2
         elif option == 'Magnitude(R) with auto sensitivity':
             self.autoSensitivity()
-            return self.magnitude
+            value = self.magnitude
         elif option == 'Magnitude(X) with auto sensitivity':
             self.autoSensitivity()
-            return self.x
-        
+            value = self.x
+        return value * magnification
+
     def autoSensitivity(self):
         """Set voltage scale to current range"""
         scale_range_L = 0.2
         sacle_range_R = 0.8
-        adjust_scale_time =  1.5
+        adjust_scale_time = 1.5
         if self.input_config == 'I (1 MOhm)':
             vi_factor = 1e-6
         else:
@@ -71,18 +73,18 @@ class Driver(SR830, DriverInterface):
         pos_1 = self.SENSITIVITIES.index(self.sensitivity)
         percent_1 = self.magnitude / (self.sensitivity*vi_factor)
 
-        #   Auto range        
+        #   Auto range
         # while (percent_1 < Scale_range_L or percent_1 > Sacle_range_R):
-            # pos_1 = self.SENSITIVITIES.index(self.sensitivity)
-            # percent_1 = self.magnitude / (self.sensitivity*vi_factor)
+        # pos_1 = self.SENSITIVITIES.index(self.sensitivity)
+        # percent_1 = self.magnitude / (self.sensitivity*vi_factor)
         if percent_1 < scale_range_L:
             self.sensitivity = self.SENSITIVITIES[pos_1 - 1]
             sleep(adjust_scale_time)
-            print('\n',round(percent_1,2),'Sensitivity adjusted\n')
+            print('\n', round(percent_1, 2), 'Sensitivity adjusted\n')
         elif percent_1 > sacle_range_R:
             self.sensitivity = self.SENSITIVITIES[pos_1 + 1]
             sleep(adjust_scale_time)
-            print('\n',round(percent_1,2),'Sensitivity adjusted\n')
+            print('\n', round(percent_1, 2), 'Sensitivity adjusted\n')
 
 
 if __name__ == '__main__':
