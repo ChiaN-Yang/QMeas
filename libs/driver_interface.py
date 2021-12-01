@@ -31,7 +31,7 @@ class DriverInterface(abc.ABC):
     def experimentLinspacer(self, option, target, speed, increment):
         time_unit = 0.1
         if int(speed) and increment == '0':
-            init = self.performGetValue(option, 1)
+            init = float(self.performGetValue(option, 1))
             print('speed', init)
             step = float(speed) / 3600 * time_unit
             if init > float(target):
@@ -40,7 +40,7 @@ class DriverInterface(abc.ABC):
             result = list(np.append(result, float(target)))
             return result
         elif int(speed) and increment != '0':
-            init = self.performGetValue(option, 1)
+            init = float(self.performGetValue(option, 1))
             print('increment', init)
             if init > float(target):
                 increment = -float(increment)

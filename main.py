@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QObject
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, \
+    QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
 import pyqtgraph as pg
 import pyqtgraph.exporters
 from libs.visa_resource_manager import Ui_MainWindow
@@ -20,6 +21,9 @@ import qdarkstyle
 from time import sleep
 import nidaqmx.system
 from PIL import ImageQt
+import logging
+
+# logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)   # debug mode
 
 
 class MainWindow(QMainWindow):
@@ -136,6 +140,7 @@ class MainWindow(QMainWindow):
         self.ui.retranslateUi(self)
         self.ui.actionQuit.setShortcut('Ctrl+Q')
         self.ui.actionQuit.triggered.connect(self.timeStop)
+        self.ui.actionQuit.triggered.connect(self.shutdownInstruments)
         self.ui.actionQuit.triggered.connect(app.exit)
         self.ui.actionQuit.triggered.connect(self.close)
 
@@ -608,7 +613,7 @@ class MainWindow(QMainWindow):
 
     def timeStop(self):
         # time stop
-        print('measure stop')
+        logging.info('measure stop')
         try:
             self.procedureStop()
             self.thread.quit()
@@ -683,12 +688,12 @@ class MainWindow(QMainWindow):
         self.ui.tableWidget_5.setItem(
             2, 0, QTableWidgetItem(f'{x_show[0]:g}'))
         # update y value
-        print('len')
-        print(len(self.instruments_read))
-        print('x')
-        print(x_show)
-        print('y')
-        print(y_show)
+        logging.debug('len')
+        logging.debug(len(self.instruments_read))
+        logging.debug('x')
+        logging.debug(x_show)
+        logging.debug('y')
+        logging.debug(y_show)
         i = 0
         for i in range(len(self.instruments_read)):
             self.ui.tableWidget_5.setItem(
@@ -768,15 +773,15 @@ class Procedure(QObject):
               [child_num, leve_position, instrument, option, check, target, speed, increment]
               [child_num, leve_position, instrument, option, check, target, speed, increment] ]
         """
-        print('tree_num', tree_num)
-        print('child_num', child_num)
-        print('leve_position', leve_position)
-        print('check', check)
-        print('method', method)
-        print('ins_label', ins_label)
-        print('target', target)
-        print('speed', speed)
-        print('incredment', increment)
+        logging.debug('tree_num', tree_num)
+        logging.debug('child_num', child_num)
+        logging.debug('leve_position', leve_position)
+        logging.debug('check', check)
+        logging.debug('method', method)
+        logging.debug('ins_label', ins_label)
+        logging.debug('target', target)
+        logging.debug('speed', speed)
+        logging.debug('incredment', increment)
 
         # Know how many trees there are
         tree_total = max(tree_num) + 1
@@ -899,8 +904,10 @@ class Procedure(QObject):
         for i in level[0]:
             self.createEmptyDataSet()
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
+            logging.debug('linespacer: ', linspacer)
             self.clear_progress.emit(len(linspacer))
             for value_i in linspacer:
+                logging.debug(value_i, 'value_i')
                 self.performRecord(i, value_i, True)
                 if self.quit_sweep:
                     self.quit_sweep = False
