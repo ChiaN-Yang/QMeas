@@ -27,23 +27,27 @@ class Driver(DSP7265, DriverInterface):
         elif option == 'Frequency':
             self.frequency = value
         elif option == 'Current':
-            self.mag = value
+            self.current = value
         elif option == 'Phase':
-            self.x = value
+            self.phase = value
         return value
 
     def performGetValue(self, option, magnification):
         """Perform the Get Value instrument operation"""
         if option == 'Voltage':
-            value = self.voltage
+            value = self.mag
         elif option == 'Frequency':
             value = self.frequency
         elif option == 'Current':
             value = self.mag
         elif option == 'Phase':
-            value = self.x
+            value = self.phase-0.63
         return value * magnification
 
 
 if __name__ == '__main__':
-    pass
+    test = Driver("GPIB::6")
+    print(test.voltage)
+    print(test.frequency)
+    print(test.mag)
+    print(test.x)

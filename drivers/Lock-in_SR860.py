@@ -31,9 +31,9 @@ class Driver(SR860, DriverInterface):
         elif option == 'Phase':
             self.phase(value)
         elif option == 'Analog in 1':
-            self.aux_in1(value)
+            self.aux_in0(value)
         elif option == 'Analog in 2':
-            self.aux_in2(value)
+            self.aux_in1(value)
         elif option == 'DC':
             self.sine_outdc(value)
         return value
@@ -51,9 +51,9 @@ class Driver(SR860, DriverInterface):
         elif option == 'Phase':
             value = self.phase()
         elif option == 'Analog in 1':
-            value = self.aux_in1()
+            value = self.aux_in0()
         elif option == 'Analog in 2':
-            value = self.aux_in2()
+            value = self.aux_in1()
         elif option == 'DC':
             value = self.sine_outdc()
         return value * magnification

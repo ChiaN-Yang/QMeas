@@ -9,7 +9,7 @@ from libs.visa_resource_manager import Ui_MainWindow
 from libs.control_option import Ui_Dialog
 from libs.read_option import Ui_Dialog as read_Ui_Dialog
 import sys
-import sip
+from PyQt5 import sip
 import pyvisa as visa
 import numpy as np
 import os
@@ -58,8 +58,11 @@ class MainWindow(QMainWindow):
         self.read_panel = ReadlPanel()
 
         # Pre-run functions
-        self.visaList()
-        self.intrumentList()
+        try:
+            self.visaList()
+            self.intrumentList()
+        except:
+            logging.error('detect available address fail')
 
         # page 1
         # Buttons
