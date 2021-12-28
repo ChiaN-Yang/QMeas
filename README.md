@@ -2,7 +2,7 @@
 A Data-Acquisition Program
 
 ## 摘要
-本篇專題設計一套儀器控制和自動化測量軟體，所要控制的儀器包括稀釋冷凍機 (Dilution refrigerator)、磁場機、電源電壓量測設備等。軟體的主要功能為控制儀器輸出、預先安排儀器未來將輸出或讀取的物理量、將儀器的讀值進行實時作圖(real-time plot)。為了達到上述目標，我依照實驗室使用習慣客製化使用者介面，後端利用資料結構做實驗排程，並自己設計與打造實時作圖模組和可擴充的驅動程式模組。
+這是一套儀器控制和自動化測量軟體，所要控制的儀器包括稀釋冷凍機 (Dilution refrigerator)、磁場機、電源電壓量測設備等。軟體的主要功能為控制儀器輸出、預先安排儀器未來將輸出或讀取的物理量、將儀器的讀值進行實時作圖(real-time plot)。為了達到上述目標，我依照實驗室使用習慣客製化使用者介面，後端利用資料結構做實驗排程，並自己設計與打造實時作圖模組和可擴充的驅動程式模組。
 
 ## 簡介
 成功大學奈米電子實驗室目前有兩組控制儀器的軟體，分別為CryoMeas和Labber。由於舊的CryoMeas為多年前以LabVIEW寫成，實驗室目前新購入的儀器並無支援LabVIEW，因此老師曾想讓整個實驗室改用Labber。然而Labber在實驗排程方式上自由度很低，同樣儀器不能重複加入排程，也不能使用迴圈重複實驗；在作圖上，也只能一對一作圖，讓習慣一對多作圖的物理研究生無法適應。最後的引爆點是Labber突然漲價六倍，讓老師希望我自己寫一個控制儀器的軟體。
@@ -43,24 +43,16 @@ A Data-Acquisition Program
 
 ## Installation
 Before run this program, you need to install package below:
-
 - Python 3.6 or later
-
 - PyQt5
-
 - Pymeasure
-
 - Numpy
-
 - Labdrivers
-
 - NIDAQmx
 
 In vscode, it can be installed with pip
 
     python -m pip install package_name
-
-***
 
 ## Hint
 you can transfer .ui to .py by this command
