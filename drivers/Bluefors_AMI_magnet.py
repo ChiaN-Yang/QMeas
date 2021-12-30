@@ -36,29 +36,32 @@ Progress:
 TODO:
     1. Add more
 """
+
+
+
+
 from libs.driver_interface import DriverInterface
 import pyvisa as visa
 from time import sleep
 import numpy as np
-
 class Driver(DriverInterface):
     METHOD = ['Magnetic Field']
-    
+
     def __init__(self, visa_address):
         rm = visa.ResourceManager()
         self.magnet = rm.open_resource('TCPIP0::192.168.50.66::7180::SOCKET')
         self.magnet.read_termination = '\r\n'
-        
+
         # remove hello word
         for i in range(2):
             command = "FIELD:MAGnet?"
-            self.magnet.write(command)           
+            self.magnet.write(command)
             response = self.magnet.read()
         # Pause mode
         command = 'PAUSE'
         self.magnet.write(command)
         sleep(0.1)
-        
+
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
         pass
@@ -73,31 +76,33 @@ class Driver(DriverInterface):
     def performSetValue(self, option, value, sweepRate=0.0):
         if option == 'Magnetic Field':
             if value != -999:
-                # set target                
+                # set target
                 command = 'CONFigure:FIELD:TARGet ' + str(value)
                 self.magnet.write(command)
-                now_value = self.performGetValue()
+                now_value = self.performGetValue(option)
                 # ramp mode
                 command = 'RAMP'
                 self.magnet.write(command)
             else:
                 # replace the command by the current field
                 # current command is reading the target
-                now_value = self.performGetValue()
+                now_value = self.performGetValue(option)
                 #print('now_value', now_value, 'self.target', self.target)
-                
+
         return float(now_value)
-    
-    def performGetValue(self, option='0', magnification=0):
+
+    def performGetValue(self, option='0', magnification=1):
         """Perform the Get Value instrument operation"""
         # add the command of current field here
         # e.g.
-        command = 'FIELD:MAGnet?'
-        self.magnet.write(command)
-        value = self.magnet.read()
-        print(value)
-        return float(value)
-    
+        if option == 'Magnetic Field':
+            command = 'FIELD:MAGnet?'
+            self.magnet.write(command)
+            value = float(self.magnet.read())
+            value *= magnification
+            print(value)
+        return value
+
     def experimentLinspacer(self, option, target, speed, increment):
         if int(speed) and increment == '0':
             time_unit = 0.1
@@ -117,7 +122,7 @@ class Driver(DriverInterface):
             result = np.arange(init, float(target), float(increment))
             result = list(np.append(result, float(target)))
             return result
-    
+
 
 # =============================================================================
 # Mark Mark Mark Mark Mark Mark Mark Mark Mark Mark Mark Mark Mark Mark Mark

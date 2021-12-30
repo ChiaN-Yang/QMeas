@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
 
         # page 2
         # Buttons
-        self.ui.pushButton_7.clicked.connect(self.read_panel.show)
+        self.ui.pushButton_7.clicked.connect(self.readPanelShow)
         self.read_panel.sub_1_ui.pushButton_5.clicked.connect(
             self.readConfirm)
         self.read_panel.sub_1_ui.pushButton_5.clicked.connect(
@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         self.read_panel.sub_1_ui.pushButton_6.clicked.connect(
             self.read_panel.close)
 
-        self.ui.pushButton_3.clicked.connect(self.control_panel.show)
+        self.ui.pushButton_3.clicked.connect(self.readPanelShow)
         self.control_panel.sub_ui.pushButton_9.clicked.connect(
             self.addLevel)
         self.control_panel.sub_ui.pushButton_9.clicked.connect(
@@ -245,6 +245,7 @@ class MainWindow(QMainWindow):
                 except visa.VisaIOError or AttributeError:
                     self.pageOneInformation(
                         "%s connect fail" % instrument_type)
+        self.ui.lineEdit.clear()
 
     # =============================================================================
     # Page 2
@@ -253,12 +254,27 @@ class MainWindow(QMainWindow):
     def pageTwoInformation(self, string):
         self.ui.textBrowser_2.append(str(string))
 
+    def readPanelShow(self):
+        # self.pageTwoInformation(self.ui.listWidget_3.currentItem())
+        if self.ui.listWidget_3.currentItem() == None:
+            self.pageTwoInformation('Please select a method.')
+        else:
+            self.read_panel.show()
+
+    def controlPanelShow(self):
+        # self.pageTwoInformation(self.ui.listWidget_3.currentItem())
+        if self.ui.listWidget_3.currentItem() == None:
+            self.pageTwoInformation('Please select a method.')
+        else:
+            self.control_panel.show()
+
     def deleteReadRow(self):
         row = self.ui.tableWidget_4.currentRow()
         self.ui.tableWidget_4.removeRow(row)
-        self.ui.tableWidget_5.removeColumn(row)
+        self.ui.tableWidget_5.removeColumn(row+1)
         self.read_row_count -= 1
         self.instruments_read.pop(row)
+        self.options_read.pop(row)
 
     def showMethod(self):
         row = self.ui.tableWidget_2.currentRow()
@@ -595,6 +611,7 @@ class MainWindow(QMainWindow):
         self.lineDisplaySwitchCreat()
         # porcedure start
         self.thread = QThread()
+        self.procedure = None
         self.procedure = Procedure(
             self.instruments, self.instruments_read)
         self.procedure.moveToThread(self.thread)
@@ -652,6 +669,8 @@ class MainWindow(QMainWindow):
         the x y value will be set later within the function plot_update()
         """
         self.plt.clear()
+        self.data_line = []
+        self.saved_line = []
         for _ in range(len(self.instruments_read)):
             self.data_line.append(self.ui.graphWidget.plot([]))
 
