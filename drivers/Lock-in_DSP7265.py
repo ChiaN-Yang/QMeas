@@ -1,4 +1,4 @@
-from libs.driver_interface import DriverInterface
+from lib.driver_interface import DriverInterface
 from pymeasure.instruments.signalrecovery.dsp7265 import DSP7265
 
 

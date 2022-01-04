@@ -1,11 +1,11 @@
-from libs.driver_interface import DriverInterface
+from lib.driver_interface import DriverInterface
 import nidaqmx
 
 
 class Driver(DriverInterface):
     """ This class implements the NI cDAQ driver"""
     METHOD = ['ao0', 'ao1', 'ao2', 'ao3']
-    
+
     def __init__(self, visa_address):
         self.address = visa_address
         with nidaqmx.Task() as task:

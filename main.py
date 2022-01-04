@@ -5,25 +5,25 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
 import pyqtgraph as pg
 import pyqtgraph.exporters
-from libs.visa_resource_manager import Ui_MainWindow
-from libs.control_option import Ui_Dialog
-from libs.read_option import Ui_Dialog as read_Ui_Dialog
+from ui.visa_resource_manager import Ui_MainWindow
+from ui.control_option import Ui_Dialog
+from ui.read_option import Ui_Dialog as read_Ui_Dialog
 import sys
 from PyQt5 import sip
 import pyvisa as visa
 import numpy as np
 import os
 from datetime import datetime
-from libs.load_driver import load_drivers
-from libs.txtFunction import txtUpdate, txtMerger, txtDeleter
-from libs.time_measurement import TimeMeasurement
+from lib.load_driver import load_drivers
+from lib.txtFunction import txtUpdate, txtMerger, txtDeleter
+from lib.time_measurement import TimeMeasurement
 import qdarkstyle
 from time import sleep
 import nidaqmx.system
 from PIL import ImageQt
 import logging
 
-# logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)   # debug mode
+# logging.basicConfig(stream=sys.stderr, level=logging.INFO)   # debug mode
 
 
 class MainWindow(QMainWindow):
@@ -76,6 +76,7 @@ class MainWindow(QMainWindow):
         # page 2
         # Buttons
         self.ui.pushButton_7.clicked.connect(self.readPanelShow)
+
         self.read_panel.sub_1_ui.pushButton_5.clicked.connect(
             self.readConfirm)
         self.read_panel.sub_1_ui.pushButton_5.clicked.connect(
@@ -169,6 +170,7 @@ class MainWindow(QMainWindow):
         for i, device in enumerate(system.devices):
             if i > 0:
                 self.ui.listWidget.addItem(device.name)
+        self.ui.listWidget.addItem("default")
 
     def intrumentList(self):
         """detect available drivers"""
@@ -645,6 +647,7 @@ class MainWindow(QMainWindow):
 
     def procedureStop(self):
         self.procedure.stopMeasure()
+        self.ui.pushButton_5.setEnabled(True)
 
     def procedureResumePause(self):
         self.procedure.resumePauseMeasure()
@@ -710,12 +713,12 @@ class MainWindow(QMainWindow):
         self.ui.tableWidget_5.setItem(
             2, 0, QTableWidgetItem(f'{x_show[0]:g}'))
         # update y value
-        logging.debug('len')
-        logging.debug(len(self.instruments_read))
-        logging.debug('x')
-        logging.debug(x_show)
-        logging.debug('y')
-        logging.debug(y_show)
+        logging.info('len')
+        logging.info(len(self.instruments_read))
+        logging.info('x')
+        logging.info(x_show)
+        logging.info('y')
+        logging.info(y_show)
         i = 0
         for i in range(len(self.instruments_read)):
             self.ui.tableWidget_5.setItem(
@@ -795,15 +798,15 @@ class Procedure(QObject):
               [child_num, leve_position, instrument, option, check, target, speed, increment]
               [child_num, leve_position, instrument, option, check, target, speed, increment] ]
         """
-        logging.debug('tree_num', tree_num)
-        logging.debug('child_num', child_num)
-        logging.debug('leve_position', leve_position)
-        logging.debug('check', check)
-        logging.debug('method', method)
-        logging.debug('ins_label', ins_label)
-        logging.debug('target', target)
-        logging.debug('speed', speed)
-        logging.debug('incredment', increment)
+        logging.info('\ntree_num', tree_num)
+        logging.info('\nchild_num', child_num)
+        logging.info('\nleve_position', leve_position)
+        logging.info('\ncheck', check)
+        logging.info('\nmethod', method)
+        logging.info('\nins_label', ins_label)
+        logging.info('\ntarget', target)
+        logging.info('\nspeed', speed)
+        logging.info('\nincredment', increment)
 
         # Know how many trees there are
         tree_total = max(tree_num) + 1
@@ -926,10 +929,10 @@ class Procedure(QObject):
         for i in level[0]:
             self.createEmptyDataSet()
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
-            logging.debug('linespacer: ', linspacer)
+            logging.info('linespacer: ', linspacer)
             self.clear_progress.emit(len(linspacer))
             for value_i in linspacer:
-                logging.debug(value_i, 'value_i')
+                logging.info(value_i, 'value_i')
                 self.performRecord(i, value_i, True)
                 if self.quit_sweep:
                     self.quit_sweep = False

@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri May  7 20:22:07 2021
-
 @author: Tsung-Lin
 """
-
 import socket
 import pyvisa as visa
 import serial
@@ -48,8 +46,8 @@ class MercuryIps:
 #             self.timeout = timeout
 #             self.bytes_to_read = bytes_to_read
 # =============================================================================
-        
-        def __init__(self, axis, mode='usb', resource_name=None, address = None, com = None, timeout=10.0, bytes_to_read=1024):
+
+        def __init__(self, axis, mode='usb', resource_name=None, address=None, com=None, timeout=10.0, bytes_to_read=1024):
             self.axis = axis
             self.mode = mode
             self.resource_name = resource_name
@@ -58,7 +56,7 @@ class MercuryIps:
             self.com = com
             self.timeout = timeout
             self.bytes_to_read = bytes_to_read
-            
+
 # =============================================================================
 #             print('1.',self.axis,'\n2.',self.mode,'\n3.',self.resource_name,'\n4.',self.ip_address,'\n5.',self.port,'\n6.',self.timeout,'\n7.',self.bytes_to_read)
 # =============================================================================
@@ -69,7 +67,7 @@ class MercuryIps:
 
         def query_ip(self, command):
             """Sends a query to the MercuryIPS via ethernet.
-            
+
             :param command: The command, which should be in the NOUN + VERB format
             :type command: string
             :returns str: The MercuryIPS response
@@ -84,33 +82,32 @@ class MercuryIps:
 # =============================================================================
 #                 print('query result:', response)
 # =============================================================================
-                
+
             return response
-        
+
         def query_usb(self, command):
             """Sends a query to the MercuryIPS via ethernet.
-            
+
             :param command: The command, which should be in the NOUN + VERB format
             :type command: string
             :returns str: The MercuryIPS response
             """
-            with serial.Serial(self.com , 1024, timeout= 0.5) as ser:
+            with serial.Serial(self.com, 1024, timeout=0.5) as ser:
                 ser.write(command.encode())
                 response = ser.read(1024).decode()
-                
+
             return response
-        
+
         def query_GPIB(self, command):
             """Sends a query to the MercuryIPS via ethernet.
-            
+
             :param command: The command, which should be in the NOUN + VERB format
             :type command: string
             :returns str: The MercuryIPS response
             """
-            
-            
+
             with self.resource_manager.open_resource(self.address) as self.instrument:
-                
+
                 self.instrument.clear()
                 self.instrument.write(command)
                 response = self.instrument.read()
@@ -118,18 +115,18 @@ class MercuryIps:
 #                 print('query ',response,'.')
 # =============================================================================
             while 'INVALID' in response:
-                 with self.resource_manager.open_resource(self.address) as self.instrument:
+                with self.resource_manager.open_resource(self.address) as self.instrument:
                     self.instrument.clear()
                     self.instrument.write(command)
                     response = self.instrument.read()
 # =============================================================================
-#                     print('query ',response,'.')    
+#                     print('query ',response,'.')
 # =============================================================================
             return response
 
         def query_visa(self, command):
             """Sends a query to the MercuryIPS via VISA.
-            
+
             :param command: The command, which should be in the NOUN + VERB format
             :type command: string
             :returns str: The MercuryIPS response
@@ -143,7 +140,7 @@ class MercuryIps:
         @staticmethod
         def extract_value(response, noun, unit):
             """Finds the value that is contained within the response to a previously sent query.
-            
+
             :param response: The response from a query.
             :type response: string
             :param noun: The part of the query that refers to the NOUN (refer to MercuryIPS documentation).
@@ -151,18 +148,21 @@ class MercuryIps:
             :returns float: The value of the response, but without units.
             """
             expected_response = 'STAT:' + noun + ':'
-            value = float(response.replace(expected_response, '').strip('\n').replace(unit, ''))
+            value = float(response.replace(expected_response,
+                          '').strip('\n').replace(unit, ''))
             return value
 
         # Employing hash tables instead of if-else trees
-        QUERY_AND_RECEIVE = {'ip': query_ip, 'visa': query_visa, 'usb':query_usb, 'GPIB':query_GPIB}
+        QUERY_AND_RECEIVE = {
+            'ip': query_ip, 'visa': query_visa, 'usb': query_usb, 'GPIB': query_GPIB}
 
         @property
         def field_setpoint(self):
             """The magnetic field set point in Tesla"""
             noun = 'DEV:' + self.axis + ':PSU:SIG:FSET'
             command = 'READ:' + noun + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
             return self.extract_value(response, noun, 'T')
 
         @field_setpoint.setter
@@ -172,101 +172,118 @@ class MercuryIps:
                     ((self.axis == 'GRPX' or self.axis == 'GRPY') and (-1 <= value <= 1))):
                 setpoint = str(value)
                 command = 'SET:DEV:' + self.axis + ':PSU:SIG:FSET:' + setpoint + '\n'
-                response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+                response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                    self, command)
 
                 if not response:
-                    raise RuntimeWarning("No response from the MercuryIps after querying the field setpoint.")
+                    raise RuntimeWarning(
+                        "No response from the MercuryIps after querying the field setpoint.")
             else:
-                raise RuntimeError("The setpoint must be within the proper limits.")
+                raise RuntimeError(
+                    "The setpoint must be within the proper limits.")
 
         @property
         def field_ramp_rate(self):
             """The magnetic field ramp rate in Tesla per minute along the magnet axis."""
             noun = 'DEV:' + self.axis + ':PSU:SIG:RFST'
             command = 'READ:' + noun + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
             return self.extract_value(response, noun, 'T/m')
 
         @field_ramp_rate.setter
         def field_ramp_rate(self, value):
             ramp_rate = str(value)
             command = 'SET:DEV:' + self.axis + ':PSU:SIG:RFST:' + ramp_rate + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 
             if not response:
-                raise RuntimeWarning("No response after setting a field ramp rate.")
+                raise RuntimeWarning(
+                    "No response after setting a field ramp rate.")
 
         @property
         def current_setpoint(self):
             """The set point of the current for a magnet in Amperes."""
             noun = 'DEV:' + self.axis + ':PSU:SIG:CSET'
             command = 'READ:' + noun + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
             return self.extract_value(response, noun, 'A')
 
         @current_setpoint.setter
         def current_setpoint(self, value):
             setpoint = str(value)
             command = 'SET:DEV:' + self.axis + ':PSU:SIG:CSET' + setpoint + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 
             if not response:
-                raise RuntimeWarning("No response after setting current set point.")
+                raise RuntimeWarning(
+                    "No response after setting current set point.")
 
         @property
         def current_ramp_rate(self):
             """The ramp rate of the current for a magnet in Amperes per minute."""
             noun = 'DEV:' + self.axis + ':PSU:SIG:RCST'
             command = 'READ:' + noun + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
             return self.extract_value(response, noun, 'A/m')
 
         @current_ramp_rate.setter
         def current_ramp_rate(self, value):
             ramp_rate = str(value)
             command = 'SET:DEV:' + self.axis + ':PSU:SIG:RCST' + ramp_rate + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 
             if not response:
-                raise RuntimeWarning("No response after setting current ramp rate.")
+                raise RuntimeWarning(
+                    "No response after setting current ramp rate.")
 
         @property
         def magnetic_field(self):
             """Gets the magnetic field."""
             noun = 'DEV:' + self.axis + ':PSU:SIG:FLD'
             command = 'READ:' + noun + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 # =============================================================================
 #             print('command: ', command, " Result: ", response)
 # =============================================================================
             return self.extract_value(response, noun, 'T')
-        
+
         def current(self):
             """Gets the current."""
             noun = 'DEV:' + self.axis + ':PSU:SIG:CURR'
             command = 'READ:' + noun + '\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 # =============================================================================
 #             print('command: ', command, " Result: ", response)
 # =============================================================================
             return self.extract_value(response, noun, 'A')
-        
 
         def ramp_to_setpoint(self):
             """Ramps a magnet to the setpoint."""
             command = 'SET:DEV:' + self.axis + ':PSU:ACTN:RTOS\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 
             if not response:
-                raise RuntimeWarning("No response after attempting to ramp to set point.")
+                raise RuntimeWarning(
+                    "No response after attempting to ramp to set point.")
 
         def ramp_to_zero(self):
             """Ramps a magnet from its current magnetic field to zero field."""
             command = 'SET:DEV:' + self.axis + ':PSU:ACTN:RTOZ\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 
             if not response:
-                raise RuntimeWarning("No response after attempting to ramp to zero.")
+                raise RuntimeWarning(
+                    "No response after attempting to ramp to zero.")
 
         def ramping(self):
             """Queries if magnet is ramping."""
@@ -279,16 +296,18 @@ class MercuryIps:
 
         def hold(self):
             """Puts a magnet in a HOLD state.
-            
+
             This action does one of the following:
             1) Stops a ramp
             2) Allows the field and current to ramp
             """
             command = 'SET:DEV:' + self.axis + ':PSU:ACTN:HOLD\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 
             if not response:
-                raise RuntimeWarning("No response after telling Mercury iPS to hold.")
+                raise RuntimeWarning(
+                    "No response after telling Mercury iPS to hold.")
 
         def Action(self):
             """Queries if magnet is in a HOLD state."""
@@ -296,18 +315,21 @@ class MercuryIps:
 # =============================================================================
 #             command = 'READ:DEV:' + self.axis + ':PSU:ACTN:HOLD\n'
 # =============================================================================
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
             # TODO: find out what kind of response you expect
-            
+
             return response[-5:-1]
 
         def clamp(self):
             """Puts a magnet in a CLAMP state."""
             command = 'SET:DEV:' + self.axis + ':PSU:ACTN:CLMP\n'
-            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](self, command)
+            response = MercuryIps.Magnet.QUERY_AND_RECEIVE[self.mode](
+                self, command)
 
             if not response:
-                raise RuntimeWarning("No response after telling Mercury iPS to clamp.")
+                raise RuntimeWarning(
+                    "No response after telling Mercury iPS to clamp.")
 
         def clamped(self):
             """Queries if magnet is in a CLAMP state."""
@@ -318,7 +340,7 @@ class MercuryIps:
 
     def __init__(self, mode='GPIB',
                  resource_name=None,
-                 ip_address=None, com = 'com3', address= 'GPIB0::25::1::INSTR', port=7020, timeout=10.0, bytes_to_read=1024):
+                 ip_address=None, com='com3', address='GPIB0::25::1::INSTR', port=7020, timeout=10.0, bytes_to_read=1024):
         """
         Parameters:
         :param str mode: The connection to the iPS, either 'ip' or 'visa'
@@ -338,12 +360,12 @@ class MercuryIps:
         else:
             raise RuntimeError('Mode is not currently supported.')
 
-        self.x_magnet = MercuryIps.Magnet('GRPX', mode=mode, resource_name=resource_name, address = address,
-                                          com = com, timeout=timeout, bytes_to_read=bytes_to_read)
-        self.y_magnet = MercuryIps.Magnet('GRPY', mode=mode, resource_name=resource_name, address = address,
-                                          com = com, timeout=timeout, bytes_to_read=bytes_to_read)
-        self.z_magnet = MercuryIps.Magnet('GRPZ', mode=mode, resource_name=resource_name, address = address,
-                                          com = com, timeout=timeout, bytes_to_read=bytes_to_read)
+        self.x_magnet = MercuryIps.Magnet('GRPX', mode=mode, resource_name=resource_name, address=address,
+                                          com=com, timeout=timeout, bytes_to_read=bytes_to_read)
+        self.y_magnet = MercuryIps.Magnet('GRPY', mode=mode, resource_name=resource_name, address=address,
+                                          com=com, timeout=timeout, bytes_to_read=bytes_to_read)
+        self.z_magnet = MercuryIps.Magnet('GRPZ', mode=mode, resource_name=resource_name, address=address,
+                                          com=com, timeout=timeout, bytes_to_read=bytes_to_read)
 
     def circle_sweep(self, field_radius, number_points):
         pass

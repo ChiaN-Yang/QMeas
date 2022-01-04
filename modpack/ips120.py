@@ -17,7 +17,6 @@ Classes:
 from datetime import datetime
 import time
 import logging
-
 import pyvisa as visa
 
 # create a logger object for this module

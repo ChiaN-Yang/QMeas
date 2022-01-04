@@ -1,5 +1,5 @@
-from libs.driver_interface import DriverInterface
-from libs.ips120 import IPS120
+from lib.driver_interface import DriverInterface
+from modpack.ips120 import IPS120
 from time import sleep
 import numpy as np
 
@@ -9,7 +9,7 @@ class Driver(IPS120, DriverInterface):
 
     def __init__(self, visa_address):
         super().__init__(visa_address)
-        
+
         self.setControl(3)
         sleep(0.1)
         # Set the LOCAL / REMOTE control state of the IPS 120
@@ -28,8 +28,6 @@ class Driver(IPS120, DriverInterface):
         sleep(0.1)
         self.setActivity(1)
         sleep(0.1)
-        
-        
 
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
@@ -41,7 +39,6 @@ class Driver(IPS120, DriverInterface):
         # # 1 - To Set Point
         # # 2 - To Zero
         # # 3 - Clamp (clamp the power supply output)
-
 
     def performClose(self):
         """Perform the close instrument connection operation"""
@@ -56,7 +53,7 @@ class Driver(IPS120, DriverInterface):
         if option == 'Magnetic Field':
             if value != -999:
                 # Set the magnetic field set point, in Tesla
-                print('value: ',value)
+                print('value: ', value)
                 self.target = value
                 self.setFieldSetpoint(self.target)
                 # Set the field to Set Point
@@ -72,7 +69,7 @@ class Driver(IPS120, DriverInterface):
     def performGetValue(self, option='0', magnification=0):
         """Perform the Get Value instrument operation"""
         return self.readField()
-    
+
     def experimentLinspacer(self, option, target, speed, increment):
         if int(speed) and increment == '0':
             time_unit = 0.1

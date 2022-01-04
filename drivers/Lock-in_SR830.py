@@ -1,4 +1,4 @@
-from libs.driver_interface import DriverInterface
+from lib.driver_interface import DriverInterface
 from pymeasure.instruments.srs.sr830 import SR830
 from time import sleep
 

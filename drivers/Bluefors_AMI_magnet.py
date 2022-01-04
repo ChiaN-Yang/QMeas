@@ -40,7 +40,7 @@ TODO:
 
 
 
-from libs.driver_interface import DriverInterface
+from lib.driver_interface import DriverInterface
 import pyvisa as visa
 from time import sleep
 import numpy as np

@@ -1,4 +1,4 @@
-from libs.driver_interface import DriverInterface
+from lib.driver_interface import DriverInterface
 from pymeasure.instruments.keithley import Keithley2400
 
 
@@ -47,7 +47,7 @@ class Driver(Keithley2400, DriverInterface):
         elif option == 'Voltage':
             value = self.voltage[0] * magnification
         return value
-    
+
     def local_switch(self):
         """ Disables remote mode and switch the system to local mode"""
         self.write(":SYSTEM:LOCAL")
