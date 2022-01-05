@@ -54,4 +54,4 @@ In vscode, it can be installed with pip
 ## Hint
 you can transfer .ui to .py by this command
 
-    pyuic5 -x visa_resource_manager.ui -o visa_resource_manager.py
+    pyuic5 -x main_window.ui -o main_window.py
