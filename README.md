@@ -45,6 +45,7 @@ Before run this program, you need to install package below:
 - Numpy
 - Labdrivers
 - NIDAQmx
+- QCoDes
 
 In vscode, it can be installed with pip
 
