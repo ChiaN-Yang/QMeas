@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
 import pyqtgraph as pg
 import pyqtgraph.exporters
-from ui.visa_resource_manager import Ui_MainWindow
+from ui.main_window import Ui_MainWindow
 from ui.control_option import Ui_Dialog
 from ui.read_option import Ui_Dialog as read_Ui_Dialog
 import sys
@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
         self.ui.actionQuit.triggered.connect(self.close)
 
         # Set Window Icon
-        self.setWindowIcon(QIcon('Qfort.png'))
+        self.setWindowIcon(QIcon('./ui/Qfort.png'))
 
         # Set Window style
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
