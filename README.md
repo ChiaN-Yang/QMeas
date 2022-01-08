@@ -1,5 +1,5 @@
 # QMeas
-A Data-Acquisition Program
+A Data-Acquisition Program for Instrument Control and Measurement Automation
 
 ## 摘要
 這是一套儀器控制和自動化測量軟體，所要控制的儀器包括稀釋冷凍機 (Dilution refrigerator)、磁場機、電源電壓量測設備等。軟體的主要功能為控制儀器輸出、預先安排儀器未來將輸出或讀取的物理量、將儀器的讀值進行實時作圖(real-time plot)。
