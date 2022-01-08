@@ -15,7 +15,7 @@ import numpy as np
 import os
 from datetime import datetime
 from lib.load_driver import load_drivers
-from lib.txtFunction import txtUpdate, txtMerger, txtDeleter
+from lib.txt_function import TxtFunction
 from lib.time_measurement import TimeMeasurement
 import qdarkstyle
 from time import sleep
@@ -515,6 +515,7 @@ class MainWindow(QMainWindow):
     def chooseDelete(self):
         item = self.tree.currentItem()
         sip.delete(item)
+        self.checkState()
 
     # =============================================================================
     # Page 3
@@ -611,6 +612,8 @@ class MainWindow(QMainWindow):
         # plotlines init
         self.createEmptyLines()
         self.lineDisplaySwitchCreat()
+        # txt start
+        self.txt = TxtFunction()
         # porcedure start
         self.thread = QThread()
         self.procedure = None
@@ -621,7 +624,7 @@ class MainWindow(QMainWindow):
                                 self.method, self.ins_label, self.target, self.speed, self.increment)
         self.thread.started.connect(self.procedure.startMeasure)
         self.procedure.finished.connect(self.thread.quit)
-        self.procedure.signal_txt.connect(txtUpdate)
+        self.procedure.signal_txt.connect(self.txt.txtUpdate)
         self.procedure.signal_axis.connect(self.axisUpdate)
         self.procedure.signal_plot.connect(self.plotUpdate)
         self.procedure.signal_lines.connect(self.saveLines)
@@ -866,11 +869,12 @@ class Procedure(QObject):
 
             elif level[0] and not level[1] and not level[2]:
                 self.oneLevelTree(level)
-
-        txtMerger(window.full_address, self.file_count,
-                  len(self.instruments_read)+1)
-        txtDeleter(self.file_count)
+                
         self.finished.emit()
+        window.txt.txtMerger(window.full_address, self.file_count,
+                             len(self.instruments_read)+1)
+        window.txt.txtDeleter(self.file_count)
+        
 
     def threeLevelsTree(self, level):
         for i in level[0]:  # i = [instrument,method,check,target,speed,increment]

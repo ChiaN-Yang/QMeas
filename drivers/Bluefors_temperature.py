@@ -26,8 +26,8 @@ class Driver(DriverInterface):
     def __init__(self, visa_address):
         # The logfiles are loaded from NAS address. Please adjust this part if
         # you are using another computer.
-        fridge_folder_path = "Z:\\BlueforsLog\\log-data\\192.168.0.116"
-        probe_folder_path = "Z:\\BlueforsLog\\log-data\\192.168.0.115"
+        fridge_folder_path = "E:\\DATA\\Bluefors_log\\192.168.0.116"
+        probe_folder_path = "E:\\DATA\\Bluefors_log\\192.168.0.115"
         if not os.path.isdir(fridge_folder_path) and os.path.isdir(probe_folder_path):
             print("Failed to find the file. Please check the file address.")
         else:

@@ -148,22 +148,21 @@ class BlueFors(Instrument):
         folder_name = date.today().strftime("%y-%m-%d")
         file_path = os.path.join(self.folder_path, folder_name, 'CH'+str(channel)+' T '+folder_name+'.log')
 
-        try:
-            df = pd.read_csv(file_path,
-                                delimiter = ',',
-                                names     = ['date', 'time', 'y'],
-                                header    = None)
-
-            # There is a space before the day
-            # df.index = pd.to_datetime(df['date']+'-'+df['time'], format=' %d-%m-%y-%H:%M:%S')
-
-            return df.iloc[-1]['y']
-        except (PermissionError, OSError) as err:
-            self.log.warn('Cannot access log file: {}. Returning np.nan instead of the temperature value.'.format(err))
-            return np.nan
-        except IndexError as err:
-            self.log.warn('Cannot parse log file: {}. Returning np.nan instead of the temperature value.'.format(err))
-            return np.nan
+        with open(file_path, 'rb') as f:
+            
+            try:  # catch OSError in case of a one line file 
+                f.seek(-2, os.SEEK_END)
+                while f.read(1) != b'\n':
+                    f.seek(-2, os.SEEK_CUR)
+                return f.readline().decode()[18:30]
+            except (PermissionError, OSError) as err:
+                self.log.warn('Cannot access log file: {}. Returning np.nan instead of the temperature value.'.format(err))
+                return np.nan
+            except IndexError as err:
+                self.log.warn('Cannot parse log file: {}. Returning np.nan instead of the temperature value.'.format(err))
+                return np.nan                    
+            except OSError:
+                f.seek(0)
 
 
     def get_pressure(self, channel: int) -> float:
