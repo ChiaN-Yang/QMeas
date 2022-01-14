@@ -1,29 +1,20 @@
 #!/usr/bin/env python
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QThread, pyqtSignal, Qt, QObject
+from PyQt5.QtCore import QThread, Qt
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
 import pyqtgraph as pg
-import pyqtgraph.exporters
-from ui.main_window import Ui_MainWindow
-from ui.control_option import Ui_Dialog
-from ui.read_option import Ui_Dialog as read_Ui_Dialog
+from ui import Ui_MainWindow, Control_Window, Read_Window
 import sys
 from PyQt5 import sip
 import pyvisa as visa
-import numpy as np
 import os
-from datetime import datetime
-from lib.load_driver import load_drivers
-from lib.txt_function import TxtFunction
-from lib.time_measurement import TimeMeasurement
+from utils import load_drivers, TxtFunction, Procedure
 import qdarkstyle
-from time import sleep
-import nidaqmx.system
-from PIL import ImageQt
+from nidaqmx.system import System
 import logging
 
-# logging.basicConfig(stream=sys.stderr, level=logging.INFO)   # debug mode
+# logging.basicConfig(format="%(message)s", level=logging.INFO)   # debug mode
 
 
 class MainWindow(QMainWindow):
@@ -166,7 +157,7 @@ class MainWindow(QMainWindow):
 
         # DAQ
         # only one daq is available now 20210916
-        system = nidaqmx.system.System.local()
+        system = System.local()
         for i, device in enumerate(system.devices):
             if i > 0:
                 self.ui.listWidget.addItem(device.name)
@@ -500,7 +491,6 @@ class MainWindow(QMainWindow):
         del(checklist[1])
         self.tree_num, self.leve_position, self.child_num, self.check, self.method, self.ins_label, self.target, self.speed, self.increment = checklist[
             0], checklist[1], checklist[2], checklist[3], checklist[4], checklist[5], checklist[6], checklist[7], checklist[8]
-        return checklist[0], checklist[1], checklist[2], checklist[3], checklist[4], checklist[5], checklist[6], checklist[7], checklist[8]
 
     def getIndexs(self, item):
         """ Returns Current top level item and child index.
@@ -604,6 +594,7 @@ class MainWindow(QMainWindow):
                     self.procedureGo()
 
     def procedureGo(self):
+        """"measure start"""
         # file name
         self.full_address = self.folder_name + '/' + self.name
         # save plot count
@@ -612,39 +603,48 @@ class MainWindow(QMainWindow):
         # plotlines init
         self.createEmptyLines()
         self.lineDisplaySwitchCreat()
-        # txt start
+        # Create a QThread object
+        self.exp_thread = QThread()
+        # Create a worker object
         self.txt = TxtFunction()
-        # porcedure start
-        self.thread = QThread()
         self.procedure = None
         self.procedure = Procedure(
-            self.instruments, self.instruments_read)
-        self.procedure.moveToThread(self.thread)
+            self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
+        # Move worker to the thread
+        self.txt.moveToThread(self.exp_thread)
+        self.procedure.moveToThread(self.exp_thread)
+        # porcedure start
         self.procedure.schedule(self.tree_num, self.child_num, self.leve_position, self.check,
                                 self.method, self.ins_label, self.target, self.speed, self.increment)
-        self.thread.started.connect(self.procedure.startMeasure)
-        self.procedure.finished.connect(self.thread.quit)
+        self.exp_thread.started.connect(self.procedure.startMeasure)
+        # Connect signals and slots
+        self.procedure.finished.connect(self.timeStop)
         self.procedure.signal_txt.connect(self.txt.txtUpdate)
         self.procedure.signal_axis.connect(self.axisUpdate)
         self.procedure.signal_plot.connect(self.plotUpdate)
         self.procedure.signal_lines.connect(self.saveLines)
         self.procedure.signal_progress.connect(self.setProgressBar)
         self.procedure.clear_progress.connect(self.clearProgressBar)
-        self.thread.start()
+        # Start the thread
+        self.exp_thread.start()
         # final resets
         self.ui.pushButton_5.setEnabled(False)
-        self.thread.finished.connect(
+        self.exp_thread.finished.connect(
             lambda: self.ui.pushButton_5.setEnabled(True))
 
-    def timeStop(self):
+    def timeStop(self, file_count):
+        """measure stop"""
         # time stop
         logging.info('measure stop')
         try:
             self.procedureStop()
-            self.thread.quit()
-            self.thread.wait()
+            self.exp_thread.quit()
+            self.exp_thread.wait()
             self.shutdownInstruments()
             self.procedure = None
+            self.txt.txtMerger(self.full_address, file_count,
+                               len(self.instruments_read)+1)
+            self.txt.txtDeleter(file_count)
         except AttributeError:
             pass
 
@@ -747,274 +747,22 @@ class MainWindow(QMainWindow):
             self.switch_list[col - 1] = self.switch_list[col - 1]*(-1)
 
 
-# =============================================================================
-# Page 2 subwindow Control option panel
-# =============================================================================
 class ControlPanel(QDialog):
+    """Page 2 subwindow Control option panel"""
+
     def __init__(self):
         super(ControlPanel, self).__init__()
-        self.sub_ui = Ui_Dialog()
+        self.sub_ui = Control_Window()
         self.sub_ui.setupUi(self)
 
 
 class ReadlPanel(QDialog):
+    """Page 2 subwindow Read option panel"""
+
     def __init__(self):
         super(ReadlPanel, self).__init__()
-        self.sub_1_ui = read_Ui_Dialog()
+        self.sub_1_ui = Read_Window()
         self.sub_1_ui.setupUi(self)
-
-
-class Procedure(QObject):
-    """this class is used to perform experiments"""
-    finished = pyqtSignal()
-    signal_txt = pyqtSignal(int, list, list, list, list)
-    signal_plot = pyqtSignal(int, list, list)
-    signal_axis = pyqtSignal(list, list)
-    signal_lines = pyqtSignal(int, list, list)
-    signal_progress = pyqtSignal()
-    clear_progress = pyqtSignal(int)
-
-    def __init__(self, instruments, instruments_read):
-        super().__init__()
-        self.instruments = instruments
-        self.instruments_read = instruments_read
-        self.options_read = window.options_read
-        self.magnification = window.instruments_magnification
-        self.control_sequence = []
-        # control variable
-        self.stop_running = False
-        self.quit_running = False
-        self.quit_sweep = False
-        self.quit_loop = False
-        # open instrument
-        self.openInstruments()
-
-    def openInstruments(self):
-        """open instruments"""
-        for instrument in self.instruments:
-            instrument.performOpen()
-
-    def schedule(self, tree_num, child_num, leve_position, check, method, ins_label, target, speed, increment):
-        """ return [tree1, tree2, tree3]
-            tree view
-            [ [child_num, leve_position, instrument, option, check, target, speed, increment]
-              [child_num, leve_position, instrument, option, check, target, speed, increment]
-              [child_num, leve_position, instrument, option, check, target, speed, increment] ]
-        """
-        logging.info('\ntree_num', tree_num)
-        logging.info('\nchild_num', child_num)
-        logging.info('\nleve_position', leve_position)
-        logging.info('\ncheck', check)
-        logging.info('\nmethod', method)
-        logging.info('\nins_label', ins_label)
-        logging.info('\ntarget', target)
-        logging.info('\nspeed', speed)
-        logging.info('\nincredment', increment)
-
-        # Know how many trees there are
-        tree_total = max(tree_num) + 1
-
-        # Create empty list to store tree info
-        # [[], []]
-        info_list = []
-        for _ in range(tree_total):
-            info_list.append([])
-
-        for n, tree, label in zip(range(len(tree_num)), tree_num, ins_label):
-            if label != '-1':
-                info_list[tree].append([child_num[n], leve_position[n], self.instruments[int(
-                    label)], method[n], check[n], target[n], speed[n], increment[n]])
-            else:
-                timeMeasure = TimeMeasurement(target[n])
-                info_list[tree].append(
-                    [child_num[n], leve_position[n], timeMeasure, method[n], check[n], target[n], speed[n], increment[n]])
-
-        for i in info_list:
-            self.buildTree(i)
-
-    def buildTree(self, info_tree):
-        """put [instruments, option] into [level_0, level_1, level_2]"""
-        # info_tree: [child_num, leve_position, instrument, method, check, target, speed, increment]
-        level = [[], [], []]
-        # level = [level0, level1, level2]  level0 = [[instrument,method,check,target,speed,increment], [instrument,method,check,target,speed,increment]...]
-        level_count = 0
-        # put instrument in level
-        for n, info in enumerate(info_tree):
-            if info[0] == -1:
-                continue
-            level[level_count].append(
-                [info_tree[n][2], info_tree[n][3], info_tree[n][4], info_tree[n][5], info_tree[n][6], info_tree[n][7]])
-            level_count += 1
-
-            if info[0] != 0:
-                for i in range(info[0]):
-                    level[level_count].append([info_tree[n+1+i][2], info_tree[n+1+i][3], info_tree[n+1+i]
-                                              [4], info_tree[n+1+i][5], info_tree[n+1+i][6], info_tree[n+1+i][7]])
-
-        self.control_sequence.append(level)
-
-    def startMeasure(self):
-        self.file_count = 0
-        self.line_count = 0
-
-        for level in self.control_sequence:
-            if self.quit_running:
-                return
-
-            if level[0] and level[1] and level[2]:
-                self.threeLevelsTree(level)
-
-            elif level[0] and level[1] and not level[2]:
-                self.twoLevelsTree(level)
-
-            elif level[0] and not level[1] and not level[2]:
-                self.oneLevelTree(level)
-                
-        self.finished.emit()
-        window.txt.txtMerger(window.full_address, self.file_count,
-                             len(self.instruments_read)+1)
-        window.txt.txtDeleter(self.file_count)
-        
-
-    def threeLevelsTree(self, level):
-        for i in level[0]:  # i = [instrument,method,check,target,speed,increment]
-            for value_i in i[0].experimentLinspacer(i[1], i[3], i[4], i[5]):
-                self.performRecord(i, value_i, False)
-
-                for j in level[1]:
-                    for value_j in j[0].experimentLinspacer(j[1], j[3], j[4], j[5]):
-                        self.performRecord(j, value_j, False)
-
-                        for k in level[1]:
-                            self.createEmptyDataSet()
-                            linspacer = k[0].experimentLinspacer(
-                                k[1], k[3], k[4], k[5])
-                            self.clear_progress.emit(len(linspacer))
-                            for value_k in linspacer:
-                                self.performRecord(k, value_k, True)
-                                if self.quit_sweep:
-                                    self.quit_sweep = False
-                                    break
-                                if self.quit_loop:
-                                    self.quit_loop = False
-                                    return
-
-                            self.signal_lines.emit(
-                                self.line_count, self.x, self.y)
-                            self.line_count += 1
-                            if int(k[2]):
-                                self.file_count += 1
-
-    def twoLevelsTree(self, level):
-        for i in level[0]:
-            for value_i in i[0].experimentLinspacer(i[1], i[3], i[4], i[5]):
-                self.performRecord(i, value_i)
-
-                for j in level[1]:
-                    self.createEmptyDataSet()
-                    linspacer = j[0].experimentLinspacer(
-                        j[1], j[3], j[4], j[5])
-                    self.clear_progress.emit(len(linspacer))
-                    for value_j in linspacer:
-                        self.performRecord(j, value_j, True)
-                        if self.quit_sweep:
-                            self.quit_sweep = False
-                            break
-                        if self.quit_loop:
-                            self.quit_loop = False
-                            return
-
-                    self.signal_lines.emit(self.line_count, self.x, self.y)
-                    self.line_count += 1
-                    if int(j[2]):
-                        self.file_count += 1
-
-    def oneLevelTree(self, level):
-        for i in level[0]:
-            self.createEmptyDataSet()
-            linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
-            logging.info('linespacer: ', linspacer)
-            self.clear_progress.emit(len(linspacer))
-            for value_i in linspacer:
-                logging.info(value_i, 'value_i')
-                self.performRecord(i, value_i, True)
-                if self.quit_sweep:
-                    self.quit_sweep = False
-                    break
-                if self.quit_loop:
-                    self.quit_loop = False
-                    return
-
-            self.signal_lines.emit(self.line_count, self.x, self.y)
-            self.line_count += 1
-            if int(i[2]):
-                self.file_count += 1
-
-    def performRecord(self, instrument_info, value, bottom_level=False):
-        while self.stop_running:
-            QThread.sleep(1)
-
-        # instrument_info = instrument method check target speed increment
-        if instrument_info[5] != '0' and instrument_info[5] != '-':
-            for value_increment in instrument_info[0].experimentLinspacer(instrument_info[1], value, instrument_info[4], '0'):
-                instrument_info[0].performSetValue(
-                    instrument_info[1], value_increment)
-                sleep(0.1)
-        set_value = instrument_info[0].performSetValue(
-            instrument_info[1], value)
-        sleep(0.1)
-        x_show = [set_value, instrument_info[0].instrumentName(),
-                  instrument_info[1]]
-        y_show = []
-        name_txt = []
-        method_txt = []
-
-        name_txt.append(instrument_info[0].instrumentName())
-        method_txt.append(instrument_info[1])
-
-        if bottom_level:
-            self.x.append(set_value)
-
-        for n, instrument_read in enumerate(self.instruments_read):
-            read_value = instrument_read.performGetValue(
-                self.options_read[n], self.magnification[n])
-            y_show.append(read_value)
-            name_txt.append(instrument_read.instrumentName())
-            method_txt.append(self.options_read[n])
-            if bottom_level:
-                self.y[n].append(read_value)
-                self.signal_plot.emit(n, self.x, self.y[n])
-
-        self.signal_axis.emit(x_show, y_show)
-        if int(instrument_info[2]):
-            self.signal_txt.emit(self.file_count, method_txt,
-                                 name_txt, x_show, y_show)
-        self.signal_progress.emit()
-
-    def resumePauseMeasure(self):
-        if self.stop_running == False:
-            self.stop_running = True
-        else:
-            self.stop_running = False
-
-    def quitSweepMeasure(self):
-        self.quit_sweep = True
-
-    def stopMeasure(self):
-        self.quit_running = True
-        self.quit_loop = True
-
-    def quitLoopMeasure(self):
-        self.quit_loop = True
-
-    def createEmptyDataSet(self):
-        x = []
-        y = []
-        read_len = len(self.instruments_read)
-        for _ in range(read_len):
-            y.append([])
-        self.x = x
-        self.y = y
 
 
 if __name__ == '__main__':

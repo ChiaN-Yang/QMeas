@@ -1,5 +1,5 @@
-from lib.driver_interface import DriverInterface
-from modpack.mercuryips_GPIB import MercuryIps
+from utils import DriverInterface
+from modpack import MercuryIps
 
 
 class Driver(MercuryIps, DriverInterface):

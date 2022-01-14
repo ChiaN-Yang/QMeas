@@ -473,7 +473,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "CryoMeas"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "QMeas"))
         self.label_3.setText(_translate("MainWindow", "Connected  Instrument"))
         self.pushButton.setText(_translate("MainWindow", "Refresh"))
         self.label_2.setText(_translate("MainWindow", "Define the intrument type"))

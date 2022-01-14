@@ -2,7 +2,7 @@
 import pkgutil
 import importlib
 import logging
-from lib.driver_interface import DriverInterface
+from utils import DriverInterface
 import sys
 
 

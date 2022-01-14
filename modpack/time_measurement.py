@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class TimeMeasurement:
     def __init__(self, time):
         self.time = int(time)
@@ -22,12 +23,13 @@ class TimeMeasurement:
         pass
 
     def experimentLinspacer(self, option, target, speed, increment):
-        return np.arange(0, self.time, 0.1)
+        time = np.arange(0, self.time, 0.1)
+        return np.round(time, 2)
 
     def setProperty(self, visa_address, instrument_name, instrument_type):
         self.instrument_name = instrument_name
         self.instrument_type = instrument_type
         self.instrument_VISA_add = visa_address
-        
+
     def instrumentName(self):
         return self.instrument_name

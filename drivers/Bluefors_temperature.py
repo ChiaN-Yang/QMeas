@@ -10,8 +10,8 @@ Progress:
 """
 
 
-from lib.driver_interface import DriverInterface
-from modpack.bluefors import BlueFors
+from utils import DriverInterface
+from modpack import BlueFors
 import os
 
 

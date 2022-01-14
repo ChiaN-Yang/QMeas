@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
+# Bluefors_AMI_magnet
 """
-Created on Tue May  4 20:19:18 2021
-
 @author: Tsung-Lin
 
 Progress:
@@ -9,7 +8,6 @@ Progress:
         
         TCPIP0::192.168.50.61::7180::SOCKET
     
-
 Issues:
     1. VISA address
     the address is not shown in the visa list. the user has to
@@ -25,11 +23,9 @@ TODO:
     1. Try to solve the issues
     2. Build up a Class for the Magnet
     3. Test the stability of the script
-"""
 
-"""
+
 2021.10.16 
-
 Progress:
     Build the class for the Magnet
     
@@ -38,12 +34,12 @@ TODO:
 """
 
 
-
-
-from lib.driver_interface import DriverInterface
+from utils import DriverInterface
 import pyvisa as visa
 from time import sleep
 import numpy as np
+
+
 class Driver(DriverInterface):
     METHOD = ['Magnetic Field']
 

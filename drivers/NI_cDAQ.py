@@ -1,4 +1,4 @@
-from lib.driver_interface import DriverInterface
+from utils import DriverInterface
 import nidaqmx
 
 

@@ -1,5 +1,5 @@
-from lib.driver_interface import DriverInterface
-from modpack.ips120 import IPS120
+from utils import DriverInterface
+from modpack import IPS120
 from time import sleep
 import numpy as np
 

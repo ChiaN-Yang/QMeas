@@ -1,4 +1,4 @@
-from lib.driver_interface import DriverInterface
+from utils import DriverInterface
 from qcodes.instrument_drivers.stanford_research.SR860 import SR860
 from time import sleep
 
