@@ -22,6 +22,7 @@ class MainWindow(QMainWindow):
     name_count = 1
     row_count = 1
     read_row_count = 1
+    save_plot_count = 0
     click = 1
     time_unit = 0.1  # 0.1s
 
@@ -32,11 +33,13 @@ class MainWindow(QMainWindow):
     options_control = []
     options_read = []
 
-    # save plot count
-    save_plot_count = 0
     # PlotItem lines
     data_line = []
     saved_line = []
+
+    # measurement & database module
+    measurement = MeasurementProcess([], [], [], [])
+    database = TxtFunction()
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -111,9 +114,11 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_13.clicked.connect(self.displayCursorCrossHair)
         self.ui.pushButton_13.clicked.connect(self.autoPlotRange)
         self.ui.pushButton_11.clicked.connect(self.procedureStop)
-        self.ui.pushButton_15.clicked.connect(measurement.resumePauseMeasure)
-        self.ui.pushButton_17.clicked.connect(measurement.quitLoopMeasure)
-        self.ui.pushButton_14.clicked.connect(measurement.quitSweepMeasure)
+        self.ui.pushButton_15.clicked.connect(
+            self.measurement.resumePauseMeasure)
+        self.ui.pushButton_17.clicked.connect(self.measurement.quitLoopMeasure)
+        self.ui.pushButton_14.clicked.connect(
+            self.measurement.quitSweepMeasure)
         self.ui.pushButton_16.clicked.connect(self.plot_save)
 
         # Tables
@@ -604,24 +609,24 @@ class MainWindow(QMainWindow):
         # Create a QThread object
         self.exp_thread = QThread()
         # Create a worker object
-        database = TxtFunction()
-        measurement = MeasurementProcess(
+        self.measurement = None
+        self.measurement = MeasurementProcess(
             self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
         # Move worker to the thread
-        database.moveToThread(self.exp_thread)
-        measurement.moveToThread(self.exp_thread)
+        self.database.moveToThread(self.exp_thread)
+        self.measurement.moveToThread(self.exp_thread)
         # porcedure start
-        measurement.schedule(self.tree_num, self.child_num, self.leve_position, self.check,
-                             self.method, self.ins_label, self.target, self.speed, self.increment)
-        self.exp_thread.started.connect(measurement.startMeasure)
+        self.measurement.schedule(self.tree_num, self.child_num, self.leve_position, self.check,
+                                  self.method, self.ins_label, self.target, self.speed, self.increment)
+        self.exp_thread.started.connect(self.measurement.startMeasure)
         # Connect signals and slots
-        measurement.finished.connect(self.timeStop)
-        measurement.signal_txt.connect(database.txtUpdate)
-        measurement.signal_axis.connect(self.axisUpdate)
-        measurement.signal_plot.connect(self.plotUpdate)
-        measurement.signal_lines.connect(self.saveLines)
-        measurement.signal_progress.connect(self.setProgressBar)
-        measurement.clear_progress.connect(self.clearProgressBar)
+        self.measurement.finished.connect(self.timeStop)
+        self.measurement.signal_txt.connect(self.database.txtUpdate)
+        self.measurement.signal_axis.connect(self.axisUpdate)
+        self.measurement.signal_plot.connect(self.plotUpdate)
+        self.measurement.signal_lines.connect(self.saveLines)
+        self.measurement.signal_progress.connect(self.setProgressBar)
+        self.measurement.clear_progress.connect(self.clearProgressBar)
         # Start the thread
         self.exp_thread.start()
         # final resets
@@ -638,15 +643,15 @@ class MainWindow(QMainWindow):
             self.exp_thread.quit()
             self.exp_thread.wait()
             self.shutdownInstruments()
-            measurement = None
-            database.txtMerger(self.full_address, file_count,
-                               len(self.instruments_read)+1)
-            database.txtDeleter(file_count)
+            self.measurement = None
+            self.database.txtMerger(self.full_address, file_count,
+                                    len(self.instruments_read)+1)
+            self.database.txtDeleter(file_count)
         except AttributeError:
             pass
 
     def procedureStop(self):
-        measurement.stopMeasure()
+        self.measurement.stopMeasure()
         self.ui.pushButton_5.setEnabled(True)
 
     def shutdownInstruments(self):
@@ -755,8 +760,6 @@ class ReadlPanel(QDialog):
 
 if __name__ == '__main__':
     app = QApplication([])
-    measurement = MeasurementProcess([], [], [], [])
-    database = TxtFunction()
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
