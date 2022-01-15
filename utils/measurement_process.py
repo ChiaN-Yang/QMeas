@@ -4,7 +4,7 @@ from modpack import TimeMeasurement
 from time import sleep
 
 
-class Procedure(QObject):
+class MeasurementProcess(QObject):
     """this class is used to perform experiments"""
     finished = pyqtSignal(int)
     signal_txt = pyqtSignal(int, list, list, list, list)
@@ -26,8 +26,6 @@ class Procedure(QObject):
         self.quit_running = False
         self.quit_sweep = False
         self.quit_loop = False
-        # open instrument
-        self.openInstruments()
 
     def openInstruments(self):
         """open instruments"""
@@ -96,6 +94,9 @@ class Procedure(QObject):
     def startMeasure(self):
         self.file_count = 0
         self.line_count = 0
+
+        # open instrument
+        self.openInstruments()
 
         for level in self.control_sequence:
             if self.quit_running:

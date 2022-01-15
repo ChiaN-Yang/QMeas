@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QThread, Qt
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, \
-    QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
 import pyqtgraph as pg
 from ui import Ui_MainWindow, Control_Window, Read_Window
 import sys
 from PyQt5 import sip
 import pyvisa as visa
 import os
-from utils import load_drivers, TxtFunction, Procedure
+from utils import load_drivers, TxtFunction, MeasurementProcess
 import qdarkstyle
 from nidaqmx.system import System
 import logging
@@ -112,9 +111,9 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_13.clicked.connect(self.displayCursorCrossHair)
         self.ui.pushButton_13.clicked.connect(self.autoPlotRange)
         self.ui.pushButton_11.clicked.connect(self.procedureStop)
-        self.ui.pushButton_15.clicked.connect(self.procedureResumePause)
-        self.ui.pushButton_17.clicked.connect(self.procedureQuitLoop)
-        self.ui.pushButton_14.clicked.connect(self.procedureQuitSweep)
+        self.ui.pushButton_15.clicked.connect(measurement.resumePauseMeasure)
+        self.ui.pushButton_17.clicked.connect(measurement.quitLoopMeasure)
+        self.ui.pushButton_14.clicked.connect(measurement.quitSweepMeasure)
         self.ui.pushButton_16.clicked.connect(self.plot_save)
 
         # Tables
@@ -155,8 +154,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clear()
         self.ui.listWidget.addItems(self.pyvisa_list)
 
-        # DAQ
-        # only one daq is available now 20210916
+        # DAQ TODO:only one daq is available now 20210916
         system = System.local()
         for i, device in enumerate(system.devices):
             if i > 0:
@@ -606,25 +604,24 @@ class MainWindow(QMainWindow):
         # Create a QThread object
         self.exp_thread = QThread()
         # Create a worker object
-        self.txt = TxtFunction()
-        self.procedure = None
-        self.procedure = Procedure(
+        database = TxtFunction()
+        measurement = MeasurementProcess(
             self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
         # Move worker to the thread
-        self.txt.moveToThread(self.exp_thread)
-        self.procedure.moveToThread(self.exp_thread)
+        database.moveToThread(self.exp_thread)
+        measurement.moveToThread(self.exp_thread)
         # porcedure start
-        self.procedure.schedule(self.tree_num, self.child_num, self.leve_position, self.check,
-                                self.method, self.ins_label, self.target, self.speed, self.increment)
-        self.exp_thread.started.connect(self.procedure.startMeasure)
+        measurement.schedule(self.tree_num, self.child_num, self.leve_position, self.check,
+                             self.method, self.ins_label, self.target, self.speed, self.increment)
+        self.exp_thread.started.connect(measurement.startMeasure)
         # Connect signals and slots
-        self.procedure.finished.connect(self.timeStop)
-        self.procedure.signal_txt.connect(self.txt.txtUpdate)
-        self.procedure.signal_axis.connect(self.axisUpdate)
-        self.procedure.signal_plot.connect(self.plotUpdate)
-        self.procedure.signal_lines.connect(self.saveLines)
-        self.procedure.signal_progress.connect(self.setProgressBar)
-        self.procedure.clear_progress.connect(self.clearProgressBar)
+        measurement.finished.connect(self.timeStop)
+        measurement.signal_txt.connect(database.txtUpdate)
+        measurement.signal_axis.connect(self.axisUpdate)
+        measurement.signal_plot.connect(self.plotUpdate)
+        measurement.signal_lines.connect(self.saveLines)
+        measurement.signal_progress.connect(self.setProgressBar)
+        measurement.clear_progress.connect(self.clearProgressBar)
         # Start the thread
         self.exp_thread.start()
         # final resets
@@ -641,25 +638,16 @@ class MainWindow(QMainWindow):
             self.exp_thread.quit()
             self.exp_thread.wait()
             self.shutdownInstruments()
-            self.procedure = None
-            self.txt.txtMerger(self.full_address, file_count,
+            measurement = None
+            database.txtMerger(self.full_address, file_count,
                                len(self.instruments_read)+1)
-            self.txt.txtDeleter(file_count)
+            database.txtDeleter(file_count)
         except AttributeError:
             pass
 
     def procedureStop(self):
-        self.procedure.stopMeasure()
+        measurement.stopMeasure()
         self.ui.pushButton_5.setEnabled(True)
-
-    def procedureResumePause(self):
-        self.procedure.resumePauseMeasure()
-
-    def procedureQuitLoop(self):
-        self.procedure.quitLoopMeasure()
-
-    def procedureQuitSweep(self):
-        self.procedure.quitSweepMeasure()
 
     def shutdownInstruments(self):
         for i in self.instruments:
@@ -767,6 +755,8 @@ class ReadlPanel(QDialog):
 
 if __name__ == '__main__':
     app = QApplication([])
+    measurement = MeasurementProcess([], [], [], [])
+    database = TxtFunction()
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
