@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'visa_rm_v4.ui'
+# Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.12
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -173,8 +174,7 @@ class Ui_MainWindow(object):
         self.tableWidget_2.setItem(0, 0, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_2.setItem(0, 1, item)
-        self.tableWidget_2.horizontalHeader().setVisible(False)
-        self.tableWidget_2.horizontalHeader().setCascadingSectionResizes(False)
+        self.tableWidget_2.horizontalHeader().setCascadingSectionResizes(True)
         self.tableWidget_2.horizontalHeader().setDefaultSectionSize(80)
         self.tableWidget_2.horizontalHeader().setHighlightSections(False)
         self.tableWidget_2.horizontalHeader().setMinimumSectionSize(125)
@@ -235,7 +235,6 @@ class Ui_MainWindow(object):
         self.tableWidget_4.setItem(0, 0, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_4.setItem(0, 1, item)
-        self.tableWidget_4.horizontalHeader().setVisible(False)
         self.tableWidget_4.horizontalHeader().setCascadingSectionResizes(False)
         self.tableWidget_4.horizontalHeader().setDefaultSectionSize(80)
         self.tableWidget_4.horizontalHeader().setHighlightSections(False)
@@ -468,7 +467,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuQuit.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -580,8 +579,6 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Graph"))
         self.menuQuit.setTitle(_translate("MainWindow", "Options"))
         self.actionQuit.setText(_translate("MainWindow", "Quit"))
-
-
 from pyqtgraph import PlotWidget
 
 
