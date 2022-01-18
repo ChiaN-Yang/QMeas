@@ -8,9 +8,9 @@ class MeasurementProcess(QObject):
     """this class is used to perform experiments"""
     finished = pyqtSignal(int)
     signal_txt = pyqtSignal(int, list, list, list, list)
-    signal_plot = pyqtSignal(int, list, list)
+    signal_plot = pyqtSignal(int, float, float)
     signal_axis = pyqtSignal(list, list)
-    signal_lines = pyqtSignal(int, list, list)
+    signal_lines = pyqtSignal(int)
     signal_progress = pyqtSignal()
     clear_progress = pyqtSignal(int)
 
@@ -123,9 +123,7 @@ class MeasurementProcess(QObject):
                         self.performRecord(j, value_j, False)
 
                         for k in level[1]:
-                            self.createEmptyDataSet()
-                            linspacer = k[0].experimentLinspacer(
-                                k[1], k[3], k[4], k[5])
+                            linspacer = k[0].experimentLinspacer(k[1], k[3], k[4], k[5])
                             self.clear_progress.emit(len(linspacer))
                             for value_k in linspacer:
                                 self.performRecord(k, value_k, True)
@@ -136,8 +134,7 @@ class MeasurementProcess(QObject):
                                     self.quit_loop = False
                                     return
 
-                            self.signal_lines.emit(
-                                self.line_count, self.x, self.y)
+                            self.signal_lines.emit(self.line_count)
                             self.line_count += 1
                             if int(k[2]):
                                 self.file_count += 1
@@ -148,9 +145,7 @@ class MeasurementProcess(QObject):
                 self.performRecord(i, value_i)
 
                 for j in level[1]:
-                    self.createEmptyDataSet()
-                    linspacer = j[0].experimentLinspacer(
-                        j[1], j[3], j[4], j[5])
+                    linspacer = j[0].experimentLinspacer(j[1], j[3], j[4], j[5])
                     self.clear_progress.emit(len(linspacer))
                     for value_j in linspacer:
                         self.performRecord(j, value_j, True)
@@ -161,14 +156,13 @@ class MeasurementProcess(QObject):
                             self.quit_loop = False
                             return
 
-                    self.signal_lines.emit(self.line_count, self.x, self.y)
+                    self.signal_lines.emit(self.line_count)
                     self.line_count += 1
                     if int(j[2]):
                         self.file_count += 1
 
     def oneLevelTree(self, level):
         for i in level[0]:
-            self.createEmptyDataSet()
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
             logging.info('linespacer: ', linspacer)
             self.clear_progress.emit(len(linspacer))
@@ -182,7 +176,7 @@ class MeasurementProcess(QObject):
                     self.quit_loop = False
                     return
 
-            self.signal_lines.emit(self.line_count, self.x, self.y)
+            self.signal_lines.emit(self.line_count)
             self.line_count += 1
             if int(i[2]):
                 self.file_count += 1
@@ -194,11 +188,9 @@ class MeasurementProcess(QObject):
         # instrument_info = instrument method check target speed increment
         if instrument_info[5] != '0' and instrument_info[5] != '-':
             for value_increment in instrument_info[0].experimentLinspacer(instrument_info[1], value, instrument_info[4], '0'):
-                instrument_info[0].performSetValue(
-                    instrument_info[1], value_increment)
+                instrument_info[0].performSetValue(instrument_info[1], value_increment)
                 sleep(0.1)
-        set_value = instrument_info[0].performSetValue(
-            instrument_info[1], value)
+        set_value = instrument_info[0].performSetValue(instrument_info[1], value)
         sleep(0.1)
         x_show = [set_value, instrument_info[0].instrumentName(),
                   instrument_info[1]]
@@ -209,23 +201,17 @@ class MeasurementProcess(QObject):
         name_txt.append(instrument_info[0].instrumentName())
         method_txt.append(instrument_info[1])
 
-        if bottom_level:
-            self.x.append(set_value)
-
         for n, instrument_read in enumerate(self.instruments_read):
-            read_value = instrument_read.performGetValue(
-                self.options_read[n], self.magnification[n])
+            read_value = instrument_read.performGetValue(self.options_read[n], self.magnification[n])
             y_show.append(read_value)
             name_txt.append(instrument_read.instrumentName())
             method_txt.append(self.options_read[n])
             if bottom_level:
-                self.y[n].append(read_value)
-                self.signal_plot.emit(n, self.x, self.y[n])
+                self.signal_plot.emit(n, set_value, y_show[n])
 
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):
-            self.signal_txt.emit(self.file_count, method_txt,
-                                 name_txt, x_show, y_show)
+            self.signal_txt.emit(self.file_count, method_txt, name_txt, x_show, y_show)
         self.signal_progress.emit()
 
     def resumePauseMeasure(self):
@@ -243,12 +229,3 @@ class MeasurementProcess(QObject):
 
     def quitLoopMeasure(self):
         self.quit_loop = True
-
-    def createEmptyDataSet(self):
-        x = []
-        y = []
-        read_len = len(self.instruments_read)
-        for _ in range(read_len):
-            y.append([])
-        self.x = x
-        self.y = y

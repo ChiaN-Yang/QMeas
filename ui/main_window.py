@@ -68,7 +68,6 @@ class Ui_MainWindow(object):
         self.tableWidget.setItem(0, 1, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setItem(0, 2, item)
-        self.tableWidget.horizontalHeader().setVisible(False)
         self.tableWidget.horizontalHeader().setCascadingSectionResizes(False)
         self.tableWidget.horizontalHeader().setDefaultSectionSize(225)
         self.tableWidget.horizontalHeader().setHighlightSections(False)
@@ -467,7 +466,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuQuit.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

@@ -1,32 +1,26 @@
 from utils import DriverInterface
 from modpack import IPS120
+from qcodes_contrib_drivers.drivers.Oxford.IPS120 import OxfordInstruments_IPS120
 from time import sleep
 import numpy as np
 
 
-class Driver(IPS120, DriverInterface):
+class Driver(OxfordInstruments_IPS120, DriverInterface):
     METHOD = ['Magnetic Field']
 
     def __init__(self, visa_address):
-        super().__init__(visa_address)
-
-        self.setControl(3)
-        sleep(0.1)
-        # Set the LOCAL / REMOTE control state of the IPS 120
-        # 0 - Local & Locked (default state)
-        # 1 - Remote & Locked
-        # 2 - Local & Unlocked
-        # 3 - Remote & Unlocked
-        self.setHeater(1)
+        super().__init__('IPS120',visa_address,True)
+        
+        self.switch_heater(1)
         sleep(0.1)
         # Set the switch heater activation state
         # 0 - Heater Off              (close switch)
         # 1 - Heater On if PSU=Magnet (open switch)
         # 2 - Heater On, no checks    (open switch)
         init_value = self.performGetValue()
-        self.setFieldSetpoint(init_value)
+        self.field_setpoint(init_value)
         sleep(0.1)
-        self.setActivity(1)
+        self.activity(1)
         sleep(0.1)
 
     def performOpen(self):
@@ -44,9 +38,10 @@ class Driver(IPS120, DriverInterface):
         """Perform the close instrument connection operation"""
         # Set the field to zero
         # self.setActivity(2)
-        self.setControl(2)
+        self.local()
         sleep(0.1)
-        self.shutDown()
+        self.close_all()
+        sleep(0.1)
 
     def performSetValue(self, option, value, sweepRate=0.3):
         """Perform the Set Value instrument operation"""
@@ -55,7 +50,7 @@ class Driver(IPS120, DriverInterface):
                 # Set the magnetic field set point, in Tesla
                 print('value: ', value)
                 self.target = value
-                self.setFieldSetpoint(self.target)
+                self.field_setpoint(self.target)
                 # Set the field to Set Point
                 # print('setActivity')
                 # self.setActivity(1)
@@ -63,12 +58,12 @@ class Driver(IPS120, DriverInterface):
                 sleep(0.1)
                 now_value = self.performGetValue()
             else:
-                now_value = self.readField()
+                now_value = self.field()
                 print('now_value', now_value, 'self.target', self.target)
 
     def performGetValue(self, option='0', magnification=0):
         """Perform the Get Value instrument operation"""
-        return self.readField()
+        return self.field()
 
     def experimentLinspacer(self, option, target, speed, increment):
         if int(speed) and increment == '0':
@@ -92,4 +87,4 @@ class Driver(IPS120, DriverInterface):
 
 
 if __name__ == '__main__':
-    pass
+    mag = Driver("GPIB::25")

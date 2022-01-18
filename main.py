@@ -12,6 +12,7 @@ from utils import load_drivers, TxtFunction, MeasurementProcess
 import qdarkstyle
 from nidaqmx.system import System
 import logging
+import numpy as np
 
 # logging.basicConfig(format="%(message)s", level=logging.INFO)   # debug mode
 
@@ -36,6 +37,8 @@ class MainWindow(QMainWindow):
     # PlotItem lines
     data_line = []
     saved_line = []
+    x_data = []
+    y_data = []
 
     # measurement & database module
     measurement = MeasurementProcess([], [], [], [])
@@ -70,24 +73,16 @@ class MainWindow(QMainWindow):
         # Buttons
         self.ui.pushButton_7.clicked.connect(self.readPanelShow)
 
-        self.read_panel.sub_1_ui.pushButton_5.clicked.connect(
-            self.readConfirm)
-        self.read_panel.sub_1_ui.pushButton_5.clicked.connect(
-            self.read_panel.close)
-        self.read_panel.sub_1_ui.pushButton_6.clicked.connect(
-            self.read_panel.close)
+        self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.readConfirm)
+        self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.read_panel.close)
+        self.read_panel.ctr_ui.pushButton_6.clicked.connect(self.read_panel.close)
 
         self.ui.pushButton_3.clicked.connect(self.readPanelShow)
-        self.control_panel.sub_ui.pushButton_9.clicked.connect(
-            self.addLevel)
-        self.control_panel.sub_ui.pushButton_9.clicked.connect(
-            self.control_panel.close)
-        self.control_panel.sub_ui.pushButton_8.clicked.connect(
-            self.chooseAddChild)
-        self.control_panel.sub_ui.pushButton_8.clicked.connect(
-            self.control_panel.close)
-        self.control_panel.sub_ui.pushButton_6.clicked.connect(
-            self.control_panel.close)
+        self.control_panel.read_ui.pushButton_9.clicked.connect(self.addLevel)
+        self.control_panel.read_ui.pushButton_9.clicked.connect(self.control_panel.close)
+        self.control_panel.read_ui.pushButton_8.clicked.connect(self.chooseAddChild)
+        self.control_panel.read_ui.pushButton_8.clicked.connect(self.control_panel.close)
+        self.control_panel.read_ui.pushButton_6.clicked.connect(self.control_panel.close)
 
         self.ui.pushButton_8.clicked.connect(self.deleteReadRow)
         self.ui.pushButton_9.clicked.connect(self.chooseDelete)
@@ -99,8 +94,7 @@ class MainWindow(QMainWindow):
         self.cwd = os.getcwd()
 
         # check box
-        self.control_panel.sub_ui.checkBox.stateChanged.connect(
-            self.checkFunctionIncrement)
+        self.control_panel.read_ui.checkBox.stateChanged.connect(self.checkFunctionIncrement)
 
         # Tables
         self.ui.tableWidget_2.cellClicked.connect(self.showMethod)
@@ -201,17 +195,13 @@ class MainWindow(QMainWindow):
                     instrument_name = f'{instrument_type}_{self.name_count}'
                     self.name_count += 1
 
-                    instrument = self.driver_list[instrument_type](
-                        visa_address)
-                    instrument.setProperty(
-                        visa_address, instrument_name, instrument_type)
+                    instrument = self.driver_list[instrument_type](visa_address)
+                    instrument.setProperty(visa_address, instrument_name, instrument_type)
                     self.instruments.append(instrument)
 
                     # TODO: add some condition to check if Connection is successful
-                    self.pageOneInformation(
-                        f'self.{instrument_name} = {instrument_type}("{visa_address}")')
-                    self.pageOneInformation(
-                        f'{instrument_type} has been connected successfully.')
+                    self.pageOneInformation(f'self.{instrument_name} = {instrument_type}("{visa_address}")')
+                    self.pageOneInformation(f'{instrument_type} has been connected successfully.')
                     # TODO: add initialization option on messagebox and show the related info
 
                     # Add new row if necessary
@@ -220,27 +210,22 @@ class MainWindow(QMainWindow):
                         self.ui.tableWidget_2.insertRow(row_len)
 
                     # Assign varibales to current var
-                    instrument_property = [
-                        instrument_personal_name, instrument_type, visa_address]
+                    instrument_property = [instrument_personal_name, instrument_type, visa_address]
                     for i, p in enumerate(instrument_property):
                         if p == '':
                             p = instrument_name
                         # Update the info to the table in page 1
-                        self.ui.tableWidget.setItem(
-                            self.row_count - 1, i, QTableWidgetItem(p))
+                        self.ui.tableWidget.setItem(self.row_count - 1, i, QTableWidgetItem(p))
 
                     # Update the left top table in page 2
                     if instrument_personal_name == '':
                         instrument_personal_name = instrument_name
-                    self.ui.tableWidget_2.setItem(
-                        self.row_count - 1, 0, QTableWidgetItem(instrument_personal_name))
-                    self.ui.tableWidget_2.setItem(
-                        self.row_count - 1, 1, QTableWidgetItem(instrument_type))
+                    self.ui.tableWidget_2.setItem(self.row_count - 1, 0, QTableWidgetItem(instrument_personal_name))
+                    self.ui.tableWidget_2.setItem(self.row_count - 1, 1, QTableWidgetItem(instrument_type))
                     self.row_count += 1
 
                 except visa.VisaIOError or AttributeError:
-                    self.pageOneInformation(
-                        "%s connect fail" % instrument_type)
+                    self.pageOneInformation(f"{instrument_type} connect fail")
         self.ui.lineEdit.clear()
 
     # =============================================================================
@@ -286,8 +271,8 @@ class MainWindow(QMainWindow):
         instrument_name = self.ui.tableWidget_2.item(row, 0).text()
         instrument_type = self.ui.tableWidget_2.item(row, 1).text()
         read_method = self.ui.listWidget_3.currentItem().text()
-        magnification = self.read_panel.sub_1_ui.lineEdit_2.text()
-        Unit = self.read_panel.sub_1_ui.lineEdit_3.text()
+        magnification = self.read_panel.ctr_ui.lineEdit_2.text()
+        Unit = self.read_panel.ctr_ui.lineEdit_3.text()
 
         # Add new row if necessary
         row_len = self.ui.tableWidget_4.rowCount()
@@ -296,26 +281,19 @@ class MainWindow(QMainWindow):
             self.ui.tableWidget_5.insertColumn(row_len + 1)
 
         # Assign the variables to the table in page 2
-        self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 0, QTableWidgetItem(instrument_name))
-        self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 1, QTableWidgetItem(instrument_type))
-        self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 2, QTableWidgetItem(read_method))
-        self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 3, QTableWidgetItem(magnification))
-        self.ui.tableWidget_4.setItem(
-            self.read_row_count - 1, 4, QTableWidgetItem(Unit))
+        self.ui.tableWidget_4.setItem(self.read_row_count - 1, 0, QTableWidgetItem(instrument_name))
+        self.ui.tableWidget_4.setItem(self.read_row_count - 1, 1, QTableWidgetItem(instrument_type))
+        self.ui.tableWidget_4.setItem(self.read_row_count - 1, 2, QTableWidgetItem(read_method))
+        self.ui.tableWidget_4.setItem(self.read_row_count - 1, 3, QTableWidgetItem(magnification))
+        self.ui.tableWidget_4.setItem(self.read_row_count - 1, 4, QTableWidgetItem(Unit))
 
         # initialize the blocks in the read option
-        self.read_panel.sub_1_ui.lineEdit_2.setText("1")
-        self.read_panel.sub_1_ui.lineEdit_3.clear()
+        self.read_panel.ctr_ui.lineEdit_2.setText("1")
+        self.read_panel.ctr_ui.lineEdit_3.clear()
 
         # Assign the variables to the table in page 3
-        self.ui.tableWidget_5.setItem(
-            0, self.read_row_count, QTableWidgetItem(instrument_name))
-        self.ui.tableWidget_5.setItem(
-            1, self.read_row_count, QTableWidgetItem(read_method))
+        self.ui.tableWidget_5.setItem(0, self.read_row_count, QTableWidgetItem(instrument_name))
+        self.ui.tableWidget_5.setItem(1, self.read_row_count, QTableWidgetItem(read_method))
 
         method_row_len = self.ui.tableWidget_4.rowCount()
         self.pageTwoInformation(method_row_len)
@@ -360,11 +338,10 @@ class MainWindow(QMainWindow):
             self.updateTimeMeasurement(self.child1)
             self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
             self.child1.setCheckState(0, Qt.Checked)
-            self.control_panel.sub_ui.checkBox.setChecked(False)
+            self.control_panel.read_ui.checkBox.setChecked(False)
             self.checkState()
         else:
-            self.pageTwoInformation(
-                'Time measurement - Please enter a number.')
+            self.pageTwoInformation('Time measurement - Please enter a number.')
 
         self.ui.lineEdit_5.clear()
 
@@ -376,8 +353,8 @@ class MainWindow(QMainWindow):
         self.root.setCheckState(0, Qt.Checked)
         self.root.setExpanded(True)
         self.updateInfo(self.root)
-        self.control_panel.sub_ui.checkBox.setChecked(False)
-        self.control_panel.sub_ui.lineEdit_5.setText('0')
+        self.control_panel.read_ui.checkBox.setChecked(False)
+        self.control_panel.read_ui.lineEdit_5.setText('0')
         self.checkState()
 
     def chooseAddChild(self):
@@ -395,16 +372,16 @@ class MainWindow(QMainWindow):
         self.updateInfo(self.child1)
         self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
         self.child1.setCheckState(0, Qt.Checked)
-        self.control_panel.sub_ui.checkBox.setChecked(False)
-        self.control_panel.sub_ui.lineEdit_5.setText('0')
+        self.control_panel.read_ui.checkBox.setChecked(False)
+        self.control_panel.read_ui.lineEdit_5.setText('0')
         self.checkState()
 
     def checkFunctionIncrement(self):
-        if self.control_panel.sub_ui.checkBox.isChecked():
-            self.control_panel.sub_ui.lineEdit_5.setEnabled(True)
+        if self.control_panel.read_ui.checkBox.isChecked():
+            self.control_panel.read_ui.lineEdit_5.setEnabled(True)
 
         else:
-            self.control_panel.sub_ui.lineEdit_5.setEnabled(False)
+            self.control_panel.read_ui.lineEdit_5.setEnabled(False)
 
     def updateInfo(self, item):
         row = self.ui.tableWidget_2.currentRow()
@@ -413,11 +390,11 @@ class MainWindow(QMainWindow):
         control_method = self.ui.listWidget_3.currentItem().text()
 
         # TODO: restrict the the value to integer only or something related to the unit
-        target = self.control_panel.sub_ui.lineEdit_2.text()
-        speed = self.control_panel.sub_ui.lineEdit_3.text()
+        target = self.control_panel.read_ui.lineEdit_2.text()
+        speed = self.control_panel.read_ui.lineEdit_3.text()
 
         # check box
-        increment = self.control_panel.sub_ui.lineEdit_5.text()
+        increment = self.control_panel.read_ui.lineEdit_5.text()
         control_list = [Ins_name, Ins_type,
                         control_method, target, speed, increment]
 
@@ -450,8 +427,7 @@ class MainWindow(QMainWindow):
 
         while iterator.value():
             item = iterator.value()
-            treeindex, childindex, child_num, method, ins_label, target, speed, increment = self.getIndexs(
-                item)
+            treeindex, childindex, child_num, method, ins_label, target, speed, increment = self.getIndexs(item)
             checkstate = item.checkState(0)
 
             # tree index
@@ -525,8 +501,7 @@ class MainWindow(QMainWindow):
             self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
             self.ui.graphWidget.addItem(self.crosshair_v, ignoreBounds=True)
             self.ui.graphWidget.addItem(self.crosshair_h, ignoreBounds=True)
-            self.proxy = pg.SignalProxy(self.ui.graphWidget.scene(
-            ).sigDisplayCursorCoordinate, rateLimit=60, slot=self.displayCursorCoordinate)
+            self.proxy = pg.SignalProxy(self.ui.graphWidget.scene().sigDisplayCursorCoordinate, rateLimit=60, slot=self.displayCursorCoordinate)
         else:
             self.ui.graphWidget.removeItem(self.crosshair_h)
             self.ui.graphWidget.removeItem(self.crosshair_v)
@@ -558,8 +533,7 @@ class MainWindow(QMainWindow):
     # =============================================================================
     def folderMessage(self):
         global folder_address
-        folder_address = QFileDialog.getExistingDirectory(
-            self, "Please define the file name", self.cwd)
+        folder_address = QFileDialog.getExistingDirectory(self, "Please define the file name", self.cwd)
 
         if folder_address != '':
             self.folder_name = folder_address
@@ -574,13 +548,11 @@ class MainWindow(QMainWindow):
             be created.
         """
         if self.ui.label_18.text() == '':
-            QMessageBox.information(
-                self, "Wrong!.", "Please select the folder.")
+            QMessageBox.information(self, "Wrong!.", "Please select the folder.")
         else:
             self.name = self.ui.lineEdit_2.text()
             if self.name == '':
-                QMessageBox.information(
-                    self, "Wrong!.", "Please type the file name.")
+                QMessageBox.information(self, "Wrong!.", "Please type the file name.")
             else:
                 file_name = f'{self.name}.txt'
                 List = os.listdir(folder_address)
@@ -589,8 +561,7 @@ class MainWindow(QMainWindow):
                         self, "Wrong!.", "The file has existed. Do you want to overwrite it?",
                         QMessageBox.Ok | QMessageBox.Close, QMessageBox.Close)
                     if reply == QMessageBox.Close:
-                        QMessageBox.information(
-                            self, "Wrong!.", "Please adjust the file name.")
+                        QMessageBox.information(self, "Wrong!.", "Please adjust the file name.")
                     elif reply == QMessageBox.Ok:
                         self.procedureGo()
                 else:
@@ -644,8 +615,7 @@ class MainWindow(QMainWindow):
             self.exp_thread.wait()
             self.shutdownInstruments()
             self.measurement = None
-            self.database.txtMerger(self.full_address, file_count,
-                                    len(self.instruments_read)+1)
+            self.database.txtMerger(self.full_address, file_count, self.read_len+1)
             self.database.txtDeleter(file_count)
         except AttributeError:
             pass
@@ -668,63 +638,57 @@ class MainWindow(QMainWindow):
         the x y value will be set later within the function plot_update()
         """
         self.plt.clear()
+        self.x_data = np.array([], dtype=np.float32)
+        self.y_data = []
+        self.read_len = len(self.instruments_read)
+        for _ in range(self.read_len):
+            self.y_data.append(np.array([], dtype=np.float32))
         self.data_line = []
         self.saved_line = []
-        for _ in range(len(self.instruments_read)):
+        for _ in range(self.read_len):
             self.data_line.append(self.ui.graphWidget.plot([]))
 
-    def saveLines(self, file_count, x, y):
-        read_len = len(y)
-        for i in range(read_len):
+    def saveLines(self, file_count):
+        for i in range(self.read_len):
             self.saved_line.append(self.ui.graphWidget.plot([]))
-            self.saved_line[i + read_len*(file_count)].setData(
-                x, y[i], pen=pg.mkPen(pg.intColor(i+1), width=1))
+            self.saved_line[i + self.read_len*(file_count)].setData(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(i+1), width=1))
             self.data_line[i].setData([])
 
     def plotUpdate(self, n, x, y_n):
+        if n == 0:
+            self.x_data = np.append(self.x_data, [x])
+        self.y_data[n] = np.append(self.y_data[n], y_n)
         # setData to the PlotItems
         if self.switch_list[n] == 1:
-            self.data_line[n].setData(
-                x, y_n, pen=pg.mkPen(pg.intColor(n+1), width=1))
+            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(pg.intColor(n+1), width=1))
         else:
             self.data_line[n].setData([])
 
     def plot_save(self):
         exporter = pg.exporters.ImageExporter(self.plt.scene())
         exporter.export(self.full_address + '_%d.png' % self.save_plot_count)
-        QMessageBox.information(
-            self, "Done.", "The figure No.%d has been saved." % self.save_plot_count)
+        QMessageBox.information(self, "Done.", "The figure No.%d has been saved." % self.save_plot_count)
         self.save_plot_count += 1
 
     def axisUpdate(self, x_show, y_show):
         # update x title (instrument name and method)
         # insturement name
-        self.ui.tableWidget_5.setItem(
-            0, 0, QTableWidgetItem(f'{x_show[1]}'))
+        self.ui.tableWidget_5.setItem(0, 0, QTableWidgetItem(f'{x_show[1]}'))
         # method
-        self.ui.tableWidget_5.setItem(
-            1, 0, QTableWidgetItem(f'{x_show[2]}'))
+        self.ui.tableWidget_5.setItem(1, 0, QTableWidgetItem(f'{x_show[2]}'))
 
         # update x value
-        self.ui.tableWidget_5.setItem(
-            2, 0, QTableWidgetItem(f'{x_show[0]:g}'))
+        self.ui.tableWidget_5.setItem(2, 0, QTableWidgetItem(f'{x_show[0]:g}'))
         # update y value
-        logging.info('len')
-        logging.info(len(self.instruments_read))
-        logging.info('x')
-        logging.info(x_show)
-        logging.info('y')
-        logging.info(y_show)
         i = 0
-        for i in range(len(self.instruments_read)):
-            self.ui.tableWidget_5.setItem(
-                2, (i + 1), QTableWidgetItem(f'{y_show[i]:g}'))
+        for i in range(self.read_len):
+            self.ui.tableWidget_5.setItem(2, (i + 1), QTableWidgetItem(f'{y_show[i]:g}'))
 
     def lineDisplaySwitchCreat(self):
         global switch_list
         switch_list = []
         self.switch_list = []
-        for _ in range(len(self.instruments_read)):
+        for _ in range(self.read_len):
             self.switch_list.append(1)
             switch_list.append(1)
 
@@ -745,8 +709,8 @@ class ControlPanel(QDialog):
 
     def __init__(self):
         super(ControlPanel, self).__init__()
-        self.sub_ui = Control_Window()
-        self.sub_ui.setupUi(self)
+        self.read_ui = Control_Window()
+        self.read_ui.setupUi(self)
 
 
 class ReadlPanel(QDialog):
@@ -754,8 +718,8 @@ class ReadlPanel(QDialog):
 
     def __init__(self):
         super(ReadlPanel, self).__init__()
-        self.sub_1_ui = Read_Window()
-        self.sub_1_ui.setupUi(self)
+        self.ctr_ui = Read_Window()
+        self.ctr_ui.setupUi(self)
 
 
 if __name__ == '__main__':
