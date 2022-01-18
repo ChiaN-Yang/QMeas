@@ -308,9 +308,6 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.tab_2, "")
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
-        self.graphWidget = PlotWidget(self.tab_3)
-        self.graphWidget.setGeometry(QtCore.QRect(10, 50, 1451, 691))
-        self.graphWidget.setObjectName("graphWidget")
         self.pushButton_11 = QtWidgets.QPushButton(self.tab_3)
         self.pushButton_11.setGeometry(QtCore.QRect(1490, 130, 111, 31))
         self.pushButton_11.setObjectName("pushButton_11")
@@ -448,6 +445,11 @@ class Ui_MainWindow(object):
         self.spinBox_3 = QtWidgets.QSpinBox(self.tab_3)
         self.spinBox_3.setGeometry(QtCore.QRect(1570, 440, 42, 22))
         self.spinBox_3.setObjectName("spinBox_3")
+        self.frame = QtWidgets.QFrame(self.tab_3)
+        self.frame.setGeometry(QtCore.QRect(9, 49, 1451, 701))
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
         self.tabWidget.addTab(self.tab_3, "")
         self.gridLayout_2.addWidget(self.tabWidget, 0, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -578,7 +580,6 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Graph"))
         self.menuQuit.setTitle(_translate("MainWindow", "Options"))
         self.actionQuit.setText(_translate("MainWindow", "Quit"))
-from pyqtgraph import PlotWidget
 
 
 if __name__ == "__main__":

@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QThread, Qt
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
-import pyqtgraph as pg
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog, QVBoxLayout
 from ui import Ui_MainWindow, Control_Window, Read_Window
-import sys
 from PyQt5 import sip
 import pyvisa as visa
 import os
@@ -12,7 +10,15 @@ from utils import load_drivers, TxtFunction, MeasurementProcess
 import qdarkstyle
 from nidaqmx.system import System
 import logging
+<<<<<<< HEAD
 import numpy as np
+=======
+from vispy import app, scene
+import numpy as np
+import itertools
+from vispy.color import get_colormaps
+
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
 # logging.basicConfig(format="%(message)s", level=logging.INFO)   # debug mode
 
@@ -34,11 +40,19 @@ class MainWindow(QMainWindow):
     options_control = []
     options_read = []
 
-    # PlotItem lines
+    # plot space
     data_line = []
     saved_line = []
+<<<<<<< HEAD
     x_data = []
     y_data = []
+=======
+    lines_data = []
+
+    # color array
+    colormaps = itertools.cycle(get_colormaps())
+    color_save = []
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
     # measurement & database module
     measurement = MeasurementProcess([], [], [], [])
@@ -48,6 +62,24 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # vispy plot widget
+        canvas = scene.SceneCanvas(keys='interactive', show=True)
+        grid = canvas.central_widget.add_grid(spacing=0)
+        self.viewbox = grid.add_view(row=0, col=1, camera='panzoom')
+        lay = QVBoxLayout(self.ui.frame)  # create layout
+        lay.addWidget(canvas.native)
+        # add some axes
+        x_axis = scene.AxisWidget(orientation='bottom')
+        x_axis.stretch = (1, 0.05)
+        grid.add_widget(x_axis, row=1, col=1)
+        x_axis.link_view(self.viewbox)
+        y_axis = scene.AxisWidget(orientation='left')
+        y_axis.stretch = (0.035, 1)
+        grid.add_widget(y_axis, row=0, col=0)
+        y_axis.link_view(self.viewbox)
+        # auto-scale to see the whole line
+        self.viewbox.camera.set_range()
 
         # control panel & read panel
         self.control_panel = ControlPanel()
@@ -72,6 +104,7 @@ class MainWindow(QMainWindow):
         # page 2
         # Buttons
         self.ui.pushButton_7.clicked.connect(self.readPanelShow)
+<<<<<<< HEAD
 
         self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.readConfirm)
         self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.read_panel.close)
@@ -83,6 +116,18 @@ class MainWindow(QMainWindow):
         self.control_panel.read_ui.pushButton_8.clicked.connect(self.chooseAddChild)
         self.control_panel.read_ui.pushButton_8.clicked.connect(self.control_panel.close)
         self.control_panel.read_ui.pushButton_6.clicked.connect(self.control_panel.close)
+=======
+        self.read_panel.read_ui.pushButton_5.clicked.connect(self.readConfirm)
+        self.read_panel.read_ui.pushButton_5.clicked.connect(self.read_panel.close)
+        self.read_panel.read_ui.pushButton_6.clicked.connect(self.read_panel.close)
+
+        self.ui.pushButton_3.clicked.connect(self.readPanelShow)
+        self.control_panel.ctr_ui.pushButton_9.clicked.connect(self.addLevel)
+        self.control_panel.ctr_ui.pushButton_9.clicked.connect(self.control_panel.close)
+        self.control_panel.ctr_ui.pushButton_8.clicked.connect(self.chooseAddChild)
+        self.control_panel.ctr_ui.pushButton_8.clicked.connect(self.control_panel.close)
+        self.control_panel.ctr_ui.pushButton_6.clicked.connect(self.control_panel.close)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
         self.ui.pushButton_8.clicked.connect(self.deleteReadRow)
         self.ui.pushButton_9.clicked.connect(self.chooseDelete)
@@ -90,11 +135,13 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_26.clicked.connect(self.timeAddLevel)
         self.ui.pushButton_27.clicked.connect(self.timeAddChild)
         self.ui.pushButton_4.clicked.connect(self.folderMessage)
-        # folder Path
-        self.cwd = os.getcwd()
 
         # check box
+<<<<<<< HEAD
         self.control_panel.read_ui.checkBox.stateChanged.connect(self.checkFunctionIncrement)
+=======
+        self.control_panel.ctr_ui.checkBox.stateChanged.connect(self.checkFunctionIncrement)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
         # Tables
         self.ui.tableWidget_2.cellClicked.connect(self.showMethod)
@@ -106,35 +153,22 @@ class MainWindow(QMainWindow):
         # page 3
         # Buttons
         self.ui.pushButton_13.clicked.connect(self.displayCursorCrossHair)
-        self.ui.pushButton_13.clicked.connect(self.autoPlotRange)
+        self.ui.pushButton_12.clicked.connect(self.autoPlotRange)
         self.ui.pushButton_11.clicked.connect(self.procedureStop)
-        self.ui.pushButton_15.clicked.connect(
-            self.measurement.resumePauseMeasure)
+        self.ui.pushButton_15.clicked.connect(self.measurement.resumePauseMeasure)
         self.ui.pushButton_17.clicked.connect(self.measurement.quitLoopMeasure)
-        self.ui.pushButton_14.clicked.connect(
-            self.measurement.quitSweepMeasure)
-        self.ui.pushButton_16.clicked.connect(self.plot_save)
+        self.ui.pushButton_14.clicked.connect(self.measurement.quitSweepMeasure)
+        self.ui.pushButton_16.clicked.connect(self.plotSave)
 
         # Tables
         self.ui.tableWidget_5.cellClicked.connect(self.lineDisplaySwitch)
-        # plot widget
-        pg.setConfigOptions(antialias=False)
-        self.plt = self.ui.graphWidget
-        # viewbox setting
-        self.viewbox = self.plt.getViewBox()
-        self.viewbox.disableAutoRange()  # Side note: this function can be connected
-        # to a button, e.g., AUTO button = enable it first and disable it
-        # plot setting
-        self.plt.showGrid(x=True, y=True, alpha=1)
-        self.plt.setLabel('bottom', '   ')
-        self.plt.setLabel('left', '   ')
 
         # Menu
         self.ui.retranslateUi(self)
         self.ui.actionQuit.setShortcut('Ctrl+Q')
         self.ui.actionQuit.triggered.connect(self.timeStop)
         self.ui.actionQuit.triggered.connect(self.shutdownInstruments)
-        self.ui.actionQuit.triggered.connect(app.exit)
+        self.ui.actionQuit.triggered.connect(application.exit)
         self.ui.actionQuit.triggered.connect(self.close)
 
         # Set Window Icon
@@ -147,7 +181,7 @@ class MainWindow(QMainWindow):
     # Page 1
     # =============================================================================
     def visaList(self):
-        """detect available address"""
+        """ detect available address """
         resource_manager = visa.ResourceManager()
         self.pyvisa_list = resource_manager.list_resources()
         self.ui.listWidget.clear()
@@ -161,16 +195,17 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.addItem("default")
 
     def intrumentList(self):
-        """detect available drivers"""
+        """ detect available drivers """
         self.driver_list = load_drivers()
         self.ui.listWidget_2.clear()
         self.ui.listWidget_2.addItems(self.driver_list.keys())
 
     def pageOneInformation(self, string):
-        """put some word in the information board"""
+        """ put some word in the information board """
         self.ui.textBrowser.append(str(string))
 
     def deleteConnectedInstrument(self):
+        """ delete connected instrument from page1 """
         row = self.ui.tableWidget.currentRow()
         self.ui.tableWidget.removeRow(row)
         self.ui.tableWidget_2.removeRow(row)
@@ -178,7 +213,7 @@ class MainWindow(QMainWindow):
         self.instruments.pop(row)
 
     def connection(self):
-        """add instruments into table_instrList"""
+        """ add instruments into table_instrList """
         # Get info from lists and construct new object later
         visa_address = self.ui.listWidget.currentItem().text()
         instrument_type = self.ui.listWidget_2.currentItem().text()
@@ -233,23 +268,25 @@ class MainWindow(QMainWindow):
     # =============================================================================
 
     def pageTwoInformation(self, string):
+        """ information in page2 """
         self.ui.textBrowser_2.append(str(string))
 
     def readPanelShow(self):
-        # self.pageTwoInformation(self.ui.listWidget_3.currentItem())
+        """ popup panel from read button """
         if self.ui.listWidget_3.currentItem() == None:
             self.pageTwoInformation('Please select a method.')
         else:
             self.read_panel.show()
 
     def controlPanelShow(self):
-        # self.pageTwoInformation(self.ui.listWidget_3.currentItem())
+        """ popup panel from control button """
         if self.ui.listWidget_3.currentItem() == None:
             self.pageTwoInformation('Please select a method.')
         else:
             self.control_panel.show()
 
     def deleteReadRow(self):
+        """ delete read instruments from page2 """
         row = self.ui.tableWidget_4.currentRow()
         self.ui.tableWidget_4.removeRow(row)
         self.ui.tableWidget_5.removeColumn(row+1)
@@ -258,6 +295,7 @@ class MainWindow(QMainWindow):
         self.options_read.pop(row)
 
     def showMethod(self):
+        """ show instruments method in page2 """
         row = self.ui.tableWidget_2.currentRow()
         instrument = self.instruments[row]
         self.ui.listWidget_3.clear()
@@ -266,13 +304,19 @@ class MainWindow(QMainWindow):
         # TODO: add the waiting-time measurement to the option
 
     def readConfirm(self):
+        """ confirm button in read panel """
         # Get the necessary info of the chosen item
         row = self.ui.tableWidget_2.currentRow()
         instrument_name = self.ui.tableWidget_2.item(row, 0).text()
         instrument_type = self.ui.tableWidget_2.item(row, 1).text()
         read_method = self.ui.listWidget_3.currentItem().text()
+<<<<<<< HEAD
         magnification = self.read_panel.ctr_ui.lineEdit_2.text()
         Unit = self.read_panel.ctr_ui.lineEdit_3.text()
+=======
+        magnification = self.read_panel.read_ui.lineEdit_2.text()
+        Unit = self.read_panel.read_ui.lineEdit_3.text()
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
         # Add new row if necessary
         row_len = self.ui.tableWidget_4.rowCount()
@@ -288,8 +332,13 @@ class MainWindow(QMainWindow):
         self.ui.tableWidget_4.setItem(self.read_row_count - 1, 4, QTableWidgetItem(Unit))
 
         # initialize the blocks in the read option
+<<<<<<< HEAD
         self.read_panel.ctr_ui.lineEdit_2.setText("1")
         self.read_panel.ctr_ui.lineEdit_3.clear()
+=======
+        self.read_panel.read_ui.lineEdit_2.setText("1")
+        self.read_panel.read_ui.lineEdit_3.clear()
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
         # Assign the variables to the table in page 3
         self.ui.tableWidget_5.setItem(0, self.read_row_count, QTableWidgetItem(instrument_name))
@@ -305,6 +354,7 @@ class MainWindow(QMainWindow):
         self.instruments_magnification.append(int(magnification))
 
     def switchToPlotTab(self):
+        """ switch to page3 """
         self.ui.tabWidget.setCurrentIndex(2)
 
     def timeAddLevel(self):
@@ -319,10 +369,8 @@ class MainWindow(QMainWindow):
             self.root.setExpanded(True)
             self.updateTimeMeasurement(self.root)
             self.checkState()
-
         else:
-            self.pageTwoInformation(
-                'Time measurement - Please enter a number.')
+            self.pageTwoInformation('Time measurement - Please enter a number.')
 
         self.ui.lineEdit_5.clear()
 
@@ -338,7 +386,11 @@ class MainWindow(QMainWindow):
             self.updateTimeMeasurement(self.child1)
             self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
             self.child1.setCheckState(0, Qt.Checked)
+<<<<<<< HEAD
             self.control_panel.read_ui.checkBox.setChecked(False)
+=======
+            self.control_panel.ctr_ui.checkBox.setChecked(False)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
             self.checkState()
         else:
             self.pageTwoInformation('Time measurement - Please enter a number.')
@@ -346,18 +398,25 @@ class MainWindow(QMainWindow):
         self.ui.lineEdit_5.clear()
 
     # treeWidget
-    def addLevel(self, level_name):
+    def addLevel(self):
+        """ add level button in control panel """
         self.root = QTreeWidgetItem(self.tree)
         self.root.setText(0, '0')
         self.root.setFlags(self.root.flags() | Qt.ItemIsUserCheckable)
         self.root.setCheckState(0, Qt.Checked)
         self.root.setExpanded(True)
         self.updateInfo(self.root)
+<<<<<<< HEAD
         self.control_panel.read_ui.checkBox.setChecked(False)
         self.control_panel.read_ui.lineEdit_5.setText('0')
+=======
+        self.control_panel.ctr_ui.checkBox.setChecked(False)
+        self.control_panel.ctr_ui.lineEdit_5.setText('0')
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
         self.checkState()
 
     def chooseAddChild(self):
+        """ add child button in control panel """
         # QTreeWidgetItem括號內放的物件是作為基礎(root)，child會往下一層放
         item = self.tree.currentItem()
         if self.tree.indexOfTopLevelItem(item) >= 0:
@@ -372,6 +431,7 @@ class MainWindow(QMainWindow):
         self.updateInfo(self.child1)
         self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
         self.child1.setCheckState(0, Qt.Checked)
+<<<<<<< HEAD
         self.control_panel.read_ui.checkBox.setChecked(False)
         self.control_panel.read_ui.lineEdit_5.setText('0')
         self.checkState()
@@ -382,6 +442,17 @@ class MainWindow(QMainWindow):
 
         else:
             self.control_panel.read_ui.lineEdit_5.setEnabled(False)
+=======
+        self.control_panel.ctr_ui.checkBox.setChecked(False)
+        self.control_panel.ctr_ui.lineEdit_5.setText('0')
+        self.checkState()
+
+    def checkFunctionIncrement(self):
+        if self.control_panel.ctr_ui.checkBox.isChecked():
+            self.control_panel.ctr_ui.lineEdit_5.setEnabled(True)
+        else:
+            self.control_panel.ctr_ui.lineEdit_5.setEnabled(False)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
     def updateInfo(self, item):
         row = self.ui.tableWidget_2.currentRow()
@@ -390,6 +461,7 @@ class MainWindow(QMainWindow):
         control_method = self.ui.listWidget_3.currentItem().text()
 
         # TODO: restrict the the value to integer only or something related to the unit
+<<<<<<< HEAD
         target = self.control_panel.read_ui.lineEdit_2.text()
         speed = self.control_panel.read_ui.lineEdit_3.text()
 
@@ -397,6 +469,14 @@ class MainWindow(QMainWindow):
         increment = self.control_panel.read_ui.lineEdit_5.text()
         control_list = [Ins_name, Ins_type,
                         control_method, target, speed, increment]
+=======
+        target = self.control_panel.ctr_ui.lineEdit_2.text()
+        speed = self.control_panel.ctr_ui.lineEdit_3.text()
+
+        # check box
+        increment = self.control_panel.ctr_ui.lineEdit_5.text()
+        control_list = [Ins_name, Ins_type, control_method, target, speed, increment]
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
         for i, element in enumerate(control_list):
             item.setText((i+1), element)
@@ -412,8 +492,7 @@ class MainWindow(QMainWindow):
         target = self.ui.lineEdit_5.text()
         speed = '-'
         increment = '-'
-        control_list = [Ins_name, Ins_type,
-                        control_method, target, speed, increment]
+        control_list = [Ins_name, Ins_type, control_method, target, speed, increment]
         for i, element in enumerate(control_list):
             item.setText((i+1), element)
         item.setText(7, row)
@@ -496,6 +575,7 @@ class MainWindow(QMainWindow):
 
     def displayCursorCrossHair(self):
         """Add crosshair lines."""
+<<<<<<< HEAD
         if self.ui.pushButton_13.isChecked():
             self.crosshair_v = pg.InfiniteLine(angle=90, movable=False)
             self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
@@ -506,18 +586,28 @@ class MainWindow(QMainWindow):
             self.ui.graphWidget.removeItem(self.crosshair_h)
             self.ui.graphWidget.removeItem(self.crosshair_v)
             self.proxy = []
+=======
+        pass
+        # if self.ui.pushButton_13.isChecked():
+        #     self.crosshair_v = pg.InfiniteLine(angle=90, movable=False)
+        #     self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
+        #     self.ui.graphWidget.addItem(self.crosshair_v, ignoreBounds=True)
+        #     self.ui.graphWidget.addItem(self.crosshair_h, ignoreBounds=True)
+        #     self.proxy = pg.SignalProxy(self.ui.graphWidget.scene(
+        #     ).sigDisplayCursorCoordinate, rateLimit=60, slot=self.displayCursorCoordinate)
+        # else:
+        #     self.ui.graphWidget.removeItem(self.crosshair_h)
+        #     self.ui.graphWidget.removeItem(self.crosshair_v)
+        #     self.proxy = []
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
     def displayCursorCoordinate(self, e):
-        pos = e[0]
-        if self.ui.graphWidget.sceneBoundingRect().contains(pos):
-            mousePoint = self.ui.graphWidget.getPlotItem().vb.mapSceneToView(pos)
-            self.crosshair_v.setPos(mousePoint.x())
-            self.crosshair_h.setPos(mousePoint.y())
-
-    def autoPlotRange(self):
-        # TODO: auto view when clicking is still not working
-        self.viewbox.enableAutoRange()
-        self.viewbox.disableAutoRange()
+        pass
+        # pos = e[0]
+        # if self.ui.graphWidget.sceneBoundingRect().contains(pos):
+        #     mousePoint = self.ui.graphWidget.getPlotItem().vb.mapSceneToView(pos)
+        #     self.crosshair_v.setPos(mousePoint.x())
+        #     self.crosshair_h.setPos(mousePoint.y())
 
     def setProgressBar(self):
         self.progress += 1
@@ -533,12 +623,18 @@ class MainWindow(QMainWindow):
     # =============================================================================
     def folderMessage(self):
         global folder_address
+<<<<<<< HEAD
         folder_address = QFileDialog.getExistingDirectory(self, "Please define the file name", self.cwd)
+=======
+        # folder Path
+        cwd = os.getcwd()
+        folder_address = QFileDialog.getExistingDirectory(self, "Please define the file name", cwd)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
         if folder_address != '':
             self.folder_name = folder_address
             self.ui.label_18.setText(self.folder_name)
-            self.cwd = folder_address
+            cwd = folder_address
 
     def timeGo(self):
         """ TimeGo is the first activating function when "run" the project
@@ -581,8 +677,7 @@ class MainWindow(QMainWindow):
         self.exp_thread = QThread()
         # Create a worker object
         self.measurement = None
-        self.measurement = MeasurementProcess(
-            self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
+        self.measurement = MeasurementProcess(self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
         # Move worker to the thread
         self.database.moveToThread(self.exp_thread)
         self.measurement.moveToThread(self.exp_thread)
@@ -615,7 +710,11 @@ class MainWindow(QMainWindow):
             self.exp_thread.wait()
             self.shutdownInstruments()
             self.measurement = None
+<<<<<<< HEAD
             self.database.txtMerger(self.full_address, file_count, self.read_len+1)
+=======
+            self.database.txtMerger(self.full_address, file_count, len(self.instruments_read)+1)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
             self.database.txtDeleter(file_count)
         except AttributeError:
             pass
@@ -632,8 +731,29 @@ class MainWindow(QMainWindow):
     # plot setting
     # =============================================================================
 
+    def plotUpdate(self, n, x_y):
+        self.lines_data[n] = np.vstack([self.lines_data[n], np.array(x_y)])
+        # setData to the PlotItems
+        if self.switch_list[n] == True:
+            pos = self.lines_data[n]
+            self.data_line[n].set_data(pos)
+        else:
+            self.data_line[n].set_data(np.array([[np.nan, np.nan]]))
+
+    def saveLines(self, file_count):
+        # vertex positions of data to draw
+        for i in range(self.read_len):
+            color = next(self.colormaps)
+            pos = self.lines_data[i]
+            self.saved_line.append(scene.Line(parent=self.viewbox.scene))
+            self.saved_line[i + self.read_len * (file_count)].set_data(pos, color)
+            self.data_line[i].set_data(np.array([[np.nan, np.nan]]))
+
     def createEmptyLines(self):
+        """ creat the plotDataItem as data_line[i] where i = 0, 1, 2... (reference)
+            the x y value will be set later within the function plot_update()
         """
+<<<<<<< HEAD
         creat the plotDataItem as data_line_%d where %d = 0, 1, 2... (reference)
         the x y value will be set later within the function plot_update()
         """
@@ -683,25 +803,74 @@ class MainWindow(QMainWindow):
         i = 0
         for i in range(self.read_len):
             self.ui.tableWidget_5.setItem(2, (i + 1), QTableWidgetItem(f'{y_show[i]:g}'))
+=======
+        # self.plt.clear()
+        self.data_line = []
+        self.saved_line = []
+        self.read_len = len(self.instruments_read)
+        for _ in range(self.read_len):
+            self.data_line.append(scene.Line(parent=self.viewbox.scene))
+        # save data
+        self.lines_data = []
+        for _ in range(self.read_len):
+            # , dtype=np.float32
+            self.lines_data.append(np.array([[np.nan, np.nan]]))
+
+    def autoPlotRange(self):
+        """ auto-scale to see the whole line """
+        self.viewbox.camera.set_range()
+
+    def plotSave(self):
+        pass
+        # exporter = pg.exporters.ImageExporter(self.plt.scene())
+        # exporter.export(self.full_address + '_%d.png' % self.save_plot_count)
+        # QMessageBox.information(
+        #     self, "Done.", "The figure No.%d has been saved." % self.save_plot_count)
+        # self.save_plot_count += 1
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
     def lineDisplaySwitchCreat(self):
-        global switch_list
-        switch_list = []
         self.switch_list = []
+<<<<<<< HEAD
         for _ in range(self.read_len):
             self.switch_list.append(1)
             switch_list.append(1)
+=======
+        for _ in range(len(self.instruments_read)):
+            self.switch_list.append(True)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
     def lineDisplaySwitch(self):
         """ this function is connected to tableWidget_5 on page 3
             the function activates whenever the tablewidge_5 is clicked
         """
-        # TODO: this function is not well working. it needs to establish multiple switch to each channel
-        col = self.ui.tableWidget_5.currentColumn()
-        if col == 0:
-            return
-        else:
-            self.switch_list[col - 1] = self.switch_list[col - 1]*(-1)
+        col = self.ui.tableWidget_5.currentColumn()-1
+        if col != -1:    # ignore x_show column
+            if self.switch_list[col]:
+                self.switch_list[col] = False
+            else:
+                self.switch_list[col] = True
+
+    # =============================================================================
+    # axis setting
+    # =============================================================================
+
+    def axisUpdate(self, x_show, y_show):
+        # update x title (instrument name and method)
+        # insturement name
+        self.ui.tableWidget_5.setItem(0, 0, QTableWidgetItem(f'{x_show[1]}'))
+        # method
+        self.ui.tableWidget_5.setItem(1, 0, QTableWidgetItem(f'{x_show[2]}'))
+
+        # update x value
+        self.ui.tableWidget_5.setItem(2, 0, QTableWidgetItem(f'{x_show[0]:g}'))
+        # update y value
+        logging.info(f'len:{len(self.instruments_read)}')
+        logging.info(f'x:{x_show}')
+        logging.info(f'y:{y_show}')
+        i = 0
+        for i in range(len(self.instruments_read)):
+            self.ui.tableWidget_5.setItem(2, (i + 1), QTableWidgetItem(f'{y_show[i]}'))  # :.6g
 
 
 class ControlPanel(QDialog):
@@ -709,8 +878,13 @@ class ControlPanel(QDialog):
 
     def __init__(self):
         super(ControlPanel, self).__init__()
+<<<<<<< HEAD
         self.read_ui = Control_Window()
         self.read_ui.setupUi(self)
+=======
+        self.ctr_ui = Control_Window()
+        self.ctr_ui.setupUi(self)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
 
 class ReadlPanel(QDialog):
@@ -718,12 +892,17 @@ class ReadlPanel(QDialog):
 
     def __init__(self):
         super(ReadlPanel, self).__init__()
+<<<<<<< HEAD
         self.ctr_ui = Read_Window()
         self.ctr_ui.setupUi(self)
+=======
+        self.read_ui = Read_Window()
+        self.read_ui.setupUi(self)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
 
 if __name__ == '__main__':
-    app = QApplication([])
+    application = QApplication([])
     window = MainWindow()
     window.show()
-    sys.exit(app.exec_())
+    app.run()

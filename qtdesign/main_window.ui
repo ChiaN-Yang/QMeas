@@ -855,16 +855,6 @@ p, li { white-space: pre-wrap; }
        <attribute name="title">
         <string>Graph</string>
        </attribute>
-       <widget class="PlotWidget" name="graphWidget" native="true">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>50</y>
-          <width>1451</width>
-          <height>691</height>
-         </rect>
-        </property>
-       </widget>
        <widget class="QPushButton" name="pushButton_11">
         <property name="geometry">
          <rect>
@@ -1302,6 +1292,22 @@ p, li { white-space: pre-wrap; }
          </rect>
         </property>
        </widget>
+       <widget class="QFrame" name="frame">
+        <property name="geometry">
+         <rect>
+          <x>9</x>
+          <y>49</y>
+          <width>1451</width>
+          <height>701</height>
+         </rect>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -1331,14 +1337,6 @@ p, li { white-space: pre-wrap; }
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>PlotWidget</class>
-   <extends>QWidget</extends>
-   <header>pyqtgraph</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

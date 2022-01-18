@@ -2,13 +2,18 @@ from PyQt5.QtCore import QThread, pyqtSignal, QObject
 import logging
 from modpack import TimeMeasurement
 from time import sleep
+from numpy import array
 
 
 class MeasurementProcess(QObject):
     """this class is used to perform experiments"""
     finished = pyqtSignal(int)
     signal_txt = pyqtSignal(int, list, list, list, list)
+<<<<<<< HEAD
     signal_plot = pyqtSignal(int, float, float)
+=======
+    signal_plot = pyqtSignal(int, list)
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
     signal_axis = pyqtSignal(list, list)
     signal_lines = pyqtSignal(int)
     signal_progress = pyqtSignal()
@@ -21,6 +26,7 @@ class MeasurementProcess(QObject):
         self.options_read = options_read
         self.magnification = instruments_magnification
         self.control_sequence = []
+        self.line_num = len(self.instruments_read)
         # control variable
         self.stop_running = False
         self.quit_running = False
@@ -39,15 +45,15 @@ class MeasurementProcess(QObject):
               [child_num, leve_position, instrument, option, check, target, speed, increment]
               [child_num, leve_position, instrument, option, check, target, speed, increment] ]
         """
-        logging.info('\ntree_num', tree_num)
-        logging.info('\nchild_num', child_num)
-        logging.info('\nleve_position', leve_position)
-        logging.info('\ncheck', check)
-        logging.info('\nmethod', method)
-        logging.info('\nins_label', ins_label)
-        logging.info('\ntarget', target)
-        logging.info('\nspeed', speed)
-        logging.info('\nincredment', increment)
+        logging.info(f'tree_num:{tree_num}')
+        logging.info(f'child_num{child_num}')
+        logging.info(f'leve_position{leve_position}')
+        logging.info(f'check{check}')
+        logging.info(f'method{method}')
+        logging.info(f'ins_label{ins_label}')
+        logging.info(f'target{target}')
+        logging.info(f'speed{speed}')
+        logging.info(f'incredment{increment}')
 
         # Know how many trees there are
         tree_total = max(tree_num) + 1
@@ -164,10 +170,10 @@ class MeasurementProcess(QObject):
     def oneLevelTree(self, level):
         for i in level[0]:
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
-            logging.info('linespacer: ', linspacer)
+            logging.info(f'linespacer:{linspacer}')
             self.clear_progress.emit(len(linspacer))
             for value_i in linspacer:
-                logging.info(value_i, 'value_i')
+                logging.info(f'value_i:{value_i}')
                 self.performRecord(i, value_i, True)
                 if self.quit_sweep:
                     self.quit_sweep = False
@@ -207,7 +213,11 @@ class MeasurementProcess(QObject):
             name_txt.append(instrument_read.instrumentName())
             method_txt.append(self.options_read[n])
             if bottom_level:
+<<<<<<< HEAD
                 self.signal_plot.emit(n, set_value, y_show[n])
+=======
+                self.signal_plot.emit(n, [set_value, read_value])
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):
@@ -229,3 +239,9 @@ class MeasurementProcess(QObject):
 
     def quitLoopMeasure(self):
         self.quit_loop = True
+<<<<<<< HEAD
+=======
+
+    def createEmptyDataSet(self):
+        pass
+>>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
