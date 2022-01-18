@@ -51,12 +51,28 @@
 
     畫圖的部分，使用執行緒(Thread)平行運算。如此可讓使用者在執行超長實驗步驟時，作圖也不會因此卡頓。
 
+## 檔案說明
+```
+main.py : 程式由此進入
+
+drivers : 存放儀器驅動程式
+
+modpack : 存放修改過的模組
+
+qtdesign : 備份QtDesign形成的ui檔
+
+ui : 設定主程式的前端介面
+
+utils : 執行主程式所需的模組
+```
+
 ## Installation
 Before run this program, you need to install package below:
 - PyQt5
 - PyQtGraph
 - PyVISA
 - Pymeasure
+- VisPy
 - Numpy
 - Labdrivers
 - NIDAQmx

@@ -46,12 +46,12 @@ class MainWindow(QMainWindow):
     color_save = []
 
     # measurement & database module
-    measurement = MeasurementProcess([], [], [], [])
+    measurement = MeasurementVis([], [], [], [])
     database = TxtFunction()
 
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.ui = Ui_MainWindow()
+        self.ui = Vis_Window()
         self.ui.setupUi(self)
 
         # vispy plot widget
@@ -591,7 +591,7 @@ class MainWindow(QMainWindow):
         self.exp_thread = QThread()
         # Create a worker object
         self.measurement = None
-        self.measurement = MeasurementProcess(self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
+        self.measurement = MeasurementVis(self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
         # Move worker to the thread
         self.database.moveToThread(self.exp_thread)
         self.measurement.moveToThread(self.exp_thread)

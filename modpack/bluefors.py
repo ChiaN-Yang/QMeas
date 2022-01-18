@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 from datetime import date
 from qcodes.instrument.base import Instrument
+import datetime
+
 
 class BlueFors(Instrument):
     """
@@ -140,7 +142,7 @@ class BlueFors(Instrument):
 
         Args:
             channel (int): Channel from which the temperature is extracted.
-
+        
         Returns:
             temperature (float): Temperature of the channel in Kelvin.
         """
@@ -148,22 +150,25 @@ class BlueFors(Instrument):
         folder_name = date.today().strftime("%y-%m-%d")
         file_path = os.path.join(self.folder_path, folder_name, 'CH'+str(channel)+' T '+folder_name+'.log')
 
-        with open(file_path, 'rb') as f:
-            
-            try:  # catch OSError in case of a one line file 
-                f.seek(-2, os.SEEK_END)
-                while f.read(1) != b'\n':
-                    f.seek(-2, os.SEEK_CUR)
-                return f.readline().decode()[18:30]
-            except (PermissionError, OSError) as err:
-                self.log.warn('Cannot access log file: {}. Returning np.nan instead of the temperature value.'.format(err))
-                return np.nan
-            except IndexError as err:
-                self.log.warn('Cannot parse log file: {}. Returning np.nan instead of the temperature value.'.format(err))
-                return np.nan                    
-            except OSError:
-                f.seek(0)
+        try:
+            df = pd.read_csv(file_path,
+                             delimiter=',',
+                             names=['date', 'time', 'y'],
+                             header=None)
 
+            # There is a space before the day
+            df.index = pd.to_datetime(
+                df['date']+'-'+df['time'], format='%d-%m-%y-%H:%M:%S')
+
+            return df.iloc[-1]['y']
+        except (PermissionError, OSError) as err:
+            self.log.warn(
+                f'\n{datetime.datetime.now()}\nCannot access log file: {err}. Returning np.nan instead of the temperature value.')
+            return np.nan
+        except IndexError as err:
+            self.log.warn(
+                f'\n{datetime.datetime.now()}\nCannot parse log file: {err}. Returning np.nan instead of the temperature value.')
+            return np.nan
 
     def get_pressure(self, channel: int) -> float:
         """
@@ -172,7 +177,7 @@ class BlueFors(Instrument):
 
         Args:
             channel (int): Channel from which the pressure is extracted.
-
+        
         Returns:
             pressure (float): Pressure of the channel in mBar.
         """
@@ -182,8 +187,8 @@ class BlueFors(Instrument):
 
         try:
             df = pd.read_csv(file_path,
-                            delimiter=',',
-                            names=['date', 'time',
+                             delimiter=',',
+                             names=['date', 'time',
                                     'ch1_name', 'ch1_void1', 'ch1_status', 'ch1_pressure', 'ch1_void2', 'ch1_void3',
                                     'ch2_name', 'ch2_void1', 'ch2_status', 'ch2_pressure', 'ch2_void2', 'ch2_void3',
                                     'ch3_name', 'ch3_void1', 'ch3_status', 'ch3_pressure', 'ch3_void2', 'ch3_void3',
@@ -191,9 +196,9 @@ class BlueFors(Instrument):
                                     'ch5_name', 'ch5_void1', 'ch5_status', 'ch5_pressure', 'ch5_void2', 'ch5_void3',
                                     'ch6_name', 'ch6_void1', 'ch6_status', 'ch6_pressure', 'ch6_void2', 'ch6_void3',
                                     'void'],
-                            header=None)
+                             header=None)
 
-            # df.index = pd.to_datetime(df['date']+'-'+df['time'], format='%d-%m-%y-%H:%M:%S')
+            df.index = pd.to_datetime(df['date']+'-'+df['time'], format='%d-%m-%y-%H:%M:%S')
 
             return df.iloc[-1]['ch'+str(channel)+'_pressure']
         except (PermissionError, OSError) as err:
@@ -202,4 +207,4 @@ class BlueFors(Instrument):
         except IndexError as err:
             self.log.warn('Cannot parse log file: {}. Returning np.nan instead of the pressure value.'.format(err))
             return np.nan
-        
+            
