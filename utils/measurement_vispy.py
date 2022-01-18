@@ -5,15 +5,11 @@ from time import sleep
 from numpy import array
 
 
-class MeasurementProcess(QObject):
+class MeasurementVis(QObject):
     """this class is used to perform experiments"""
     finished = pyqtSignal(int)
     signal_txt = pyqtSignal(int, list, list, list, list)
-<<<<<<< HEAD
-    signal_plot = pyqtSignal(int, float, float)
-=======
     signal_plot = pyqtSignal(int, list)
->>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
     signal_axis = pyqtSignal(list, list)
     signal_lines = pyqtSignal(int)
     signal_progress = pyqtSignal()
@@ -129,7 +125,9 @@ class MeasurementProcess(QObject):
                         self.performRecord(j, value_j, False)
 
                         for k in level[1]:
-                            linspacer = k[0].experimentLinspacer(k[1], k[3], k[4], k[5])
+                            self.createEmptyDataSet()
+                            linspacer = k[0].experimentLinspacer(
+                                k[1], k[3], k[4], k[5])
                             self.clear_progress.emit(len(linspacer))
                             for value_k in linspacer:
                                 self.performRecord(k, value_k, True)
@@ -151,7 +149,9 @@ class MeasurementProcess(QObject):
                 self.performRecord(i, value_i)
 
                 for j in level[1]:
-                    linspacer = j[0].experimentLinspacer(j[1], j[3], j[4], j[5])
+                    self.createEmptyDataSet()
+                    linspacer = j[0].experimentLinspacer(
+                        j[1], j[3], j[4], j[5])
                     self.clear_progress.emit(len(linspacer))
                     for value_j in linspacer:
                         self.performRecord(j, value_j, True)
@@ -169,6 +169,7 @@ class MeasurementProcess(QObject):
 
     def oneLevelTree(self, level):
         for i in level[0]:
+            self.createEmptyDataSet()
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
             logging.info(f'linespacer:{linspacer}')
             self.clear_progress.emit(len(linspacer))
@@ -194,9 +195,11 @@ class MeasurementProcess(QObject):
         # instrument_info = instrument method check target speed increment
         if instrument_info[5] != '0' and instrument_info[5] != '-':
             for value_increment in instrument_info[0].experimentLinspacer(instrument_info[1], value, instrument_info[4], '0'):
-                instrument_info[0].performSetValue(instrument_info[1], value_increment)
+                instrument_info[0].performSetValue(
+                    instrument_info[1], value_increment)
                 sleep(0.1)
-        set_value = instrument_info[0].performSetValue(instrument_info[1], value)
+        set_value = instrument_info[0].performSetValue(
+            instrument_info[1], value)
         sleep(0.1)
         x_show = [set_value, instrument_info[0].instrumentName(),
                   instrument_info[1]]
@@ -208,20 +211,18 @@ class MeasurementProcess(QObject):
         method_txt.append(instrument_info[1])
 
         for n, instrument_read in enumerate(self.instruments_read):
-            read_value = instrument_read.performGetValue(self.options_read[n], self.magnification[n])
+            read_value = instrument_read.performGetValue(
+                self.options_read[n], self.magnification[n])
             y_show.append(read_value)
             name_txt.append(instrument_read.instrumentName())
             method_txt.append(self.options_read[n])
             if bottom_level:
-<<<<<<< HEAD
-                self.signal_plot.emit(n, set_value, y_show[n])
-=======
                 self.signal_plot.emit(n, [set_value, read_value])
->>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739
 
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):
-            self.signal_txt.emit(self.file_count, method_txt, name_txt, x_show, y_show)
+            self.signal_txt.emit(self.file_count, method_txt,
+                                 name_txt, x_show, y_show)
         self.signal_progress.emit()
 
     def resumePauseMeasure(self):
@@ -239,9 +240,6 @@ class MeasurementProcess(QObject):
 
     def quitLoopMeasure(self):
         self.quit_loop = True
-<<<<<<< HEAD
-=======
 
     def createEmptyDataSet(self):
         pass
->>>>>>> 4a8ef20f52760e2d71f335d7342fced1bd557739

@@ -59,7 +59,7 @@ class Driver(SR830, DriverInterface):
         elif option == 'Magnitude(X) with auto sensitivity':
             self.autoSensitivity()
             value = self.x
-        return float(value) * float(magnification)
+        return value * magnification
 
     def autoSensitivity(self):
         """Set voltage scale to current range"""
