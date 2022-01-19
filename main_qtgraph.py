@@ -128,6 +128,7 @@ class MainWindow(QMainWindow):
         self.plt.showGrid(x=True, y=True, alpha=1)
         self.plt.setLabel('bottom', '   ')
         self.plt.setLabel('left', '   ')
+        self.plt.setDownsampling(auto=True, mode='peak')
 
         # Menu
         self.ui.retranslateUi(self)
