@@ -10,7 +10,7 @@ class MeasurementQt(QObject):
     signal_txt = pyqtSignal(int, list, list, list, list)
     signal_plot = pyqtSignal(int, float, float)
     signal_axis = pyqtSignal(list, list)
-    signal_lines = pyqtSignal(int)
+    signal_lines = pyqtSignal()
     signal_progress = pyqtSignal()
     clear_progress = pyqtSignal(int)
 
@@ -80,14 +80,12 @@ class MeasurementQt(QObject):
         for n, info in enumerate(info_tree):
             if info[0] == -1:
                 continue
-            level[level_count].append(
-                [info_tree[n][2], info_tree[n][3], info_tree[n][4], info_tree[n][5], info_tree[n][6], info_tree[n][7]])
+            level[level_count].append([info_tree[n][2], info_tree[n][3], info_tree[n][4], info_tree[n][5], info_tree[n][6], info_tree[n][7]])
             level_count += 1
 
             if info[0] != 0:
                 for i in range(info[0]):
-                    level[level_count].append([info_tree[n+1+i][2], info_tree[n+1+i][3], info_tree[n+1+i]
-                                              [4], info_tree[n+1+i][5], info_tree[n+1+i][6], info_tree[n+1+i][7]])
+                    level[level_count].append([info_tree[n+1+i][2], info_tree[n+1+i][3], info_tree[n+1+i][4], info_tree[n+1+i][5], info_tree[n+1+i][6], info_tree[n+1+i][7]])
 
         self.control_sequence.append(level)
 
@@ -134,7 +132,7 @@ class MeasurementQt(QObject):
                                     self.quit_loop = False
                                     return
 
-                            self.signal_lines.emit(self.line_count)
+                            self.signal_lines.emit() # self.line_count
                             self.line_count += 1
                             if int(k[2]):
                                 self.file_count += 1
@@ -156,7 +154,7 @@ class MeasurementQt(QObject):
                             self.quit_loop = False
                             return
 
-                    self.signal_lines.emit(self.line_count)
+                    self.signal_lines.emit()
                     self.line_count += 1
                     if int(j[2]):
                         self.file_count += 1
@@ -176,7 +174,7 @@ class MeasurementQt(QObject):
                     self.quit_loop = False
                     return
 
-            self.signal_lines.emit(self.line_count)
+            self.signal_lines.emit() # self.line_count
             self.line_count += 1
             if int(i[2]):
                 self.file_count += 1
@@ -192,8 +190,7 @@ class MeasurementQt(QObject):
                 sleep(0.1)
         set_value = instrument_info[0].performSetValue(instrument_info[1], value)
         sleep(0.1)
-        x_show = [set_value, instrument_info[0].instrumentName(),
-                  instrument_info[1]]
+        x_show = [set_value, instrument_info[0].instrumentName(), instrument_info[1]]
         y_show = []
         name_txt = []
         method_txt = []
@@ -207,7 +204,7 @@ class MeasurementQt(QObject):
             name_txt.append(instrument_read.instrumentName())
             method_txt.append(self.options_read[n])
             if bottom_level:
-                self.signal_plot.emit(n, set_value, y_show[n])
+                self.signal_plot.emit(n, set_value, read_value)
 
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):

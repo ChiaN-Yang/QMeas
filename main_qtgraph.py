@@ -26,6 +26,7 @@ class MainWindow(QMainWindow):
     save_plot_count = 0
     click = 1
     time_unit = 0.1  # 0.1s
+    progress = 0
 
     # instruments
     instruments = []
@@ -39,10 +40,13 @@ class MainWindow(QMainWindow):
     saved_line = []
     x_data = []
     y_data = []
+    color = 0
 
     # measurement & database module
     measurement = MeasurementQt([], [], [], [])
     database = TxtFunction()
+    # Create a QThread object
+    exp_thread = QThread()
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -106,13 +110,11 @@ class MainWindow(QMainWindow):
         # page 3
         # Buttons
         self.ui.pushButton_13.clicked.connect(self.displayCursorCrossHair)
-        self.ui.pushButton_13.clicked.connect(self.autoPlotRange)
+        self.ui.pushButton_12.clicked.connect(self.autoPlotRange)
         self.ui.pushButton_11.clicked.connect(self.procedureStop)
-        self.ui.pushButton_15.clicked.connect(
-            self.measurement.resumePauseMeasure)
+        self.ui.pushButton_15.clicked.connect(self.measurement.resumePauseMeasure)
         self.ui.pushButton_17.clicked.connect(self.measurement.quitLoopMeasure)
-        self.ui.pushButton_14.clicked.connect(
-            self.measurement.quitSweepMeasure)
+        self.ui.pushButton_14.clicked.connect(self.measurement.quitSweepMeasure)
         self.ui.pushButton_16.clicked.connect(self.plot_save)
 
         # Tables
@@ -143,6 +145,9 @@ class MainWindow(QMainWindow):
 
         # Set Window style
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+
+        # Move worker to the thread
+        self.database.moveToThread(self.exp_thread)
 
     # =============================================================================
     # Page 1
@@ -533,13 +538,12 @@ class MainWindow(QMainWindow):
     #  Start and stop function
     # =============================================================================
     def folderMessage(self):
-        global folder_address
-        folder_address = QFileDialog.getExistingDirectory(self, "Please define the file name", self.cwd)
+        self.folder_address = QFileDialog.getExistingDirectory(self, "Please define the file name", self.cwd)
 
-        if folder_address != '':
-            self.folder_name = folder_address
+        if self.folder_address != '':
+            self.folder_name = self.folder_address
             self.ui.label_18.setText(self.folder_name)
-            self.cwd = folder_address
+            self.cwd = self.folder_address
 
     def timeGo(self):
         """ TimeGo is the first activating function when "run" the project
@@ -556,7 +560,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(self, "Wrong!.", "Please type the file name.")
             else:
                 file_name = f'{self.name}.txt'
-                List = os.listdir(folder_address)
+                List = os.listdir(self.folder_address)
                 if file_name in List:
                     reply = QMessageBox.information(
                         self, "Wrong!.", "The file has existed. Do you want to overwrite it?",
@@ -578,13 +582,10 @@ class MainWindow(QMainWindow):
         # plotlines init
         self.createEmptyLines()
         self.lineDisplaySwitchCreat()
-        # Create a QThread object
-        self.exp_thread = QThread()
         # Create a worker object
         self.measurement = None
         self.measurement = MeasurementQt(self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
         # Move worker to the thread
-        self.database.moveToThread(self.exp_thread)
         self.measurement.moveToThread(self.exp_thread)
         # porcedure start
         self.measurement.schedule(self.tree_num, self.child_num, self.leve_position, self.check,
@@ -602,8 +603,7 @@ class MainWindow(QMainWindow):
         self.exp_thread.start()
         # final resets
         self.ui.pushButton_5.setEnabled(False)
-        self.exp_thread.finished.connect(
-            lambda: self.ui.pushButton_5.setEnabled(True))
+        self.exp_thread.finished.connect(lambda: self.ui.pushButton_5.setEnabled(True))
 
     def timeStop(self, file_count):
         """measure stop"""
@@ -633,9 +633,8 @@ class MainWindow(QMainWindow):
     # =============================================================================
 
     def createEmptyLines(self):
-        """
-        creat the plotDataItem as data_line_%d where %d = 0, 1, 2... (reference)
-        the x y value will be set later within the function plot_update()
+        """ creat the plotDataItem as data_line[i] where i = 0, 1, 2... (reference)
+            the x y value will be set later within the function plot_update()
         """
         self.plt.clear()
         self.x_data = np.array([], dtype=np.float32)
@@ -648,11 +647,18 @@ class MainWindow(QMainWindow):
         for _ in range(self.read_len):
             self.data_line.append(self.ui.graphWidget.plot([]))
 
-    def saveLines(self, file_count):
+    def saveLines(self):
         for i in range(self.read_len):
-            self.saved_line.append(self.ui.graphWidget.plot([]))
-            self.saved_line[i + self.read_len*(file_count)].setData(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(i+1), width=1))
+            self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(self.color), width=1))
             self.data_line[i].setData([])
+            self.color += 1
+        
+        # initialize x y data
+        self.x_data = np.array([], dtype=np.float32)
+        self.y_data = []
+        for _ in range(self.read_len):
+            self.y_data.append(np.array([], dtype=np.float32))
+
 
     def plotUpdate(self, n, x, y_n):
         if n == 0:
