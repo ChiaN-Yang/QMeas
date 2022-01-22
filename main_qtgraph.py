@@ -639,18 +639,23 @@ class MainWindow(QMainWindow):
         self.plt.clear()
         self.x_data = np.array([], dtype=np.float32)
         self.y_data = []
+        self.saved_data = {}
         self.read_len = len(self.instruments_read)
         for _ in range(self.read_len):
             self.y_data.append(np.array([], dtype=np.float32))
         self.data_line = []
-        self.saved_line = []
+        self.saved_line = {}
         for _ in range(self.read_len):
             self.data_line.append(self.ui.graphWidget.plot([]))
 
-    def saveLines(self):
+    def saveLines(self, file_count):
         for i in range(self.read_len):
-            self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(self.color), width=1))
-            self.data_line[i].setData([])
+            if self.switch_list[file_count%self.read_len]:
+                self.saved_line[i + self.read_len*(file_count)] = self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(self.color), width=1))            
+            else:
+                self.saved_line[i + self.read_len*(file_count)] = self.ui.graphWidget.plot([])
+            self.saved_data[i + self.read_len*(file_count)] = [self.x_data, self.y_data[i]]
+            self.data_line[i].setData([]) # setData([])
             self.color += 1
         
         # initialize x y data
@@ -665,7 +670,7 @@ class MainWindow(QMainWindow):
             self.x_data = np.append(self.x_data, [x])
         self.y_data[n] = np.append(self.y_data[n], y_n)
         # setData to the PlotItems
-        if self.switch_list[n] == 1:
+        if self.switch_list[n]:
             self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(pg.intColor(n+1), width=1))
         else:
             self.data_line[n].setData([])
@@ -691,23 +696,35 @@ class MainWindow(QMainWindow):
             self.ui.tableWidget_5.setItem(2, (i + 1), QTableWidgetItem(f'{y_show[i]:g}'))
 
     def lineDisplaySwitchCreat(self):
-        global switch_list
-        switch_list = []
         self.switch_list = []
         for _ in range(self.read_len):
-            self.switch_list.append(1)
-            switch_list.append(1)
+            self.switch_list.append(True)
 
     def lineDisplaySwitch(self):
         """ this function is connected to tableWidget_5 on page 3
             the function activates whenever the tablewidge_5 is clicked
         """
         # TODO: this function is not well working. it needs to establish multiple switch to each channel
-        col = self.ui.tableWidget_5.currentColumn()
-        if col == 0:
+        col = self.ui.tableWidget_5.currentColumn()-1
+        if col == -1:   # ignore x_show column
             return
+        if self.switch_list[col]:
+            self.switch_list[col] = False
+            for curve_id in self.saved_line.keys():
+                if curve_id % self.read_len == col:
+                    self.lineHide(curve_id)
         else:
-            self.switch_list[col - 1] = self.switch_list[col - 1]*(-1)
+            self.switch_list[col] = True
+            for curve_id in self.saved_line.keys():
+                if curve_id % self.read_len == col:
+                    self.lineSet(curve_id)
+
+    def lineSet(self, curve_id):
+        curve = self.saved_line[curve_id]
+        curve.setData(self.saved_data[curve_id][0], self.saved_data[curve_id][1])
+
+    def lineHide(self, curve_id):
+        self.saved_line[curve_id].setData([])
 
 
 class ControlPanel(QDialog):

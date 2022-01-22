@@ -5,6 +5,7 @@ Created on Mon Aug 30 16:45:34 2021
 """
 import pandas as pd
 import os
+from os.path import exists
 from PyQt5.QtCore import QObject
 
 
@@ -61,7 +62,10 @@ class TxtFunction(QObject):
     def txtMerger(self, file_name, sequence_length, channel_num):
         # channel_num is the total number of reading channel + 1 X channel
         # we get the channel number from y_show + 1
-
+        
+        # Check if the next file is incompleted
+        if exists(f'./data/{sequence_length}.txt'):
+            sequence_length += 1
         # creat a empty list named title to record <CHA> S1C1 S1C2....
         title = []
         for j in range(sequence_length):
@@ -82,6 +86,9 @@ class TxtFunction(QObject):
         final_df.to_csv(f'{file_name}.txt', header=True, index=False, sep='\t', mode='a')
 
     def txtDeleter(self, sequence_length):
+        # Check if the next file is incompleted
+        if exists(f'./data/{sequence_length}.txt'):
+            sequence_length += 1
         for i in range(sequence_length):
             os.remove(f"./data/{i}.txt")
 

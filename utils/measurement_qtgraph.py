@@ -10,16 +10,16 @@ class MeasurementQt(QObject):
     signal_txt = pyqtSignal(int, list, list, list, list)
     signal_plot = pyqtSignal(int, float, float)
     signal_axis = pyqtSignal(list, list)
-    signal_lines = pyqtSignal()
+    signal_lines = pyqtSignal(int)
     signal_progress = pyqtSignal()
     clear_progress = pyqtSignal(int)
 
     def __init__(self, instruments, instruments_read, options_read, instruments_magnification):
         super().__init__()
-        self.instruments = instruments
-        self.instruments_read = instruments_read
-        self.options_read = options_read
-        self.magnification = instruments_magnification
+        self.instruments = instruments.copy()
+        self.instruments_read = instruments_read.copy()
+        self.options_read = options_read.copy()
+        self.magnification = instruments_magnification.copy()
         self.control_sequence = []
         # control variable
         self.stop_running = False
@@ -113,17 +113,18 @@ class MeasurementQt(QObject):
 
     def threeLevelsTree(self, level):
         for i in level[0]:  # i = [instrument,method,check,target,speed,increment]
-            for value_i in i[0].experimentLinspacer(i[1], i[3], i[4], i[5]):
+            linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
+            self.clear_progress.emit(len(linspacer))
+            for value_i in linspacer:
                 self.performRecord(i, value_i, False)
+                self.signal_progress.emit()
 
                 for j in level[1]:
                     for value_j in j[0].experimentLinspacer(j[1], j[3], j[4], j[5]):
                         self.performRecord(j, value_j, False)
 
                         for k in level[1]:
-                            linspacer = k[0].experimentLinspacer(k[1], k[3], k[4], k[5])
-                            self.clear_progress.emit(len(linspacer))
-                            for value_k in linspacer:
+                            for value_k in k[0].experimentLinspacer(k[1], k[3], k[4], k[5]):
                                 self.performRecord(k, value_k, True)
                                 if self.quit_sweep:
                                     self.quit_sweep = False
@@ -132,20 +133,21 @@ class MeasurementQt(QObject):
                                     self.quit_loop = False
                                     return
 
-                            self.signal_lines.emit() # self.line_count
+                            self.signal_lines.emit(self.line_count)
                             self.line_count += 1
                             if int(k[2]):
                                 self.file_count += 1
 
     def twoLevelsTree(self, level):
         for i in level[0]:
-            for value_i in i[0].experimentLinspacer(i[1], i[3], i[4], i[5]):
+            linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
+            self.clear_progress.emit(len(linspacer))
+            for value_i in linspacer:
                 self.performRecord(i, value_i)
+                self.signal_progress.emit()
 
                 for j in level[1]:
-                    linspacer = j[0].experimentLinspacer(j[1], j[3], j[4], j[5])
-                    self.clear_progress.emit(len(linspacer))
-                    for value_j in linspacer:
+                    for value_j in j[0].experimentLinspacer(j[1], j[3], j[4], j[5]):
                         self.performRecord(j, value_j, True)
                         if self.quit_sweep:
                             self.quit_sweep = False
@@ -154,7 +156,7 @@ class MeasurementQt(QObject):
                             self.quit_loop = False
                             return
 
-                    self.signal_lines.emit()
+                    self.signal_lines.emit(self.line_count)
                     self.line_count += 1
                     if int(j[2]):
                         self.file_count += 1
@@ -162,11 +164,10 @@ class MeasurementQt(QObject):
     def oneLevelTree(self, level):
         for i in level[0]:
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
-            logging.info('linespacer: ', linspacer)
             self.clear_progress.emit(len(linspacer))
             for value_i in linspacer:
-                logging.info(value_i, 'value_i')
                 self.performRecord(i, value_i, True)
+                self.signal_progress.emit()
                 if self.quit_sweep:
                     self.quit_sweep = False
                     break
@@ -174,7 +175,7 @@ class MeasurementQt(QObject):
                     self.quit_loop = False
                     return
 
-            self.signal_lines.emit() # self.line_count
+            self.signal_lines.emit(self.line_count)
             self.line_count += 1
             if int(i[2]):
                 self.file_count += 1
@@ -209,7 +210,6 @@ class MeasurementQt(QObject):
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):
             self.signal_txt.emit(self.file_count, method_txt, name_txt, x_show, y_show)
-        self.signal_progress.emit()
 
     def resumePauseMeasure(self):
         if self.stop_running == False:

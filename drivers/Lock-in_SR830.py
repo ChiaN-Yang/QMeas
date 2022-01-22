@@ -5,7 +5,7 @@ from time import sleep
 
 class Driver(SR830, DriverInterface):
     METHOD = ['Voltage', 'Frequency', 'Magnitude(R)', 'Magnitude(X)', 'Phase', 'Analog in 1', 'Analog in 2',
-              'Magnitude(R) with auto sensitivity', 'Magnitude(X) with auto sensitivity']
+              'Magnitude(R) with auto sensitivity', 'Magnitude(X) with auto sensitivity','Triton Temperature (AUX in 3)']
 
     def __init__(self, visa_address):
         SR830.__init__(self, visa_address)
@@ -59,6 +59,22 @@ class Driver(SR830, DriverInterface):
         elif option == 'Magnitude(X) with auto sensitivity':
             self.autoSensitivity()
             value = self.x
+        elif option == 'Triton Temperature (AUX in 3)':
+            aux_volt =  self.aux_in_3
+            # voltage setting in Lakeshore
+            volt_low = -10
+            volt_high = 10
+            # user-defined two temperature endpoints (K)
+            # magnification = '50,125'; scale = ['50','125']
+            scale = magnification.split(',')
+            endpoint_1 = float(scale[0]) # temp in [K] for -10V
+            endpoint_2 = float(scale[1]) # temp in [K] for +10V
+            # Calculate the slope and intercept
+            slope = (endpoint_2 - endpoint_1) / (volt_high - volt_low)
+            intercept = slope * (-volt_high) + endpoint_2
+            # Calculate the corresponding Temperature
+            value = aux_volt*slope + intercept
+            return value
         return value * magnification
 
     def autoSensitivity(self):
