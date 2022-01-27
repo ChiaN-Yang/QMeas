@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QThread, Qt
+from PyQt5.QtCore import QThread, Qt, pyqtSlot
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
 import pyqtgraph as pg
 from ui import Qt_Window, Control_Window, Read_Window
@@ -111,10 +111,7 @@ class MainWindow(QMainWindow):
         # Buttons
         self.ui.pushButton_13.clicked.connect(self.displayCursorCrossHair)
         self.ui.pushButton_12.clicked.connect(self.autoPlotRange)
-        self.ui.pushButton_11.clicked.connect(self.procedureStop)
-        self.ui.pushButton_15.clicked.connect(self.measurement.resumePauseMeasure)
-        self.ui.pushButton_17.clicked.connect(self.measurement.quitLoopMeasure)
-        self.ui.pushButton_14.clicked.connect(self.measurement.quitSweepMeasure)
+        self.ui.stopButton.clicked.connect(self.procedureStop)
         self.ui.pushButton_16.clicked.connect(self.plot_save)
 
         # Tables
@@ -136,7 +133,6 @@ class MainWindow(QMainWindow):
         self.ui.retranslateUi(self)
         self.ui.actionQuit.setShortcut('Ctrl+Q')
         self.ui.actionQuit.triggered.connect(self.timeStop)
-        self.ui.actionQuit.triggered.connect(self.shutdownInstruments)
         self.ui.actionQuit.triggered.connect(app.exit)
         self.ui.actionQuit.triggered.connect(self.close)
 
@@ -495,6 +491,21 @@ class MainWindow(QMainWindow):
     # =============================================================================
     # Page 3
     # =============================================================================
+    @pyqtSlot()
+    def on_loopButton_clicked(self):
+        self.measurement.quitLoopMeasure()
+
+    @pyqtSlot()
+    def on_sweepButton_clicked(self):
+        self.measurement.quitSweepMeasure()
+
+    @pyqtSlot()
+    def on_pauseButton_clicked(self):
+        if self.ui.pauseButton.text() == "Pause":
+            self.ui.pauseButton.setText("Resune")
+        else:
+            self.ui.pauseButton.setText("Pause")
+        self.measurement.resumePauseMeasure()
 
     def pageThreeInformation(self, string):
         self.ui.textBrowser_3.clear

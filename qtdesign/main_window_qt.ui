@@ -865,7 +865,7 @@ p, li { white-space: pre-wrap; }
          </rect>
         </property>
        </widget>
-       <widget class="QPushButton" name="pushButton_11">
+       <widget class="QPushButton" name="stopButton">
         <property name="geometry">
          <rect>
           <x>1490</x>
@@ -1057,7 +1057,7 @@ p, li { white-space: pre-wrap; }
          </property>
         </column>
        </widget>
-       <widget class="QPushButton" name="pushButton_14">
+       <widget class="QPushButton" name="sweepButton">
         <property name="geometry">
          <rect>
           <x>1490</x>
@@ -1073,7 +1073,7 @@ p, li { white-space: pre-wrap; }
          <bool>true</bool>
         </property>
        </widget>
-       <widget class="QPushButton" name="pushButton_15">
+       <widget class="QPushButton" name="pauseButton">
         <property name="geometry">
          <rect>
           <x>1490</x>
@@ -1083,7 +1083,7 @@ p, li { white-space: pre-wrap; }
          </rect>
         </property>
         <property name="text">
-         <string>Resume / Pause</string>
+         <string>Pause</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -1121,7 +1121,7 @@ p, li { white-space: pre-wrap; }
          <number>0</number>
         </property>
        </widget>
-       <widget class="QPushButton" name="pushButton_17">
+       <widget class="QPushButton" name="loopButton">
         <property name="geometry">
          <rect>
           <x>1490</x>

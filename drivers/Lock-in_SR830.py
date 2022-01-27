@@ -75,7 +75,7 @@ class Driver(SR830, DriverInterface):
             # Calculate the corresponding Temperature
             value = aux_volt*slope + intercept
             return value
-        return value * magnification
+        return float(value) * magnification
 
     def autoSensitivity(self):
         """Set voltage scale to current range"""
