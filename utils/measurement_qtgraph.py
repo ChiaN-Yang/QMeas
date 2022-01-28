@@ -8,7 +8,7 @@ class MeasurementQt(QObject):
     """this class is used to perform experiments"""
     finished = pyqtSignal(int)
     signal_txt = pyqtSignal(int, list, list, list, list)
-    signal_plot = pyqtSignal(int, float, float)
+    signal_plot = pyqtSignal(int, float, float, int)
     signal_axis = pyqtSignal(list, list)
     signal_lines = pyqtSignal(int)
     signal_progress = pyqtSignal()
@@ -205,7 +205,7 @@ class MeasurementQt(QObject):
             name_txt.append(instrument_read.instrumentName())
             method_txt.append(self.options_read[n])
             if bottom_level:
-                self.signal_plot.emit(n, set_value, read_value)
+                self.signal_plot.emit(n, set_value, read_value, self.line_count)
 
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):

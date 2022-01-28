@@ -8,7 +8,7 @@ import sys
 from PyQt5 import sip
 import pyvisa as visa
 import os
-from utils import load_drivers, TxtFunction, MeasurementQt
+from utils import load_drivers, TxtFunction, MeasurementQt, addtwodimdict
 import qdarkstyle
 from nidaqmx.system import System
 import logging
@@ -40,16 +40,17 @@ class MainWindow(QMainWindow):
     x_data = []
     y_data = []
     color = 0
-    start_plot_num = 1
-    max_plot_num = np.Inf
-    max_plot_count = 0
-    space_plot_num = 1
 
     # measurement & database module
     measurement = MeasurementQt([], [], [], [])
     database = TxtFunction()
     # Create a QThread object
     exp_thread = QThread()
+
+    # choose line
+    choose_line_start = 0
+    choose_line_space = 1
+    choose_line_num = 0
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -509,27 +510,22 @@ class MainWindow(QMainWindow):
         else:
             self.ui.pauseButton.setText("Pause")
         self.measurement.resumePauseMeasure()
-
+   
     @pyqtSlot(int)
     def on_spinBox_valueChanged(self, value):
         """ Draw from the nth line """
-        self.start_plot_num = value-1
+        self.choose_line_start = value-1
         self.renewGraph()
 
     @pyqtSlot(int)
     def on_spinBox_2_valueChanged(self, value):
         """ A total of n lines to draw """
-        if value == 0:
-            self.max_plot_num = np.Inf
-        else:
-            read_len = self.switch_list.count(True)
-            self.max_plot_num = value*read_len
         self.renewGraph()
 
     @pyqtSlot(int)
     def on_spinBox_3_valueChanged(self, value):
         """ draw every n lines """
-        self.space_plot_num = value
+        self.choose_line_space = value
         self.renewGraph()
 
     def pageThreeInformation(self, string):
@@ -695,21 +691,25 @@ class MainWindow(QMainWindow):
             self.y_data.append(np.array([], dtype=np.float32))
             self.switch_list.append(True)
             
-    def plotUpdate(self, n, x, y_n):
+    def plotUpdate(self, n, x, y_n, line_id):
         if n == 0:
             self.x_data = np.append(self.x_data, [x])
         self.y_data[n] = np.append(self.y_data[n], y_n)
         # setData to the PlotItems
-        if self.switch_list[n] and self.max_plot_count < self.max_plot_num:
+        # TODO: self.choose_line_num==0 is not complete
+        if self.switch_list[n] and self.choose_line_num==0:
+            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(pg.intColor(n+1), width=1))
+        elif self.switch_list[n] and line_id in self.choose_line:
             self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(pg.intColor(n+1), width=1))
 
     def saveLines(self, file_count):
         for i in range(self.read_len):
             if self.switch_list[file_count%self.read_len]:
                 self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(self.color), width=1))
-            self.saved_data[i + self.read_len*(file_count)] = [self.x_data, self.y_data[i]]
+            addtwodimdict(self.saved_data, file_count, i, [self.x_data, self.y_data[i]])
             self.data_line[i].setData([])
             self.color += 1
+            self.line_num_now = file_count
         
         # initialize x y data
         self.x_data = np.array([], dtype=np.float32)
@@ -721,7 +721,6 @@ class MainWindow(QMainWindow):
         """ this function is connected to tableWidget_5 on page 3
             the function activates whenever the tablewidge_5 is clicked
         """
-        # TODO: this function is not well working. it needs to establish multiple switch to each channel
         col = self.ui.tableWidget_5.currentColumn()-1
         if col == -1:   # ignore x_show column
             return
@@ -734,19 +733,32 @@ class MainWindow(QMainWindow):
     def renewGraph(self):
         self.plt.clear()
         self.color = 0
-        self.max_plot_count = 0
         self.data_line = []
         for _ in range(self.read_len):
             self.data_line.append(self.ui.graphWidget.plot([]))
 
-        for curve_id in self.saved_data.keys():
-            if self.switch_list[curve_id % self.read_len] and curve_id/self.read_len >= self.start_plot_num:
-                self.ui.graphWidget.plot(self.saved_data[curve_id][0], self.saved_data[curve_id][1], pen=pg.mkPen(pg.intColor(self.color), width=1))
-                self.color += 1
-                self.max_plot_count += 1
-                # if self.max_plot_count >= self.max_plot_num:
-                #     break
-
+        # get choose_line_num
+        self.choose_line_num = self.ui.spinBox_2.value()
+        if self.choose_line_num == 0:
+            self.choose_line_num = int(self.line_num_now)
+        else:
+            self.choose_line_num -= 1
+        
+        start = self.choose_line_start*self.choose_line_space
+        self.choose_line = np.linspace(start, start+self.choose_line_space*self.choose_line_num, self.choose_line_num+1, dtype=np.int32)
+        print(self.choose_line_num+1)
+        print(self.choose_line)
+        for curve_group in self.choose_line:
+            for curve_num in range(self.read_len):
+                if self.switch_list[curve_num]:                    
+                    try:
+                        data = self.saved_data[curve_group][curve_num]
+                        print(f'curve_group:{curve_group}, curve_num:{curve_num}')
+                        self.ui.graphWidget.plot(data[0], data[1], pen=pg.mkPen(pg.intColor(self.color), width=1))
+                        self.color += 1
+                    except KeyError:
+                        pass
+                    
     # =============================================================================
     # axis setting
     # =============================================================================

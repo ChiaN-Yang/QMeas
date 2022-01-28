@@ -23,7 +23,7 @@ class TimeMeasurement:
         pass
 
     def experimentLinspacer(self, option, target, speed, increment):
-        time = np.arange(0, self.time, 0.1)
+        time = np.arange(0.1, self.time+0.1, 0.1)
         return np.round(time, 2)
 
     def setProperty(self, visa_address, instrument_name, instrument_type):

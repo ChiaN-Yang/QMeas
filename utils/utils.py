@@ -24,3 +24,14 @@ def load_drivers():
         sys.exit()
 
     return dict(zip(driver_list, DriverInterface.__subclasses__()))
+
+def addtwodimdict(thedict, key_a, key_b, val):
+    """ Example:
+        addtwodimdict(mapdict, 'Chengdu', 'Guangzhou', 1243)
+        print(mapdict['Chengdu']['Guangzhou'])
+    """
+    if key_a in thedict:
+        thedict[key_a].update({key_b: val})
+    else:
+        thedict.update({key_a:{key_b: val}})
+        
