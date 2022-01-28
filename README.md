@@ -86,4 +86,4 @@ In vscode, it can be installed with pip:
 ## Hint
 transfer .ui to .py:
 
-    pyuic5 -x main_window.ui -o main_window.py
+    pyuic5 -x "./qtdesign/main_window_qt.ui" -o "./ui/main_window_qt.py"

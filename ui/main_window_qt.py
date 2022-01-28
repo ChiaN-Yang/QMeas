@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'main_window_qt.ui'
+# Form implementation generated from reading ui file './qtdesign/main_window_qt.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -429,6 +429,7 @@ class Ui_MainWindow(object):
         self.line_3.setObjectName("line_3")
         self.spinBox = QtWidgets.QSpinBox(self.tab_3)
         self.spinBox.setGeometry(QtCore.QRect(1570, 360, 42, 22))
+        self.spinBox.setMinimum(1)
         self.spinBox.setObjectName("spinBox")
         self.label_14 = QtWidgets.QLabel(self.tab_3)
         self.label_14.setGeometry(QtCore.QRect(1480, 360, 71, 20))
@@ -447,6 +448,7 @@ class Ui_MainWindow(object):
         self.label_16.setObjectName("label_16")
         self.spinBox_3 = QtWidgets.QSpinBox(self.tab_3)
         self.spinBox_3.setGeometry(QtCore.QRect(1570, 440, 42, 22))
+        self.spinBox_3.setMinimum(1)
         self.spinBox_3.setObjectName("spinBox_3")
         self.tabWidget.addTab(self.tab_3, "")
         self.gridLayout_2.addWidget(self.tabWidget, 0, 1, 1, 1)

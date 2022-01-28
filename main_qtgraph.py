@@ -37,10 +37,13 @@ class MainWindow(QMainWindow):
 
     # PlotItem lines
     data_line = []
-    saved_line = []
     x_data = []
     y_data = []
     color = 0
+    start_plot_num = 1
+    max_plot_num = np.Inf
+    max_plot_count = 0
+    space_plot_num = 1
 
     # measurement & database module
     measurement = MeasurementQt([], [], [], [])
@@ -112,7 +115,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_13.clicked.connect(self.displayCursorCrossHair)
         self.ui.pushButton_12.clicked.connect(self.autoPlotRange)
         self.ui.stopButton.clicked.connect(self.procedureStop)
-        self.ui.pushButton_16.clicked.connect(self.plot_save)
+        self.ui.pushButton_16.clicked.connect(self.plotSave)
 
         # Tables
         self.ui.tableWidget_5.cellClicked.connect(self.lineDisplaySwitch)
@@ -507,6 +510,28 @@ class MainWindow(QMainWindow):
             self.ui.pauseButton.setText("Pause")
         self.measurement.resumePauseMeasure()
 
+    @pyqtSlot(int)
+    def on_spinBox_valueChanged(self, value):
+        """ Draw from the nth line """
+        self.start_plot_num = value-1
+        self.renewGraph()
+
+    @pyqtSlot(int)
+    def on_spinBox_2_valueChanged(self, value):
+        """ A total of n lines to draw """
+        if value == 0:
+            self.max_plot_num = np.Inf
+        else:
+            read_len = self.switch_list.count(True)
+            self.max_plot_num = value*read_len
+        self.renewGraph()
+
+    @pyqtSlot(int)
+    def on_spinBox_3_valueChanged(self, value):
+        """ draw every n lines """
+        self.space_plot_num = value
+        self.renewGraph()
+
     def pageThreeInformation(self, string):
         self.ui.textBrowser_3.clear
         self.ui.textBrowser_3.append(str(string))
@@ -530,6 +555,13 @@ class MainWindow(QMainWindow):
             mousePoint = self.ui.graphWidget.getPlotItem().vb.mapSceneToView(pos)
             self.crosshair_v.setPos(mousePoint.x())
             self.crosshair_h.setPos(mousePoint.y())
+
+    def plotSave(self):
+        """ save figure from page3 """
+        exporter = pg.exporters.ImageExporter(self.plt.scene())
+        exporter.export(self.full_address + '_%d.png' % self.save_plot_count)
+        QMessageBox.information(self, "Done.", "The figure No.%d has been saved." % self.save_plot_count)
+        self.save_plot_count += 1
 
     def autoPlotRange(self):
         # TODO: auto view when clicking is still not working
@@ -592,7 +624,6 @@ class MainWindow(QMainWindow):
         self.switchToPlotTab()
         # plotlines init
         self.createEmptyLines()
-        self.lineDisplaySwitchCreat()
         # Create a worker object
         self.measurement = None
         self.measurement = MeasurementQt(self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
@@ -645,28 +676,39 @@ class MainWindow(QMainWindow):
 
     def createEmptyLines(self):
         """ creat the plotDataItem as data_line[i] where i = 0, 1, 2... (reference)
-            the x y value will be set later within the function plot_update()
+            the x y value will be set later within the function plotUpdate()
         """
         self.plt.clear()
+        self.read_len = len(self.instruments_read)
+        # one line data
         self.x_data = np.array([], dtype=np.float32)
         self.y_data = []
+        # all data
         self.saved_data = {}
-        self.read_len = len(self.instruments_read)
-        for _ in range(self.read_len):
-            self.y_data.append(np.array([], dtype=np.float32))
+        # plot item
         self.data_line = []
-        self.saved_line = {}
+        # line display switch
+        self.switch_list = []
+
         for _ in range(self.read_len):
             self.data_line.append(self.ui.graphWidget.plot([]))
+            self.y_data.append(np.array([], dtype=np.float32))
+            self.switch_list.append(True)
+            
+    def plotUpdate(self, n, x, y_n):
+        if n == 0:
+            self.x_data = np.append(self.x_data, [x])
+        self.y_data[n] = np.append(self.y_data[n], y_n)
+        # setData to the PlotItems
+        if self.switch_list[n] and self.max_plot_count < self.max_plot_num:
+            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(pg.intColor(n+1), width=1))
 
     def saveLines(self, file_count):
         for i in range(self.read_len):
             if self.switch_list[file_count%self.read_len]:
-                self.saved_line[i + self.read_len*(file_count)] = self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(self.color), width=1))            
-            else:
-                self.saved_line[i + self.read_len*(file_count)] = self.ui.graphWidget.plot([])
+                self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(self.color), width=1))
             self.saved_data[i + self.read_len*(file_count)] = [self.x_data, self.y_data[i]]
-            self.data_line[i].setData([]) # setData([])
+            self.data_line[i].setData([])
             self.color += 1
         
         # initialize x y data
@@ -675,22 +717,39 @@ class MainWindow(QMainWindow):
         for _ in range(self.read_len):
             self.y_data.append(np.array([], dtype=np.float32))
 
-
-    def plotUpdate(self, n, x, y_n):
-        if n == 0:
-            self.x_data = np.append(self.x_data, [x])
-        self.y_data[n] = np.append(self.y_data[n], y_n)
-        # setData to the PlotItems
-        if self.switch_list[n]:
-            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(pg.intColor(n+1), width=1))
+    def lineDisplaySwitch(self):
+        """ this function is connected to tableWidget_5 on page 3
+            the function activates whenever the tablewidge_5 is clicked
+        """
+        # TODO: this function is not well working. it needs to establish multiple switch to each channel
+        col = self.ui.tableWidget_5.currentColumn()-1
+        if col == -1:   # ignore x_show column
+            return
+        if self.switch_list[col]:
+            self.switch_list[col] = False
         else:
-            self.data_line[n].setData([])
+            self.switch_list[col] = True
+        self.renewGraph()
 
-    def plot_save(self):
-        exporter = pg.exporters.ImageExporter(self.plt.scene())
-        exporter.export(self.full_address + '_%d.png' % self.save_plot_count)
-        QMessageBox.information(self, "Done.", "The figure No.%d has been saved." % self.save_plot_count)
-        self.save_plot_count += 1
+    def renewGraph(self):
+        self.plt.clear()
+        self.color = 0
+        self.max_plot_count = 0
+        self.data_line = []
+        for _ in range(self.read_len):
+            self.data_line.append(self.ui.graphWidget.plot([]))
+
+        for curve_id in self.saved_data.keys():
+            if self.switch_list[curve_id % self.read_len] and curve_id/self.read_len >= self.start_plot_num:
+                self.ui.graphWidget.plot(self.saved_data[curve_id][0], self.saved_data[curve_id][1], pen=pg.mkPen(pg.intColor(self.color), width=1))
+                self.color += 1
+                self.max_plot_count += 1
+                # if self.max_plot_count >= self.max_plot_num:
+                #     break
+
+    # =============================================================================
+    # axis setting
+    # =============================================================================
 
     def axisUpdate(self, x_show, y_show):
         # update x title (instrument name and method)
@@ -705,37 +764,6 @@ class MainWindow(QMainWindow):
         i = 0
         for i in range(self.read_len):
             self.ui.tableWidget_5.setItem(2, (i + 1), QTableWidgetItem(f'{y_show[i]:g}'))
-
-    def lineDisplaySwitchCreat(self):
-        self.switch_list = []
-        for _ in range(self.read_len):
-            self.switch_list.append(True)
-
-    def lineDisplaySwitch(self):
-        """ this function is connected to tableWidget_5 on page 3
-            the function activates whenever the tablewidge_5 is clicked
-        """
-        # TODO: this function is not well working. it needs to establish multiple switch to each channel
-        col = self.ui.tableWidget_5.currentColumn()-1
-        if col == -1:   # ignore x_show column
-            return
-        if self.switch_list[col]:
-            self.switch_list[col] = False
-            for curve_id in self.saved_line.keys():
-                if curve_id % self.read_len == col:
-                    self.lineHide(curve_id)
-        else:
-            self.switch_list[col] = True
-            for curve_id in self.saved_line.keys():
-                if curve_id % self.read_len == col:
-                    self.lineSet(curve_id)
-
-    def lineSet(self, curve_id):
-        curve = self.saved_line[curve_id]
-        curve.setData(self.saved_data[curve_id][0], self.saved_data[curve_id][1])
-
-    def lineHide(self, curve_id):
-        self.saved_line[curve_id].setData([])
 
 
 class ControlPanel(QDialog):
