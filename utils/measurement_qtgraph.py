@@ -14,7 +14,7 @@ class MeasurementQt(QObject):
     signal_progress = pyqtSignal()
     clear_progress = pyqtSignal(int)
 
-    def __init__(self, instruments, instruments_read, options_read, instruments_magnification):
+    def __init__(self, instruments, instruments_read, options_read, instruments_magnification, tree_info):
         super().__init__()
         self.instruments = instruments.copy()
         self.instruments_read = instruments_read.copy()
@@ -26,6 +26,9 @@ class MeasurementQt(QObject):
         self.quit_running = False
         self.quit_sweep = False
         self.quit_loop = False
+        if tree_info != []:
+            #             tree_num,     child_num,    leve_position,check,        method,      ins_label,   target,      speed,       increment 
+            self.schedule(tree_info[0], tree_info[2], tree_info[1], tree_info[3], tree_info[4], tree_info[5], tree_info[6], tree_info[7], tree_info[8])
 
     def openInstruments(self):
         """open instruments"""

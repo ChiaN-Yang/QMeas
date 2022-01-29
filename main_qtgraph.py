@@ -3,6 +3,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QThread, Qt, pyqtSlot
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
 import pyqtgraph as pg
+import pyqtgraph.exporters
 from ui import Qt_Window, Control_Window, Read_Window
 import sys
 from PyQt5 import sip
@@ -42,7 +43,7 @@ class MainWindow(QMainWindow):
     color = 0
 
     # measurement & database module
-    measurement = MeasurementQt([], [], [], [])
+    measurement = MeasurementQt([], [], [], [], [])
     database = TxtFunction()
     # Create a QThread object
     exp_thread = QThread()
@@ -184,7 +185,7 @@ class MainWindow(QMainWindow):
         self.instruments.pop(row)
 
     def connection(self):
-        """add instruments into table_instrList"""
+        """ Connect instrument and add to table_instrList """
         # Get info from lists and construct new object later
         visa_address = self.ui.listWidget.currentItem().text()
         instrument_type = self.ui.listWidget_2.currentItem().text()
@@ -205,8 +206,7 @@ class MainWindow(QMainWindow):
                     instrument.setProperty(visa_address, instrument_name, instrument_type)
                     self.instruments.append(instrument)
 
-                    # TODO: add some condition to check if Connection is successful
-                    self.pageOneInformation(f'self.{instrument_name} = {instrument_type}("{visa_address}")')
+                    self.pageOneInformation(f'visa_address: {visa_address}')
                     self.pageOneInformation(f'{instrument_type} has been connected successfully.')
                     # TODO: add initialization option on messagebox and show the related info
 
@@ -269,7 +269,6 @@ class MainWindow(QMainWindow):
         self.ui.listWidget_3.clear()
         # show the method of the chosen itesm to the list
         self.ui.listWidget_3.addItems(instrument.METHOD)
-        # TODO: add the waiting-time measurement to the option
 
     def readConfirm(self):
         # Get the necessary info of the chosen item
@@ -401,8 +400,7 @@ class MainWindow(QMainWindow):
 
         # check box
         increment = self.control_panel.read_ui.lineEdit_5.text()
-        control_list = [Ins_name, Ins_type,
-                        control_method, target, speed, increment]
+        control_list = [Ins_name, Ins_type, control_method, target, speed, increment]
 
         for i, element in enumerate(control_list):
             item.setText((i+1), element)
@@ -418,14 +416,12 @@ class MainWindow(QMainWindow):
         target = self.ui.lineEdit_5.text()
         speed = '-'
         increment = '-'
-        control_list = [Ins_name, Ins_type,
-                        control_method, target, speed, increment]
+        control_list = [Ins_name, Ins_type, control_method, target, speed, increment]
         for i, element in enumerate(control_list):
             item.setText((i+1), element)
         item.setText(7, row)
 
     def checkState(self):
-        global checklist
         iterator = QTreeWidgetItemIterator(self.tree)
         checklist = []
         for _ in range(11):
@@ -474,8 +470,7 @@ class MainWindow(QMainWindow):
                 checklist[3][i] = checklist[5][i]
         del(checklist[5])
         del(checklist[1])
-        self.tree_num, self.leve_position, self.child_num, self.check, self.method, self.ins_label, self.target, self.speed, self.increment = checklist[
-            0], checklist[1], checklist[2], checklist[3], checklist[4], checklist[5], checklist[6], checklist[7], checklist[8]
+        self.tree_info = checklist
 
     def getIndexs(self, item):
         """ Returns Current top level item and child index.
@@ -539,7 +534,7 @@ class MainWindow(QMainWindow):
             self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
             self.ui.graphWidget.addItem(self.crosshair_v, ignoreBounds=True)
             self.ui.graphWidget.addItem(self.crosshair_h, ignoreBounds=True)
-            self.proxy = pg.SignalProxy(self.ui.graphWidget.scene().sigDisplayCursorCoordinate, rateLimit=60, slot=self.displayCursorCoordinate)
+            self.proxy = pg.SignalProxy(self.ui.graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.displayCursorCoordinate)
         else:
             self.ui.graphWidget.removeItem(self.crosshair_h)
             self.ui.graphWidget.removeItem(self.crosshair_v)
@@ -548,19 +543,19 @@ class MainWindow(QMainWindow):
     def displayCursorCoordinate(self, e):
         pos = e[0]
         if self.ui.graphWidget.sceneBoundingRect().contains(pos):
-            mousePoint = self.ui.graphWidget.getPlotItem().vb.mapSceneToView(pos)
-            self.crosshair_v.setPos(mousePoint.x())
-            self.crosshair_h.setPos(mousePoint.y())
+            mouse_point = self.ui.graphWidget.getPlotItem().vb.mapSceneToView(pos)
+            self.ui.label_coordinate.setText(f"x={mouse_point.x():.3f}\ty={mouse_point.y():.3f}")
+            self.crosshair_v.setPos(mouse_point.x())
+            self.crosshair_h.setPos(mouse_point.y())
 
     def plotSave(self):
         """ save figure from page3 """
-        exporter = pg.exporters.ImageExporter(self.plt.scene())
+        exporter = pyqtgraph.exporters.ImageExporter(self.plt.scene())
         exporter.export(self.full_address + '_%d.png' % self.save_plot_count)
         QMessageBox.information(self, "Done.", "The figure No.%d has been saved." % self.save_plot_count)
         self.save_plot_count += 1
 
     def autoPlotRange(self):
-        # TODO: auto view when clicking is still not working
         self.viewbox.enableAutoRange()
         self.viewbox.disableAutoRange()
 
@@ -622,12 +617,10 @@ class MainWindow(QMainWindow):
         self.createEmptyLines()
         # Create a worker object
         self.measurement = None
-        self.measurement = MeasurementQt(self.instruments, self.instruments_read, self.options_read, self.instruments_magnification)
+        self.measurement = MeasurementQt(self.instruments, self.instruments_read, self.options_read, self.instruments_magnification, self.tree_info)
         # Move worker to the thread
         self.measurement.moveToThread(self.exp_thread)
         # porcedure start
-        self.measurement.schedule(self.tree_num, self.child_num, self.leve_position, self.check,
-                                  self.method, self.ins_label, self.target, self.speed, self.increment)
         self.exp_thread.started.connect(self.measurement.startMeasure)
         # Connect signals and slots
         self.measurement.finished.connect(self.timeStop)
