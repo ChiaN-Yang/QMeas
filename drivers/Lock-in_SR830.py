@@ -9,6 +9,7 @@ class Driver(SR830, DriverInterface):
 
     def __init__(self, visa_address):
         SR830.__init__(self, visa_address)
+        self.first_run = True
 
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
@@ -60,20 +61,24 @@ class Driver(SR830, DriverInterface):
             self.autoSensitivity()
             value = self.x
         elif option == 'Triton Temperature (AUX in 3)':
-            aux_volt =  self.aux_in_3
-            # voltage setting in Lakeshore
-            volt_low = -10
-            volt_high = 10
-            # user-defined two temperature endpoints (K)
-            # magnification = '50,125'; scale = ['50','125']
-            scale = magnification.split(',')
-            endpoint_1 = float(scale[0]) # temp in [K] for -10V
-            endpoint_2 = float(scale[1]) # temp in [K] for +10V
-            # Calculate the slope and intercept
-            slope = (endpoint_2 - endpoint_1) / (volt_high - volt_low)
-            intercept = slope * (-volt_high) + endpoint_2
+            if self.first_run:
+                # voltage setting in Lakeshore
+                volt_low = -10
+                volt_high = 10
+                # user-defined two temperature endpoints (K)
+                # magnification = '50,125'; scale = ['50','125']
+                scale = magnification.split(',')
+                endpoint_1 = float(scale[0]) # temp in [K] for -10V
+                endpoint_2 = float(scale[1]) # temp in [K] for +10V
+                if endpoint_1 > endpoint_2:
+                    endpoint_1, endpoint_2 = endpoint_2, endpoint_1
+                # Calculate the slope and intercept
+                self.slope = (endpoint_2 - endpoint_1) / (volt_high - volt_low)
+                self.intercept = self.slope * (-volt_high) + endpoint_2
+                self.first_run = False
             # Calculate the corresponding Temperature
-            value = aux_volt*slope + intercept
+            aux_volt =  self.aux_in_3
+            value = aux_volt*self.slope + self.intercept
             return value
         return float(value) * magnification
 

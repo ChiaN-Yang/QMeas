@@ -35,6 +35,7 @@ class MainWindow(QMainWindow):
     instruments_magnification = []
     options_control = []
     options_read = []
+    tree_info = []
 
     # PlotItem lines
     data_line = []
@@ -52,6 +53,7 @@ class MainWindow(QMainWindow):
     choose_line_start = 0
     choose_line_space = 1
     choose_line_num = 0
+    line_num_now = 0
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -307,7 +309,11 @@ class MainWindow(QMainWindow):
 
         self.instruments_read.append(self.instruments[row])
         self.options_read.append(read_method)
-        self.instruments_magnification.append(int(magnification))
+        try:
+            self.instruments_magnification.append(int(magnification))
+        except ValueError:
+            self.instruments_magnification.append(magnification)
+            logging.warning('magnification is not int')
 
     def switchToPlotTab(self):
         self.ui.tabWidget.setCurrentIndex(2)
@@ -538,13 +544,16 @@ class MainWindow(QMainWindow):
         else:
             self.ui.graphWidget.removeItem(self.crosshair_h)
             self.ui.graphWidget.removeItem(self.crosshair_v)
-            self.proxy = []
+            del self.proxy
+            self.ui.label_coordinate_x.setText(f"")
+            self.ui.label_coordinate_y.setText(f"")
 
     def displayCursorCoordinate(self, e):
         pos = e[0]
         if self.ui.graphWidget.sceneBoundingRect().contains(pos):
             mouse_point = self.ui.graphWidget.getPlotItem().vb.mapSceneToView(pos)
-            self.ui.label_coordinate.setText(f"x={mouse_point.x():.3f}\ty={mouse_point.y():.3f}")
+            self.ui.label_coordinate_x.setText(f"x={mouse_point.x():g}")
+            self.ui.label_coordinate_y.setText(f"y={mouse_point.y():g}")
             self.crosshair_v.setPos(mouse_point.x())
             self.crosshair_h.setPos(mouse_point.y())
 
@@ -608,6 +617,9 @@ class MainWindow(QMainWindow):
 
     def procedureGo(self):
         """"measure start"""
+        if self.tree_info == []:
+            self.pageTwoInformation('Please set Control instruments')
+            return
         # file name
         self.full_address = self.folder_name + '/' + self.name
         # save plot count
