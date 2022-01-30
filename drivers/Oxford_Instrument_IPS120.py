@@ -1,5 +1,5 @@
 from utils import DriverInterface
-from modpack import IPS120
+# from modpack import IPS120
 from qcodes_contrib_drivers.drivers.Oxford.IPS120 import OxfordInstruments_IPS120
 from time import sleep
 import numpy as np
@@ -9,18 +9,18 @@ class Driver(OxfordInstruments_IPS120, DriverInterface):
     METHOD = ['Magnetic Field']
 
     def __init__(self, visa_address):
-        super().__init__('IPS120',visa_address,True)
+        self.ips120 = OxfordInstruments_IPS120('IPS120',visa_address,True)
         
-        self.switch_heater(1)
+        self.ips120.switch_heater(1)
         sleep(0.1)
         # Set the switch heater activation state
         # 0 - Heater Off              (close switch)
         # 1 - Heater On if PSU=Magnet (open switch)
         # 2 - Heater On, no checks    (open switch)
         init_value = self.performGetValue()
-        self.field_setpoint(init_value)
+        self.ips120.field_setpoint(init_value)
         sleep(0.1)
-        self.activity(1)
+        self.ips120.activity(1)
         sleep(0.1)
 
     def performOpen(self):
@@ -38,19 +38,19 @@ class Driver(OxfordInstruments_IPS120, DriverInterface):
         """Perform the close instrument connection operation"""
         # Set the field to zero
         # self.setActivity(2)
-        self.local()
+        self.ips120.local()
         sleep(0.1)
-        self.close_all()
+        self.ips120.close_all()
         sleep(0.1)
 
     def performSetValue(self, option, value, sweepRate=0.3):
         """Perform the Set Value instrument operation"""
         if option == 'Magnetic Field':
-            if value != -999:
+            if value != np.nan:
                 # Set the magnetic field set point, in Tesla
                 print('value: ', value)
                 self.target = value
-                self.field_setpoint(self.target)
+                self.ips120.field_setpoint(self.target)
                 # Set the field to Set Point
                 # print('setActivity')
                 # self.setActivity(1)
@@ -58,12 +58,12 @@ class Driver(OxfordInstruments_IPS120, DriverInterface):
                 sleep(0.1)
                 now_value = self.performGetValue()
             else:
-                now_value = self.field()
+                now_value = self.ips120.field()
                 print('now_value', now_value, 'self.target', self.target)
 
     def performGetValue(self, option='0', magnification=0):
         """Perform the Get Value instrument operation"""
-        return self.field()
+        return self.ips120.field()
 
     def experimentLinspacer(self, option, target, speed, increment):
         if int(speed) and increment == '0':
@@ -73,7 +73,7 @@ class Driver(OxfordInstruments_IPS120, DriverInterface):
             if init > float(target):
                 step = -step
             result_len = len(np.arange(init, float(target), step))+1
-            result = [-999 for _ in range(result_len)]
+            result = [np.nan for _ in range(result_len)]
             result[0] = float(target)
             return result
         elif int(speed) and increment != '0':

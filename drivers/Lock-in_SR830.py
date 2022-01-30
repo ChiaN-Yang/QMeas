@@ -67,7 +67,7 @@ class Driver(SR830, DriverInterface):
                 volt_high = 10
                 # user-defined two temperature endpoints (K)
                 # magnification = '50,125'; scale = ['50','125']
-                scale = magnification.split(',')
+                scale = str(magnification).split(',')
                 endpoint_1 = float(scale[0]) # temp in [K] for -10V
                 endpoint_2 = float(scale[1]) # temp in [K] for +10V
                 if endpoint_1 > endpoint_2:

@@ -3,12 +3,12 @@ from qcodes.instrument_drivers.stanford_research.SR860 import SR860
 from time import sleep
 
 
-class Driver(SR860, DriverInterface):
+class Driver(DriverInterface):
     METHOD = ['Voltage', 'Frequency',
               'Magnitude(R)', 'Magnitude(X)', 'Phase', 'Analog in 1', 'Analog in 2', 'DC']
 
     def __init__(self, visa_address):
-        SR860.__init__(self, "lockin", visa_address)
+        self.sr860 = SR860("lockin", visa_address)
 
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
@@ -16,46 +16,46 @@ class Driver(SR860, DriverInterface):
 
     def performClose(self):
         """Perform the close instrument connection operation"""
-        self.close()
+        self.sr860.close()
 
     def performSetValue(self, option, value, sweepRate=0.0):
         """Perform the Set Value instrument operation"""
         if option == 'Voltage':
-            self.amplitude(value)
+            self.sr860.amplitude(value)
         elif option == 'Frequency':
-            self.frequency(value)
+            self.sr860.frequency(value)
         elif option == 'Magnitude(R)':
-            self.R(value)
+            self.sr860.R(value)
         elif option == 'Magnitude(X)':
-            self.X(value)
+            self.sr860.X(value)
         elif option == 'Phase':
-            self.phase(value)
+            self.sr860.phase(value)
         elif option == 'Analog in 1':
-            self.aux_in0(value)
+            self.sr860.aux_in0(value)
         elif option == 'Analog in 2':
-            self.aux_in1(value)
+            self.sr860.aux_in1(value)
         elif option == 'DC':
-            self.sine_outdc(value)
+            self.sr860.sine_outdc(value)
         return value
 
     def performGetValue(self, option, magnification):
         """Perform the Get Value instrument operation"""
         if option == 'Voltage':
-            value = self.amplitude()
+            value = self.sr860.amplitude()
         elif option == 'Frequency':
-            value = self.frequency()
+            value = self.sr860.frequency()
         elif option == 'Magnitude(R)':
-            value = self.R()
+            value = self.sr860.R()
         elif option == 'Magnitude(X)':
-            value = self.X()
+            value = self.sr860.X()
         elif option == 'Phase':
-            value = self.phase()
+            value = self.sr860.phase()
         elif option == 'Analog in 1':
-            value = self.aux_in0()
+            value = self.sr860.aux_in0()
         elif option == 'Analog in 2':
-            value = self.aux_in1()
+            value = self.sr860.aux_in1()
         elif option == 'DC':
-            value = self.sine_outdc()
+            value = self.sr860.sine_outdc()
         return value * magnification
 
 

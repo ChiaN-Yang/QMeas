@@ -232,8 +232,9 @@ class MainWindow(QMainWindow):
                     self.ui.tableWidget_2.setItem(self.row_count - 1, 1, QTableWidgetItem(instrument_type))
                     self.row_count += 1
 
-                except visa.VisaIOError or AttributeError:
+                except visa.VisaIOError or AttributeError as e:
                     self.pageOneInformation(f"{instrument_type} connect fail")
+                    logging.exception('connect fail', exc_info=e)
         self.ui.lineEdit.clear()
 
     # =============================================================================
