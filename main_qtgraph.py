@@ -9,7 +9,7 @@ import sys
 from PyQt5 import sip
 import pyvisa as visa
 import os
-from utils import load_drivers, TxtFunction, MeasurementQt, addtwodimdict
+from utils import load_drivers, TxtFunction, MeasurementQt, addtwodimdict, colorLoop
 import qdarkstyle
 from nidaqmx.system import System
 import logging
@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
     data_line = []
     x_data = []
     y_data = []
-    color = 0
+    color_offset = 0
 
     # measurement & database module
     measurement = MeasurementQt([], [], [], [], [])
@@ -65,9 +65,9 @@ class MainWindow(QMainWindow):
         self.read_panel = ReadlPanel()
 
         # Pre-run functions
+        self.intrumentList()
         try:
             self.visaList()
-            self.intrumentList()
         except:
             logging.error('detect available address fail')
 
@@ -704,17 +704,17 @@ class MainWindow(QMainWindow):
         # setData to the PlotItems
         # TODO: self.choose_line_num==0 is not complete
         if self.switch_list[n] and self.choose_line_num==0:
-            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(pg.intColor(n+1), width=1))
+            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(colorLoop(n+self.color_offset), width=1))
         elif self.switch_list[n] and line_id in self.choose_line:
-            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(pg.intColor(n+1), width=1))
+            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(colorLoop(n+self.color_offset), width=1))
 
     def saveLines(self, file_count):
         for i in range(self.read_len):
             if self.switch_list[file_count%self.read_len]:
-                self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(pg.intColor(self.color), width=1))
+                self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(colorLoop(i+self.color_offset), width=1))
             addtwodimdict(self.saved_data, file_count, i, [self.x_data, self.y_data[i]])
             self.data_line[i].setData([])
-            self.color += 1
+            self.color_offset += 3
             self.line_num_now = file_count
         
         # initialize x y data
@@ -738,7 +738,7 @@ class MainWindow(QMainWindow):
 
     def renewGraph(self):
         self.plt.clear()
-        self.color = 0
+        self.color_offset = 0
         self.data_line = []
         for _ in range(self.read_len):
             self.data_line.append(self.ui.graphWidget.plot([]))
@@ -760,8 +760,8 @@ class MainWindow(QMainWindow):
                     try:
                         data = self.saved_data[curve_group][curve_num]
                         print(f'curve_group:{curve_group}, curve_num:{curve_num}')
-                        self.ui.graphWidget.plot(data[0], data[1], pen=pg.mkPen(pg.intColor(self.color), width=1))
-                        self.color += 1
+                        self.ui.graphWidget.plot(data[0], data[1], pen=pg.mkPen(colorLoop(curve_group+self.color_offset), width=1))
+                        self.color_offset += 3
                     except KeyError:
                         pass
                     

@@ -4,6 +4,7 @@ import importlib
 import logging
 from utils import DriverInterface
 import sys
+import numpy as np
 
 
 def load_drivers():
@@ -35,3 +36,17 @@ def addtwodimdict(thedict, key_a, key_b, val):
     else:
         thedict.update({key_a:{key_b: val}})
         
+# colors
+color_group = [(230,159,0),
+               (86,180,233),
+               (0,158,115),
+               (240,228,66),
+               (0,114,178),
+               (213,94,0),
+               (204,121,167)]
+
+# circulate the color
+def colorLoop(n):
+    num = np.mod(n,len(color_group))
+    return color_group[num]
+    

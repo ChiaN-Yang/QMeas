@@ -77,6 +77,7 @@ Before run this program, you need to install package below:
 - Labdrivers
 - NIDAQmx
 - QCoDes
+- QCoDes_contrib_drivers
 - QDarkStyle
 
 In vscode, it can be installed with pip:
