@@ -14,34 +14,52 @@ class MeasurementQt(QObject):
     signal_progress = pyqtSignal()
     clear_progress = pyqtSignal(int)
 
-    def __init__(self, instruments, instruments_read, options_read, instruments_magnification, tree_info):
+    def __init__(self):
         super().__init__()
-        self.instruments = instruments.copy()
-        self.instruments_read = instruments_read.copy()
-        self.options_read = options_read.copy()
-        self.magnification = instruments_magnification.copy()
+        self.instruments = []
+        self.instruments_read = []
+        self.options_read = []
+        self.magnification = []
         self.control_sequence = []
         # control variable
         self.stop_running = False
         self.quit_running = False
         self.quit_sweep = False
         self.quit_loop = False
-        if tree_info != []:
-            #             tree_num,     child_num,    leve_position,check,        method,      ins_label,   target,      speed,       increment 
-            self.schedule(tree_info[0], tree_info[2], tree_info[1], tree_info[3], tree_info[4], tree_info[5], tree_info[6], tree_info[7], tree_info[8])
+
+    def setInfo(self, instruments, instruments_read, options_read, instruments_magnification, tree_info):
+        self.instruments = instruments.copy()
+        self.instruments_read = instruments_read.copy()
+        self.options_read = options_read.copy()
+        self.magnification = instruments_magnification.copy()
+        self.schedule(tree_info)
+        # control variable
+        self.stop_running = False
+        self.quit_running = False
+        self.quit_sweep = False
+        self.quit_loop = False
 
     def openInstruments(self):
         """open instruments"""
         for instrument in self.instruments:
             instrument.performOpen()
 
-    def schedule(self, tree_num, child_num, leve_position, check, method, ins_label, target, speed, increment):
+    def schedule(self, tree_info):
         """ return [tree1, tree2, tree3]
             tree view
             [ [child_num, leve_position, instrument, option, check, target, speed, increment]
               [child_num, leve_position, instrument, option, check, target, speed, increment]
               [child_num, leve_position, instrument, option, check, target, speed, increment] ]
         """
+        tree_num = tree_info[0]
+        child_num = tree_info[2]
+        leve_position = tree_info[1]
+        check = tree_info[3]
+        method = tree_info[4]
+        ins_label = tree_info[5]
+        target = tree_info[6]
+        speed = tree_info[7]
+        increment = tree_info[8]
         logging.info('\ntree_num', tree_num)
         logging.info('\nchild_num', child_num)
         logging.info('\nleve_position', leve_position)
