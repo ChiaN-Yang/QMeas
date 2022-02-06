@@ -16,13 +16,13 @@ class QMeasCtrl:
         self._measurement = model
         self._view = view
         self._database = database
-        # Connect signals and slots
-        self._connectSignals()
         # Create a QThread object
         self.exp_thread = QThread()
         # Move worker to the thread
         self._measurement.moveToThread(self.exp_thread)
         self._database.moveToThread(self.exp_thread)
+        # Connect signals and slots
+        self._connectSignals()
         
     def _connectSignals(self):
         """Connect signals and slots."""
@@ -33,7 +33,6 @@ class QMeasCtrl:
         self._view.ui.loopButton.clicked.connect(self._measurement.quitLoopMeasure)
         self._view.ui.sweepButton.clicked.connect(self._measurement.quitSweepMeasure)
         self._view.ui.pauseButton.clicked.connect(self.resumePause)
-        # Connect signals and slots
         self._measurement.finished.connect(self.timeStop)
         self._measurement.signal_txt.connect(self._database.txtUpdate)
         self._measurement.signal_axis.connect(self._view.axisUpdate)
@@ -53,28 +52,25 @@ class QMeasCtrl:
             will start immediately. The txt file as well as the plot items will
             be created.
         """
+        self.name = self._view.ui.lineEdit_2.text()
+        file_name = f'{self.name}.txt'
         if self._view.ui.label_18.text() == '':
-            self._view.messageBox("Please select the folder.")
+            self._view.folder_address = os.path.abspath(os.getcwd()) + "\\data"
+        if self.name == '':
+            self._view.messageBox("Please type the file name.")
+        elif file_name in os.listdir(self._view.folder_address):
+            if self._view.fileExist():
+                self.procedureGo()
         else:
-            self.name = self._view.ui.lineEdit_2.text()
-            if self.name == '':
-                self._view.messageBox("Please type the file name.")
-            else:
-                file_name = f'{self.name}.txt'
-                List = os.listdir(self._view.folder_address)
-                if file_name in List:
-                    if self._view.fileExist():
-                        self.procedureGo()
-                else:
-                    self.procedureGo()
+            self.procedureGo()
 
     def procedureGo(self):
         """"measure start"""
         if self._view.tree_info == []:
-            self.pageTwoInformation('Please set Control instruments')
+            self._view.pageTwoInformation('Please set Control instruments')
             return
         # file name
-        self.full_address = self._view.folder_name + '/' + self.name
+        self.full_address = self._view.folder_address + '/' + self.name
         # save plot count
         self._view.save_plot_count = 0
         self._view.switchToPlotTab()

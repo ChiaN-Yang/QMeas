@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QApplication, QMainWindow, QTableWidgetItem, QDialog
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QMainWindow, QTableWidgetItem, QDialog
 import pyqtgraph as pg
 import pyqtgraph.exporters
 from ui import Qt_Window, Control_Window, Read_Window
-import sys
 from PyQt5 import sip
 import pyvisa as visa
 import os
@@ -546,11 +545,10 @@ class MainWindow(QMainWindow):
     # =============================================================================
     def folderMessage(self):
         cwd = os.getcwd()
-        self.folder_address = QFileDialog.getExistingDirectory(self, "Please define the file name", cwd)
+        self.folder_address = QFileDialog.getExistingDirectory(self, "Please define the folder name", cwd)
 
         if self.folder_address != '':
-            self.folder_name = self.folder_address
-            self.ui.label_18.setText(self.folder_name)
+            self.ui.label_18.setText(self.folder_address)
             cwd = self.folder_address
 
     def messageBox(self, message):
@@ -644,7 +642,7 @@ class MainWindow(QMainWindow):
             self.choose_line_num -= 1
         
         start = self.choose_line_start*self.choose_line_space
-        self.choose_line = np.linspace(start, start+self.choose_line_space*self.choose_line_num, self.choose_line_num+1, dtype=np.int32)
+        self.choose_line = np.linspace(start, start+self.choose_line_space*self.choose_line_num, self.choose_line_num+1, dtype=np.int16)
         print(self.choose_line_num+1)
         print(self.choose_line)
         for curve_group in self.choose_line:
@@ -693,10 +691,3 @@ class ReadlPanel(QDialog):
         super(ReadlPanel, self).__init__()
         self.ctr_ui = Read_Window()
         self.ctr_ui.setupUi(self)
-
-
-if __name__ == '__main__':
-    app = QApplication([])
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
