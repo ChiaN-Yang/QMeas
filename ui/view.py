@@ -13,6 +13,7 @@ import qdarkstyle
 from nidaqmx.system import System
 import logging
 import numpy as np
+import asyncio
 
 # logging.basicConfig(format="%(message)s", level=logging.INFO)   # debug mode
 
@@ -62,8 +63,8 @@ class MainWindow(QMainWindow):
         self._connectSignals()
 
         # Tables
-        self.ui.tableWidget.setColumnWidth(0, 100)
-        self.ui.tableWidget.setColumnWidth(1, 200)
+        self.ui.tableWidget.setColumnWidth(0, 300)
+        self.ui.tableWidget.setColumnWidth(1, 300)
 
         # plot widget
         pg.setConfigOptions(antialias=False)
@@ -126,7 +127,7 @@ class MainWindow(QMainWindow):
         self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.readConfirm)
         self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.read_panel.close)
         self.read_panel.ctr_ui.pushButton_6.clicked.connect(self.read_panel.close)
-        self.ui.pushButton_3.clicked.connect(self.readPanelShow)
+        self.ui.pushButton_3.clicked.connect(self.controlPanelShow)
         self.control_panel.read_ui.pushButton_9.clicked.connect(self.addLevel)
         self.control_panel.read_ui.pushButton_9.clicked.connect(self.control_panel.close)
         self.control_panel.read_ui.pushButton_8.clicked.connect(self.chooseAddChild)
@@ -468,6 +469,12 @@ class MainWindow(QMainWindow):
     # =============================================================================
     # Page 3
     # =============================================================================
+    def procedureGo(self):
+        # save plot count
+        self.save_plot_count = 0
+        self.switchToPlotTab()
+        # plotlines init
+        self.createEmptyLines()
 
     def resumePause(self):
         if self.ui.pauseButton.text() == "Pause":
@@ -645,16 +652,24 @@ class MainWindow(QMainWindow):
         self.choose_line = np.linspace(start, start+self.choose_line_space*self.choose_line_num, self.choose_line_num+1, dtype=np.int16)
         print(self.choose_line_num+1)
         print(self.choose_line)
-        for curve_group in self.choose_line:
+
+        async def plotLines(curve_group):
             for curve_num in range(self.read_len):
                 if self.switch_list[curve_num]:                    
                     try:
+                        print(f'curve_num:{curve_num}')
+                        print(f'curve_group:{curve_group}')
                         data = self.saved_data[curve_group][curve_num]
-                        print(f'curve_group:{curve_group}, curve_num:{curve_num}')
                         self.ui.graphWidget.plot(data[0], data[1], pen=pg.mkPen(colorLoop(curve_group+self.color_offset), width=1))
                         self.color_offset += 3
                     except KeyError:
                         pass
+
+        async def chooseLines():
+            for curve_group in self.choose_line:
+                task = asyncio.create_task(plotLines(curve_group))
+
+        asyncio.run(chooseLines())
                     
     # =============================================================================
     # axis setting
