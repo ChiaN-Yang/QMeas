@@ -32,7 +32,6 @@ class DriverInterface(abc.ABC):
         time_unit = 0.1
         if int(speed) and increment == '0':
             init = float(self.performGetValue(option, 1))
-            print('speed', init)
             step = float(speed) / 3600 * time_unit
             if init > float(target):
                 step = -step
@@ -41,7 +40,6 @@ class DriverInterface(abc.ABC):
             return result
         elif int(speed) and increment != '0':
             init = float(self.performGetValue(option, 1))
-            print('increment', init)
             if init > float(target):
                 increment = -float(increment)
             result = np.arange(init, float(target), float(increment))

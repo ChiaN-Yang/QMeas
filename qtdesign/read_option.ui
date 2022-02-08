@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>392</width>
-    <height>229</height>
+    <height>161</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -106,38 +106,11 @@
     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
    </property>
   </widget>
-  <widget class="QLabel" name="label_8">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>119</y>
-     <width>191</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>9</pointsize>
-    </font>
-   </property>
-   <property name="mouseTracking">
-    <bool>false</bool>
-   </property>
-   <property name="layoutDirection">
-    <enum>Qt::LeftToRight</enum>
-   </property>
-   <property name="text">
-    <string>Auto sensitivity: (not complete)</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-   </property>
-  </widget>
   <widget class="QPushButton" name="pushButton_6">
    <property name="geometry">
     <rect>
      <x>290</x>
-     <y>180</y>
+     <y>120</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -150,39 +123,13 @@
    <property name="geometry">
     <rect>
      <x>190</x>
-     <y>180</y>
+     <y>120</y>
      <width>81</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
     <string>Confirm</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="checkBox">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>130</y>
-     <width>85</width>
-     <height>19</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Yes</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="checkBox_2">
-   <property name="geometry">
-    <rect>
-     <x>300</x>
-     <y>130</y>
-     <width>85</width>
-     <height>19</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>No</string>
    </property>
   </widget>
  </widget>

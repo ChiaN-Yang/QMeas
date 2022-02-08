@@ -81,9 +81,10 @@ class TxtFunction(QObject):
         # open the file and write the title first
         self.txtWriter(f'{file_name}.txt', title, 'w')
         # form the final dataframe from temp_txt
-        final_df = pd.concat(temp_txt, axis=1)
-        # write the dataframe to the same txt file
-        final_df.to_csv(f'{file_name}.txt', header=True, index=False, sep='\t', mode='a')
+        if temp_txt:
+            final_df = pd.concat(temp_txt, axis=1)
+            # write the dataframe to the same txt file
+            final_df.to_csv(f'{file_name}.txt', header=True, index=False, sep='\t', mode='a')
 
     def txtDeleter(self, sequence_length):
         # Check if the next file is incompleted

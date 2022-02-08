@@ -29,8 +29,8 @@ class QMeasCtrl:
         self._view.ui.actionQuit.triggered.connect(self.timeStop)
         self._view.ui.actionQuit.triggered.connect(app.exit)
         self._view.ui.stopButton.clicked.connect(self.procedureStop)
-        self._view.ui.loopButton.clicked.connect(self._measurement.quitLoopMeasure)
-        self._view.ui.sweepButton.clicked.connect(self._measurement.quitSweepMeasure)
+        self._view.ui.loopButton.clicked.connect(lambda: self._measurement.quitLoopMeasure())
+        self._view.ui.sweepButton.clicked.connect(lambda: self._measurement.quitSweepMeasure())
         self._view.ui.pauseButton.clicked.connect(self.resumePause)
 
     def _connectMeasureSignals(self):

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'read_option.ui'
+# Form implementation generated from reading ui file './qtdesign/read_option.ui'
 #
-# Created by: PyQt5 UI code generator 5.12
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -12,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(392, 229)
+        Dialog.resize(392, 161)
         self.lineEdit_2 = QtWidgets.QLineEdit(Dialog)
         self.lineEdit_2.setGeometry(QtCore.QRect(190, 20, 181, 31))
         font = QtGui.QFont()
@@ -43,27 +44,12 @@ class Ui_Dialog(object):
         self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_7.setObjectName("label_7")
-        self.label_8 = QtWidgets.QLabel(Dialog)
-        self.label_8.setGeometry(QtCore.QRect(10, 119, 191, 41))
-        font = QtGui.QFont()
-        font.setPointSize(9)
-        self.label_8.setFont(font)
-        self.label_8.setMouseTracking(False)
-        self.label_8.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_8.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_8.setObjectName("label_8")
         self.pushButton_6 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_6.setGeometry(QtCore.QRect(290, 180, 81, 31))
+        self.pushButton_6.setGeometry(QtCore.QRect(290, 120, 81, 31))
         self.pushButton_6.setObjectName("pushButton_6")
         self.pushButton_5 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_5.setGeometry(QtCore.QRect(190, 180, 81, 31))
+        self.pushButton_5.setGeometry(QtCore.QRect(190, 120, 81, 31))
         self.pushButton_5.setObjectName("pushButton_5")
-        self.checkBox = QtWidgets.QCheckBox(Dialog)
-        self.checkBox.setGeometry(QtCore.QRect(210, 130, 85, 19))
-        self.checkBox.setObjectName("checkBox")
-        self.checkBox_2 = QtWidgets.QCheckBox(Dialog)
-        self.checkBox_2.setGeometry(QtCore.QRect(300, 130, 85, 19))
-        self.checkBox_2.setObjectName("checkBox_2")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -76,13 +62,8 @@ class Ui_Dialog(object):
         self.lineEdit_3.setPlaceholderText(_translate("Dialog", "I_SD (nA), Vxx (mV)..."))
         self.label_6.setText(_translate("Dialog", "Define the magnification:"))
         self.label_7.setText(_translate("Dialog", "Define the note:"))
-        self.label_8.setText(_translate("Dialog", "Auto sensitivity: (not complete)"))
         self.pushButton_6.setText(_translate("Dialog", "Cancel"))
         self.pushButton_5.setText(_translate("Dialog", "Confirm"))
-        self.checkBox.setText(_translate("Dialog", "Yes"))
-        self.checkBox_2.setText(_translate("Dialog", "No"))
-
-
 
 
 if __name__ == "__main__":

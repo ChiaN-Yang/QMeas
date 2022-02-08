@@ -121,6 +121,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton.clicked.connect(self._visaList)
         self.ui.pushButton_2.clicked.connect(self.connection)
         self.ui.pushButton_10.clicked.connect(self.deleteConnectedInstrument)
+        self.ui.nextButton.clicked.connect(lambda: self.switchToPlotTab(1))
         # page 2
         # Buttons
         self.ui.pushButton_7.clicked.connect(self.readPanelShow)
@@ -259,33 +260,25 @@ class MainWindow(QMainWindow):
         read_method = self.ui.listWidget_3.currentItem().text()
         magnification = self.read_panel.ctr_ui.lineEdit_2.text()
         Unit = self.read_panel.ctr_ui.lineEdit_3.text()
-
         # Add new row if necessary
         row_len = self.ui.tableWidget_4.rowCount()
         if self.read_row_count > row_len:
             self.ui.tableWidget_4.insertRow(row_len)
             self.ui.tableWidget_5.insertColumn(row_len + 1)
-
         # Assign the variables to the table in page 2
         self.ui.tableWidget_4.setItem(self.read_row_count - 1, 0, QTableWidgetItem(instrument_name))
         self.ui.tableWidget_4.setItem(self.read_row_count - 1, 1, QTableWidgetItem(instrument_type))
         self.ui.tableWidget_4.setItem(self.read_row_count - 1, 2, QTableWidgetItem(read_method))
         self.ui.tableWidget_4.setItem(self.read_row_count - 1, 3, QTableWidgetItem(magnification))
         self.ui.tableWidget_4.setItem(self.read_row_count - 1, 4, QTableWidgetItem(Unit))
-
         # initialize the blocks in the read option
         self.read_panel.ctr_ui.lineEdit_2.setText("1")
         self.read_panel.ctr_ui.lineEdit_3.clear()
-
         # Assign the variables to the table in page 3
         self.ui.tableWidget_5.setItem(0, self.read_row_count, QTableWidgetItem(instrument_name))
         self.ui.tableWidget_5.setItem(1, self.read_row_count, QTableWidgetItem(read_method))
 
-        method_row_len = self.ui.tableWidget_4.rowCount()
-        self.pageTwoInformation(method_row_len)
-
         self.read_row_count += 1
-
         self.instruments_read.append(self.instruments[row])
         self.options_read.append(read_method)
         try:
@@ -294,8 +287,8 @@ class MainWindow(QMainWindow):
             self.instruments_magnification.append(magnification)
             logging.warning('magnification is not int')
 
-    def switchToPlotTab(self):
-        self.ui.tabWidget.setCurrentIndex(2)
+    def switchToPlotTab(self, page):
+        self.ui.tabWidget.setCurrentIndex(page)
 
     def timeAddLevel(self):
         """ Provide another option to do the time measurement """
@@ -472,7 +465,7 @@ class MainWindow(QMainWindow):
     def procedureGo(self):
         # save plot count
         self.save_plot_count = 0
-        self.switchToPlotTab()
+        self.switchToPlotTab(2)
         # plotlines init
         self.createEmptyLines()
 

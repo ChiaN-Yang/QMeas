@@ -119,7 +119,7 @@ class MeasurementQt(QObject):
 
         for level in self.control_sequence:
             if self.quit_running:
-                return
+                break
 
             if level[0] and level[1] and level[2]:
                 self.threeLevelsTree(level)
