@@ -22,6 +22,7 @@ class QMeasCtrl:
         self._database.moveToThread(self.exp_thread)
         # Connect signals and slots
         self._connectViewSignals()
+        self.full_address = ""
         
     def _connectViewSignals(self):
         """Connect signals and slots."""
@@ -94,8 +95,9 @@ class QMeasCtrl:
         logging.info('measure stop')
         self.procedureStop()
         self.shutdownInstruments()
-        self._database.txtMerger(self.full_address, file_count, self._view.read_len+1)
-        self._database.txtDeleter(file_count)
+        if self.full_address:
+            self._database.txtMerger(self.full_address, file_count, self._view.read_len+1)
+            self._database.txtDeleter(file_count)
         self.exp_thread.quit()
         self.exp_thread.wait()
 

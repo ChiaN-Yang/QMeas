@@ -244,6 +244,7 @@ class MainWindow(QMainWindow):
         self.read_row_count -= 1
         self.instruments_read.pop(row)
         self.options_read.pop(row)
+        self.instruments_magnification.pop(row)
 
     def showMethod(self):
         row = self.ui.tableWidget_2.currentRow()
@@ -260,6 +261,16 @@ class MainWindow(QMainWindow):
         read_method = self.ui.listWidget_3.currentItem().text()
         magnification = self.read_panel.ctr_ui.lineEdit_2.text()
         Unit = self.read_panel.ctr_ui.lineEdit_3.text()
+        # check if magnification is number
+        if read_method == "Triton Temperature (AUX in 3)":
+            self.instruments_magnification.append(magnification)
+        else:
+            try:
+                mag = float(magnification)
+                self.instruments_magnification.append(mag)
+            except ValueError:
+                self.pageTwoInformation('magnification is not a number.')
+                return
         # Add new row if necessary
         row_len = self.ui.tableWidget_4.rowCount()
         if self.read_row_count > row_len:
@@ -281,11 +292,6 @@ class MainWindow(QMainWindow):
         self.read_row_count += 1
         self.instruments_read.append(self.instruments[row])
         self.options_read.append(read_method)
-        try:
-            self.instruments_magnification.append(int(magnification))
-        except ValueError:
-            self.instruments_magnification.append(magnification)
-            logging.warning('magnification is not int')
 
     def switchToPlotTab(self, page):
         self.ui.tabWidget.setCurrentIndex(page)
