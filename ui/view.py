@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidg
 from ui import Qt_Window, Control_Window, Read_Window
 from PyQt5 import sip
 from utils import load_drivers, addtwodimdict, colorLoop
-from random import randint
 from nidaqmx.system import System
 import pyqtgraph as pg
 import pyqtgraph.exporters
@@ -98,14 +97,14 @@ class MainWindow(QMainWindow):
             self.pyvisa_list = resource_manager.list_resources()
             self.ui.listWidget.clear()
             self.ui.listWidget.addItems(self.pyvisa_list)
-
+            self.ui.listWidget.addItem("default")
             # DAQ TODO:only one daq is available now 20210916
             system = System.local()
             for i, device in enumerate(system.devices):
                 if i > 0:
                     self.ui.listWidget.addItem(device.name)
-            self.ui.listWidget.addItem("default")
         except:
+            self.pageOneInformation('detect available address fail')
             logging.error('detect available address fail')
 
     def _intrumentList(self):
@@ -581,7 +580,7 @@ class MainWindow(QMainWindow):
         # one line data
         self.x_data = np.array([], dtype=np.float32)
         self.y_data = []
-        # all data
+        # all plot Item
         self.saved_data = {}
         # plot item
         self.data_line = []
@@ -599,19 +598,17 @@ class MainWindow(QMainWindow):
         self.y_data[n] = np.append(self.y_data[n], y_n)
         # setData to the PlotItems
         # TODO: The three line selection functions currently only include the second one
-        if self.switch_list[n] and self.choose_line_num==0:
-            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(colorLoop(n+self.color_offset), width=1))
-        elif self.switch_list[n] and line_id in self.choose_line:
+        if not self.switch_list[n] or (self.choose_line_num!=0 and not line_id in self.choose_line):
+            self.data_line[n].hide()
+        else:
             self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(colorLoop(n+self.color_offset), width=1))
 
     def saveLines(self, file_count):
         for i in range(self.read_len):
-            if self.switch_list[i] and self.choose_line_num==0:
-                self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(colorLoop(i+self.color_offset), width=1))
-            elif self.switch_list[i] and file_count in self.choose_line:
-                self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(colorLoop(i+self.color_offset), width=1))
-            addtwodimdict(self.saved_data, file_count, i, [self.x_data, self.y_data[i]])
-            self.data_line[i].setData([])
+            line = self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(colorLoop(i+self.color_offset), width=1))
+            addtwodimdict(self.saved_data, file_count, i, line)
+            if not self.switch_list[i] or (self.choose_line_num!=0 and not file_count in self.choose_line):
+                line.hide()
             self.color_offset += 3
             self.line_num_now = file_count
         
@@ -635,11 +632,10 @@ class MainWindow(QMainWindow):
         self.renewGraph()
 
     def renewGraph(self):
-        self.plt.clear()
-        self.color_offset = 0
-        self.data_line = []
-        for _ in range(self.read_len):
-            self.data_line.append(self.ui.graphWidget.plot([]))
+        # hide all line in graph
+        for group in self.saved_data.values():
+            for line in group.values():
+                line.hide()
 
         # get choose_line_num
         self.choose_line_num = self.ui.spinBox_2.value()
@@ -654,23 +650,14 @@ class MainWindow(QMainWindow):
         print(choose_line_num+1)
         print(self.choose_line)
 
-        async def plotLines(curve_group):
-            for curve_num in range(self.read_len):
-                if self.switch_list[curve_num]:                    
-                    try:
-                        print(f'curve_num:{curve_num}')
-                        print(f'curve_group:{curve_group}')
-                        data = self.saved_data[curve_group][curve_num]
-                        self.ui.graphWidget.plot(data[0], data[1], pen=pg.mkPen(colorLoop(randint(0,7)), width=1))
-                        self.color_offset += 3
-                    except KeyError:
-                        pass
-
-        async def chooseLines():
+        try:
             for curve_group in choose_line:
-                asyncio.create_task(plotLines(curve_group))
-
-        asyncio.run(chooseLines())
+                for curve_num in self.saved_data[curve_group].keys():
+                    if self.switch_list[curve_num]:                    
+                        
+                            self.saved_data[curve_group][curve_num].show()
+        except KeyError:
+            logging.exception("message")
                     
     # =============================================================================
     # axis setting
@@ -686,7 +673,6 @@ class MainWindow(QMainWindow):
         # update x value
         self.ui.tableWidget_5.setItem(2, 0, QTableWidgetItem(f'{x_show[0]:g}'))
         # update y value
-        i = 0
         for i in range(self.read_len):
             self.ui.tableWidget_5.setItem(2, (i + 1), QTableWidgetItem(f'{y_show[i]:g}'))
 
