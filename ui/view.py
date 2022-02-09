@@ -2,20 +2,19 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QMainWindow, QTableWidgetItem, QDialog
-import pyqtgraph as pg
-import pyqtgraph.exporters
 from ui import Qt_Window, Control_Window, Read_Window
 from PyQt5 import sip
+from utils import load_drivers, addtwodimdict, colorLoop
+from random import randint
+from nidaqmx.system import System
+import pyqtgraph as pg
+import pyqtgraph.exporters
 import pyvisa as visa
 import os
-from utils import load_drivers, addtwodimdict, colorLoop
 import qdarkstyle
-from nidaqmx.system import System
 import logging
 import numpy as np
 import asyncio
-
-# logging.basicConfig(format="%(message)s", level=logging.INFO)   # debug mode
 
 
 class MainWindow(QMainWindow):
@@ -599,7 +598,7 @@ class MainWindow(QMainWindow):
             self.x_data = np.append(self.x_data, [x])
         self.y_data[n] = np.append(self.y_data[n], y_n)
         # setData to the PlotItems
-        # TODO: self.choose_line_num==0 is not complete
+        # TODO: The three line selection functions currently only include the second one
         if self.switch_list[n] and self.choose_line_num==0:
             self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(colorLoop(n+self.color_offset), width=1))
         elif self.switch_list[n] and line_id in self.choose_line:
@@ -607,7 +606,9 @@ class MainWindow(QMainWindow):
 
     def saveLines(self, file_count):
         for i in range(self.read_len):
-            if self.switch_list[file_count%self.read_len]:
+            if self.switch_list[i] and self.choose_line_num==0:
+                self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(colorLoop(i+self.color_offset), width=1))
+            elif self.switch_list[i] and file_count in self.choose_line:
                 self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(colorLoop(i+self.color_offset), width=1))
             addtwodimdict(self.saved_data, file_count, i, [self.x_data, self.y_data[i]])
             self.data_line[i].setData([])
@@ -643,13 +644,14 @@ class MainWindow(QMainWindow):
         # get choose_line_num
         self.choose_line_num = self.ui.spinBox_2.value()
         if self.choose_line_num == 0:
-            self.choose_line_num = int(self.line_num_now)
+            choose_line_num = int(self.line_num_now)
         else:
-            self.choose_line_num -= 1
+            choose_line_num = self.choose_line_num - 1
         
         start = self.choose_line_start*self.choose_line_space
-        self.choose_line = np.linspace(start, start+self.choose_line_space*self.choose_line_num, self.choose_line_num+1, dtype=np.int16)
-        print(self.choose_line_num+1)
+        choose_line = np.linspace(start, start+self.choose_line_space*choose_line_num, choose_line_num+1, dtype=np.int16)
+        self.choose_line = set(choose_line)
+        print(choose_line_num+1)
         print(self.choose_line)
 
         async def plotLines(curve_group):
@@ -659,14 +661,14 @@ class MainWindow(QMainWindow):
                         print(f'curve_num:{curve_num}')
                         print(f'curve_group:{curve_group}')
                         data = self.saved_data[curve_group][curve_num]
-                        self.ui.graphWidget.plot(data[0], data[1], pen=pg.mkPen(colorLoop(curve_group+self.color_offset), width=1))
+                        self.ui.graphWidget.plot(data[0], data[1], pen=pg.mkPen(colorLoop(randint(0,7)), width=1))
                         self.color_offset += 3
                     except KeyError:
                         pass
 
         async def chooseLines():
-            for curve_group in self.choose_line:
-                task = asyncio.create_task(plotLines(curve_group))
+            for curve_group in choose_line:
+                asyncio.create_task(plotLines(curve_group))
 
         asyncio.run(chooseLines())
                     
