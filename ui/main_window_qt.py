@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file './qtdesign/main_window_qt.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -481,6 +479,13 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.actionQuit = QtWidgets.QAction(MainWindow)
         self.actionQuit.setObjectName("actionQuit")
+        self.actionRecent = QtWidgets.QAction(MainWindow)
+        self.actionRecent.setObjectName("actionRecent")
+        self.actionOpen = QtWidgets.QAction(MainWindow)
+        self.actionOpen.setObjectName("actionOpen")
+        self.menuQuit.addAction(self.actionRecent)
+        self.menuQuit.addAction(self.actionOpen)
+        self.menuQuit.addSeparator()
         self.menuQuit.addAction(self.actionQuit)
         self.menubar.addAction(self.menuQuit.menuAction())
 
@@ -598,8 +603,10 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Graph"))
         self.menuQuit.setTitle(_translate("MainWindow", "Options"))
         self.actionQuit.setText(_translate("MainWindow", "Quit"))
-from pyqtgraph import PlotWidget
+        self.actionRecent.setText(_translate("MainWindow", "Recent"))
+        self.actionOpen.setText(_translate("MainWindow", "Open"))
 
+from pyqtgraph import PlotWidget
 
 if __name__ == "__main__":
     import sys
@@ -609,3 +616,4 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
+

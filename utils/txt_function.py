@@ -101,11 +101,26 @@ class TxtFunction(QObject):
             for i, element in enumerate(txtdata):
                 if i == len(txtdata) - 1:
                     # write the last element and \n
-                    f.write(str(element))
-                    f.write('\n')
+                    f.write(f'{element}\n')
                 else:
                     # write the every element. sep = \tab
-                    f.write(str(element) + '\t')
+                    f.write(f'{element}\t')
+
+    def recordSteps(self, steps):
+        with open('./ui/asset/step.txt', 'w') as f:
+            f.write(f'Connection:\n')
+            for element in steps[0]:
+                if element == ".":
+                    f.write('\n')
+                else:
+                    f.write(f'{element}\t')
+            f.write(f'Read:\n')
+            for element in steps[1]:
+                if element == ".":
+                    f.write('\n')
+                else:
+                    f.write(f'{element}\t')
+            f.write(f'File address:\n{steps[2][0]}')
 
 
 if __name__ == '__main__':

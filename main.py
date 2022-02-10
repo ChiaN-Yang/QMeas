@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread
 from ui.view import MainWindow
 from utils import MeasurementQt, TxtFunction
+from shutil import copyfile
 
 
 class QMeasCtrl:
@@ -60,6 +61,8 @@ class QMeasCtrl:
             self._view.folder_address = os.path.abspath(os.getcwd()) + "\\data"
         if self.name == '':
             self._view.messageBox("Please type the file name.")
+        elif self._view.tree_info == []:
+            self._view.pageTwoInformation('Please set Control instruments')
         elif file_name in os.listdir(self._view.folder_address):
             if self._view.fileExist():
                 self.procedureGo()
@@ -68,9 +71,9 @@ class QMeasCtrl:
 
     def procedureGo(self):
         """"measure start"""
-        if self._view.tree_info == []:
-            self._view.pageTwoInformation('Please set Control instruments')
-            return
+        # Record experimental steps
+        self._database.recordSteps(self._view.getTableValues())
+        copyfile('./ui/asset/step.txt', f'{self._view.folder_address}/{self.name}_measurement_process.txt')
         # file name
         self.full_address = self._view.folder_address + '/' + self.name
         self._view.procedureGo()

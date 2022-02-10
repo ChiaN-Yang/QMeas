@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from time import sleep
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QMainWindow, QTableWidgetItem, QDialog
@@ -23,9 +24,9 @@ class MainWindow(QMainWindow):
     row_count = 1
     read_row_count = 1
     save_plot_count = 0
-    # click = 1
     time_unit = 0.1  # sec
     progress = 0
+    load = True
 
     # instruments
     instruments = []
@@ -80,9 +81,11 @@ class MainWindow(QMainWindow):
         self.ui.retranslateUi(self)
         self.ui.actionQuit.setShortcut('Ctrl+Q')
         self.ui.actionQuit.triggered.connect(self.close)
+        self.ui.actionRecent.triggered.connect(self.openRecentStep)
+        self.ui.actionOpen.triggered.connect(self.openFileStep)
 
         # Set Window Icon
-        self.setWindowIcon(QIcon('./ui/Qfort.png'))
+        self.setWindowIcon(QIcon('./ui/asset/Qfort.png'))
 
         # Set Window style
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
@@ -105,7 +108,7 @@ class MainWindow(QMainWindow):
                     self.ui.listWidget.addItem(device.name)
         except:
             self.pageOneInformation('detect available address fail')
-            logging.error('detect available address fail')
+            logging.warning('detect available address fail')
 
     def _intrumentList(self):
         """detect available drivers"""
@@ -117,13 +120,13 @@ class MainWindow(QMainWindow):
         # page 1
         # Buttons
         self.ui.pushButton.clicked.connect(self._visaList)
-        self.ui.pushButton_2.clicked.connect(self.connection)
+        self.ui.pushButton_2.clicked.connect(lambda: self.connection())
         self.ui.pushButton_10.clicked.connect(self.deleteConnectedInstrument)
         self.ui.nextButton.clicked.connect(lambda: self.switchToPlotTab(1))
         # page 2
         # Buttons
         self.ui.pushButton_7.clicked.connect(self.readPanelShow)
-        self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.readConfirm)
+        self.read_panel.ctr_ui.pushButton_5.clicked.connect(lambda: self.readConfirm())
         self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.read_panel.close)
         self.read_panel.ctr_ui.pushButton_6.clicked.connect(self.read_panel.close)
         self.ui.pushButton_3.clicked.connect(self.controlPanelShow)
@@ -163,12 +166,13 @@ class MainWindow(QMainWindow):
         self.row_count -= 1
         self.instruments.pop(row)
 
-    def connection(self):
+    def connection(self, instrument_personal_name="", instrument_type="", visa_address=""):
         """ Connect instrument and add to table_instrList """
-        # Get info from lists and construct new object later
-        visa_address = self.ui.listWidget.currentItem().text()
-        instrument_type = self.ui.listWidget_2.currentItem().text()
-        instrument_personal_name = self.ui.lineEdit.text()
+        if visa_address=="" or instrument_type=="" or instrument_personal_name=="":
+            # Get info from lists and construct new object later
+            visa_address = self.ui.listWidget.currentItem().text()
+            instrument_type = self.ui.listWidget_2.currentItem().text()
+            instrument_personal_name = self.ui.lineEdit.text()
 
         row_len = self.ui.tableWidget.rowCount()
         # Check existance
@@ -214,6 +218,63 @@ class MainWindow(QMainWindow):
                     logging.exception('connect fail', exc_info=e)
         self.ui.lineEdit.clear()
 
+    def getTableValues(self):
+        steps = [[],[],[]]
+        # Connection:
+        for row in range(self.ui.tableWidget.rowCount()):
+            for col in range(self.ui.tableWidget.columnCount()):
+                steps[0].append(self.ui.tableWidget.item(row,col).text())
+            steps[0].append(".")
+        # Read:
+        for row in range(self.ui.tableWidget_4.rowCount()):
+            for col in range(self.ui.tableWidget_4.columnCount()):
+                steps[1].append(self.ui.tableWidget_4.item(row,col).text())
+            steps[1].append(".")
+        # folder address:
+        steps[2].append(self.ui.label_18.text())
+        return steps
+
+    def openRecentStep(self):
+        if self.load:
+            self.pageOneInformation("Opening recent file...")
+            with open('./ui/asset/step.txt') as f:
+                steps = f.readlines()
+            self.loadStep(steps)
+            self.load = False
+        
+    def openFileStep(self):
+        file = QFileDialog.getOpenFileName(self, "Please select the file")
+        if file[0] and self.load:
+            self.pageOneInformation("Opening specified file...")
+            with open(file[0]) as f:
+                steps = f.readlines()
+            self.loadStep(steps)
+            self.load = False
+
+    def loadStep(self, steps):
+        modes = {'Connection:': 0, 'Read:': 1, 'File address:': 2}
+        for step in steps:
+            info = step.rstrip().split('\t')
+            if info[0] == 'Connection:' or info[0] == 'Read:' or info[0] == 'File address:':
+                mode = modes[info[0]]
+                continue
+            # Connection:
+            if mode == 0:
+                self.connection(info[0], info[1], info[2])
+                sleep(0.5)
+            # Read:
+            elif mode == 1:
+                if len(info)==4:
+                    self.readConfirm(info[0], info[1], info[2], info[3])
+                elif len(info)==5:
+                    self.readConfirm(info[0], info[1], info[2], info[3], info[4])
+            # File address:
+            elif mode == 2:
+                self.folder_address = info[0]
+                self.ui.label_18.setText(info[0])
+        self.pageOneInformation("done.")
+        self.switchToPlotTab(1)
+        
     # =============================================================================
     # Page 2
     # =============================================================================
@@ -251,14 +312,15 @@ class MainWindow(QMainWindow):
         # show the method of the chosen itesm to the list
         self.ui.listWidget_3.addItems(instrument.METHOD)
 
-    def readConfirm(self):
-        # Get the necessary info of the chosen item
+    def readConfirm(self, instrument_name="", instrument_type="", read_method="", magnification="", Unit=""):
         row = self.ui.tableWidget_2.currentRow()
-        instrument_name = self.ui.tableWidget_2.item(row, 0).text()
-        instrument_type = self.ui.tableWidget_2.item(row, 1).text()
-        read_method = self.ui.listWidget_3.currentItem().text()
-        magnification = self.read_panel.ctr_ui.lineEdit_2.text()
-        Unit = self.read_panel.ctr_ui.lineEdit_3.text()
+        if magnification=="":
+            # Get the necessary info of the chosen item
+            instrument_name = self.ui.tableWidget_2.item(row, 0).text()
+            instrument_type = self.ui.tableWidget_2.item(row, 1).text()
+            read_method = self.ui.listWidget_3.currentItem().text()
+            magnification = self.read_panel.ctr_ui.lineEdit_2.text()
+            Unit = self.read_panel.ctr_ui.lineEdit_3.text()
         # check if magnification is number
         if read_method == "Triton Temperature (AUX in 3)":
             self.instruments_magnification.append(magnification)
