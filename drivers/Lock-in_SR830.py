@@ -78,7 +78,7 @@ class Driver(SR830, DriverInterface):
                 self.first_run = False
             # Calculate the corresponding Temperature
             aux_volt =  self.aux_in_3
-            value = aux_volt*self.slope + self.intercept
+            value = round(aux_volt*self.slope + self.intercept, 7)
             return value
         return float(value) * magnification
 

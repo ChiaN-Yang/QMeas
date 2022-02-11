@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-from time import sleep
+from PyQt5 import sip
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QMainWindow, QTableWidgetItem, QDialog
 from ui import Qt_Window, Control_Window, Read_Window
-from PyQt5 import sip
+from time import sleep
 from utils import load_drivers, addtwodimdict, colorLoop, is_number
 from nidaqmx.system import System
 import pyqtgraph as pg
@@ -18,34 +18,7 @@ import numpy as np
 
 class MainWindow(QMainWindow):
     """Main class"""
-    # pointer
-    name_count = 1
-    row_count = 1
-    read_row_count = 1
-    save_plot_count = 0
-    time_unit = 0.1  # sec
-    progress = 0
-    load = True
-
-    # instruments
-    instruments = []
-    instruments_read = []
-    instruments_magnification = []
-    options_read = []
-    tree_info = []
-
-    # PlotItem lines
-    data_line = []
-    x_data = []
-    y_data = []
-    color_offset = 0
-
-    # choose line
-    choose_line_start = 0
-    choose_line_space = 1
-    choose_line_num = 0
-    line_num_now = 0
-
+    
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = Qt_Window()
@@ -59,38 +32,17 @@ class MainWindow(QMainWindow):
         self._intrumentList()
         self._visaList()
         self._connectSignals()
-
-        # Tables
-        self.ui.tableWidget.setColumnWidth(0, 300)
-        self.ui.tableWidget.setColumnWidth(1, 300)
-
-        # plot widget
-        pg.setConfigOptions(antialias=False)
-        self.plt = self.ui.graphWidget
-        # viewbox setting
-        self.viewbox = self.plt.getViewBox()
-        self.viewbox.disableAutoRange()
-        # plot setting
-        self.plt.showGrid(x=True, y=True, alpha=1)
-        self.plt.setLabel('bottom', '   ')
-        self.plt.setLabel('left', '   ')
-        self.plt.setDownsampling(auto=True, mode='peak')
-
-        # Menu
-        self.ui.retranslateUi(self)
-        self.ui.actionQuit.setShortcut('Ctrl+Q')
-        self.ui.actionQuit.triggered.connect(self.close)
-        self.ui.actionRecent.triggered.connect(self.openRecentStep)
-        self.ui.actionOpen.triggered.connect(self.openFileStep)
-
-        # Set Window Icon
-        self.setWindowIcon(QIcon('./ui/asset/Qfort.png'))
+        self._setPlotWidget()
+        self._initParameters()
 
         # Set Window style
+        self.ui.tableWidget.setColumnWidth(0, 300)
+        self.ui.tableWidget.setColumnWidth(1, 300)
+        self.setWindowIcon(QIcon('./ui/asset/Qfort.png'))
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
 
     # =============================================================================
-    # Page 1
+    # Pre-run functions
     # =============================================================================
     def _visaList(self):
         """detect available address"""
@@ -107,7 +59,6 @@ class MainWindow(QMainWindow):
                     self.ui.listWidget.addItem(device.name)
         except:
             self.pageOneInformation('detect available address fail')
-            logging.warning('detect available address fail')
 
     def _intrumentList(self):
         """detect available drivers"""
@@ -116,14 +67,13 @@ class MainWindow(QMainWindow):
         self.ui.listWidget_2.addItems(self.driver_list.keys())
 
     def _connectSignals(self):
-        # page 1
-        # Buttons
+        """Connect buttons with functions"""
+        # Page 1 Buttons
         self.ui.pushButton.clicked.connect(self._visaList)
         self.ui.pushButton_2.clicked.connect(lambda: self.connection())
         self.ui.pushButton_10.clicked.connect(self.deleteConnectedInstrument)
         self.ui.nextButton.clicked.connect(lambda: self.switchToPlotTab(1))
-        # page 2
-        # Buttons
+        # Page 2 Buttons
         self.ui.pushButton_7.clicked.connect(self.readPanelShow)
         self.read_panel.ctr_ui.pushButton_5.clicked.connect(lambda: self.readConfirm())
         self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.read_panel.close)
@@ -146,76 +96,64 @@ class MainWindow(QMainWindow):
         # treeWidget init
         self.tree = self.ui.treeWidget
         self.tree.itemClicked.connect(self.checkState)
-        # page 3
-        # Buttons
+        # Page 3 Buttons
         self.ui.pushButton_13.clicked.connect(self.displayCursorCrossHair)
         self.ui.pushButton_12.clicked.connect(self.autoPlotRange)
         self.ui.pushButton_16.clicked.connect(self.plotSave)
         # Tables
         self.ui.tableWidget_5.cellClicked.connect(self.lineDisplaySwitch)
+        # Menu
+        self.ui.retranslateUi(self)
+        self.ui.actionQuit.setShortcut('Ctrl+Q')
+        self.ui.actionQuit.triggered.connect(self.close)
+        self.ui.actionRecent.triggered.connect(self.openRecentStep)
+        self.ui.actionOpen.triggered.connect(self.openFileStep)
 
-    def pageOneInformation(self, string):
-        """put some word in the information board"""
-        self.ui.textBrowser.append(str(string))
+    def _setPlotWidget(self):
+        """Set PyQtGraph"""
+        pg.setConfigOptions(antialias=False)
+        self.plt = self.ui.graphWidget
+        # viewbox setting
+        self.viewbox = self.plt.getViewBox()
+        self.viewbox.disableAutoRange()
+        # plot setting
+        self.plt.showGrid(x=True, y=True, alpha=1)
+        self.plt.setLabel('bottom', '   ')
+        self.plt.setLabel('left', '   ')
+        self.plt.setDownsampling(auto=True, mode='peak')
 
-    def deleteConnectedInstrument(self):
-        row = self.ui.tableWidget.currentRow()
-        self.ui.tableWidget.removeRow(row)
-        self.ui.tableWidget_2.removeRow(row)
-        self.row_count -= 1
-        self.instruments.pop(row)
+    def _initParameters(self):
+        # pointer
+        self.name_count = 1
+        self.row_count = 1
+        self.read_row_count = 1
+        self.save_plot_count = 0
+        self.time_unit = 0.1  # sec
+        self.progress = 0
+        self.load = True
 
-    def connection(self, instrument_personal_name="", instrument_type="", visa_address=""):
-        """ Connect instrument and add to table_instrList """
-        if visa_address=="" or instrument_type=="" or instrument_personal_name=="":
-            # Get info from lists and construct new object later
-            visa_address = self.ui.listWidget.currentItem().text()
-            instrument_type = self.ui.listWidget_2.currentItem().text()
-            instrument_personal_name = self.ui.lineEdit.text()
+        # instruments
+        self.instruments = []
+        self.instruments_read = []
+        self.instruments_magnification = []
+        self.options_read = []
+        self.tree_info = []
 
-        row_len = self.ui.tableWidget.rowCount()
-        # Check existance
-        if self.ui.tableWidget.findItems(visa_address, Qt.MatchExactly) != [] or \
-                self.ui.tableWidget.findItems(instrument_personal_name, Qt.MatchExactly) != []:
-            self.pageOneInformation('This VISA address or name has been used.')
-        else:
-            if instrument_type in self.driver_list.keys():
-                try:
-                    instrument_name = f'{instrument_type}_{self.name_count}'
-                    self.name_count += 1
+        # PlotItem lines
+        self.data_line = []
+        self.x_data = []
+        self.y_data = []
+        self.color_offset = 0
 
-                    instrument = self.driver_list[instrument_type](visa_address)
-                    instrument.setProperty(visa_address, instrument_name, instrument_type)
-                    self.instruments.append(instrument)
+        # choose line
+        self.choose_line_start = 0
+        self.choose_line_space = 1
+        self.choose_line_num = 0
+        self.line_num_now = 0
 
-                    self.pageOneInformation(f'visa_address: {visa_address}')
-                    self.pageOneInformation(f'{instrument_type} has been connected successfully.')
-                    # TODO: add initialization option on messagebox and show the related info
-
-                    # Add new row if necessary
-                    if self.row_count > row_len:
-                        self.ui.tableWidget.insertRow(row_len)
-                        self.ui.tableWidget_2.insertRow(row_len)
-
-                    # Assign varibales to current var
-                    instrument_property = [instrument_personal_name, instrument_type, visa_address]
-                    for i, p in enumerate(instrument_property):
-                        if p == '':
-                            p = instrument_name
-                        # Update the info to the table in page 1
-                        self.ui.tableWidget.setItem(self.row_count - 1, i, QTableWidgetItem(p))
-
-                    # Update the left top table in page 2
-                    if instrument_personal_name == '':
-                        instrument_personal_name = instrument_name
-                    self.ui.tableWidget_2.setItem(self.row_count - 1, 0, QTableWidgetItem(instrument_personal_name))
-                    self.ui.tableWidget_2.setItem(self.row_count - 1, 1, QTableWidgetItem(instrument_type))
-                    self.row_count += 1
-
-                except visa.VisaIOError or AttributeError as e:
-                    self.pageOneInformation(f"{instrument_type} connect fail")
-                    logging.exception('connect fail', exc_info=e)
-        self.ui.lineEdit.clear()
+    # =============================================================================
+    # Record measurement process
+    # =============================================================================
 
     def getTableValues(self):
         steps = [[],[],[]]
@@ -272,13 +210,73 @@ class MainWindow(QMainWindow):
         self.pageOneInformation("done.")
         self.load = False
         self.switchToPlotTab(1)
-        
+
     # =============================================================================
-    # Page 2
+    # Page 1 Connection
     # =============================================================================
 
-    def pageTwoInformation(self, string):
-        self.ui.textBrowser_2.append(str(string))
+    def connection(self, instrument_personal_name="", instrument_type="", visa_address=""):
+        """ Connect instrument and add to table_instrList """
+        if visa_address=="" or instrument_type=="" or instrument_personal_name=="":
+            # Get info from lists and construct new object later
+            visa_address = self.ui.listWidget.currentItem().text()
+            instrument_type = self.ui.listWidget_2.currentItem().text()
+            instrument_personal_name = self.ui.lineEdit.text()
+
+        row_len = self.ui.tableWidget.rowCount()
+        # Check existance
+        if self.ui.tableWidget.findItems(visa_address, Qt.MatchExactly) != [] or \
+                self.ui.tableWidget.findItems(instrument_personal_name, Qt.MatchExactly) != []:
+            self.pageOneInformation('This VISA address or name has been used.')
+        else:
+            if instrument_type in self.driver_list.keys():
+                try:
+                    instrument_name = f'{instrument_type}_{self.name_count}'
+                    self.name_count += 1
+
+                    instrument = self.driver_list[instrument_type](visa_address)
+                    instrument.setProperty(visa_address, instrument_name, instrument_type)
+                    self.instruments.append(instrument)
+
+                    self.pageOneInformation(f'visa_address: {visa_address}')
+                    self.pageOneInformation(f'{instrument_type} has been connected successfully.')
+                    # TODO: add initialization option on messagebox and show the related info
+
+                    # Add new row if necessary
+                    if self.row_count > row_len:
+                        self.ui.tableWidget.insertRow(row_len)
+                        self.ui.tableWidget_2.insertRow(row_len)
+
+                    # Assign varibales to current var
+                    instrument_property = [instrument_personal_name, instrument_type, visa_address]
+                    for i, p in enumerate(instrument_property):
+                        if p == '':
+                            p = instrument_name
+                        # Update the info to the table in page 1
+                        self.ui.tableWidget.setItem(self.row_count - 1, i, QTableWidgetItem(p))
+
+                    # Update the left top table in page 2
+                    if instrument_personal_name == '':
+                        instrument_personal_name = instrument_name
+                    self.ui.tableWidget_2.setItem(self.row_count - 1, 0, QTableWidgetItem(instrument_personal_name))
+                    self.ui.tableWidget_2.setItem(self.row_count - 1, 1, QTableWidgetItem(instrument_type))
+                    self.row_count += 1
+
+                except visa.VisaIOError or AttributeError as e:
+                    self.pageOneInformation(f"{instrument_type} connect fail")
+                    logging.exception('connect fail', exc_info=e)
+        self.ui.lineEdit.clear()
+
+    def deleteConnectedInstrument(self):
+        row = self.ui.tableWidget.currentRow()
+        self.ui.tableWidget.removeRow(row)
+        self.ui.tableWidget_2.removeRow(row)
+        self.row_count -= 1
+        self.instruments.pop(row)
+        
+    # =============================================================================
+    # Page 2 Read
+    # =============================================================================
 
     def readPanelShow(self):
         # self.pageTwoInformation(self.ui.listWidget_3.currentItem())
@@ -286,29 +284,6 @@ class MainWindow(QMainWindow):
             self.pageTwoInformation('Please select a method.')
         else:
             self.read_panel.show()
-
-    def controlPanelShow(self):
-        # self.pageTwoInformation(self.ui.listWidget_3.currentItem())
-        if self.ui.listWidget_3.currentItem() == None:
-            self.pageTwoInformation('Please select a method.')
-        else:
-            self.control_panel.show()
-
-    def deleteReadRow(self):
-        row = self.ui.tableWidget_4.currentRow()
-        self.ui.tableWidget_4.removeRow(row)
-        self.ui.tableWidget_5.removeColumn(row+1)
-        self.read_row_count -= 1
-        self.instruments_read.pop(row)
-        self.options_read.pop(row)
-        self.instruments_magnification.pop(row)
-
-    def showMethod(self):
-        row = self.ui.tableWidget_2.currentRow()
-        instrument = self.instruments[row]
-        self.ui.listWidget_3.clear()
-        # show the method of the chosen itesm to the list
-        self.ui.listWidget_3.addItems(instrument.METHOD)
 
     def readConfirm(self, instrument_name="", instrument_type="", read_method="", magnification="", Unit=""):
         row = self.ui.tableWidget_2.currentRow()
@@ -350,8 +325,25 @@ class MainWindow(QMainWindow):
         self.instruments_read.append(self.instruments[row])
         self.options_read.append(read_method)
 
-    def switchToPlotTab(self, page):
-        self.ui.tabWidget.setCurrentIndex(page)
+    def deleteReadRow(self):
+        row = self.ui.tableWidget_4.currentRow()
+        self.ui.tableWidget_4.removeRow(row)
+        self.ui.tableWidget_5.removeColumn(row+1)
+        self.read_row_count -= 1
+        self.instruments_read.pop(row)
+        self.options_read.pop(row)
+        self.instruments_magnification.pop(row)
+
+    # =============================================================================
+    # Page 2 Control
+    # =============================================================================
+
+    def controlPanelShow(self):
+        # self.pageTwoInformation(self.ui.listWidget_3.currentItem())
+        if self.ui.listWidget_3.currentItem() == None:
+            self.pageTwoInformation('Please select a method.')
+        else:
+            self.control_panel.show()
 
     def timeAddLevel(self):
         """ Provide another option to do the time measurement """
@@ -362,7 +354,7 @@ class MainWindow(QMainWindow):
             self.root.setFlags(self.root.flags() | Qt.ItemIsUserCheckable)
             self.root.setCheckState(0, Qt.Checked)
             self.root.setExpanded(True)
-            self.updateTimeMeasurement(self.root)
+            self.updateTimeMeasurement(self.root, wait_time)
             self.checkState()
         else:
             self.pageTwoInformation('Time measurement - Please enter a number.')
@@ -376,7 +368,7 @@ class MainWindow(QMainWindow):
             self.child1 = QTreeWidgetItem(item)
             self.child1.setText(0, '1')
             self.child1.setExpanded(True)
-            self.updateTimeMeasurement(self.child1)
+            self.updateTimeMeasurement(self.child1, wait_time)
             self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
             self.child1.setCheckState(0, Qt.Checked)
             self.control_panel.read_ui.checkBox.setChecked(False)
@@ -385,19 +377,36 @@ class MainWindow(QMainWindow):
             self.pageTwoInformation('Time measurement - Please enter a number.')
         self.ui.lineEdit_5.clear()
 
+    def updateTimeMeasurement(self, item, wait_time):
+        row = str(-1)
+        Ins_name = 'Time Meas'
+        Ins_type = 'Timer'
+        control_method = '-'
+
+        # TODO: restrict the the value to integer only or something related to the unit
+        target = wait_time
+        speed = '-'
+        increment = '-'
+        control_list = [Ins_name, Ins_type, control_method, target, speed, increment]
+        for i, element in enumerate(control_list):
+            item.setText((i+1), element)
+        item.setText(7, row)
+
     # treeWidget
-    def addLevel(self, level_name):
+    def addLevel(self):
+        control_list = self.getControlList()
         self.root = QTreeWidgetItem(self.tree)
         self.root.setText(0, '0')
         self.root.setFlags(self.root.flags() | Qt.ItemIsUserCheckable)
         self.root.setCheckState(0, Qt.Checked)
         self.root.setExpanded(True)
-        self.updateInfo(self.root)
+        self.updateInfo(self.root, control_list)
         self.control_panel.read_ui.checkBox.setChecked(False)
         self.control_panel.read_ui.lineEdit_5.setText('0')
         self.checkState()
 
     def chooseAddChild(self):
+        control_list = self.getControlList()
         # QTreeWidgetItem括號內放的物件是作為基礎(root)，child會往下一層放
         item = self.tree.currentItem()
         if self.tree.indexOfTopLevelItem(item) >= 0:
@@ -405,57 +414,52 @@ class MainWindow(QMainWindow):
         else:
             _, _, child_num, _, _, _ = self.getIndexs(item.parent())
             target_item = item.parent().child(child_num - 1)
-
         self.child1 = QTreeWidgetItem(target_item)
         self.child1.setText(0, '1')
         self.child1.setExpanded(True)
-        self.updateInfo(self.child1)
+        self.updateInfo(self.child1, control_list)
         self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
         self.child1.setCheckState(0, Qt.Checked)
         self.control_panel.read_ui.checkBox.setChecked(False)
         self.control_panel.read_ui.lineEdit_5.setText('0')
         self.checkState()
 
+    def getControlList(self):
+        row = self.ui.tableWidget_2.currentRow()
+        Ins_name = self.ui.tableWidget_2.item(row, 0).text()
+        Ins_type = self.ui.tableWidget_2.item(row, 1).text()
+        control_method = self.ui.listWidget_3.currentItem().text()
+        target = self.control_panel.read_ui.lineEdit_2.text()
+        speed = self.control_panel.read_ui.lineEdit_3.text()
+        increment = self.control_panel.read_ui.lineEdit_5.text()
+        control_list = [Ins_name, Ins_type, control_method, target, speed, increment, str(row)]
+        return control_list
+
+    def updateInfo(self, item, control_list):
+        target = control_list[3]
+        speed = control_list[4]
+        if is_number(target) and is_number(speed):
+            for i, element in enumerate(control_list):
+                item.setText((i+1), element)
+        else:
+            self.pageTwoInformation('Control measurement - Please enter a number.')
+
+    # =============================================================================
+    # Page 2 Other
+    # =============================================================================
+
+    def showMethod(self):
+        row = self.ui.tableWidget_2.currentRow()
+        instrument = self.instruments[row]
+        self.ui.listWidget_3.clear()
+        # show the method of the chosen itesm to the list
+        self.ui.listWidget_3.addItems(instrument.METHOD)
+
     def checkFunctionIncrement(self):
         if self.control_panel.read_ui.checkBox.isChecked():
             self.control_panel.read_ui.lineEdit_5.setEnabled(True)
         else:
             self.control_panel.read_ui.lineEdit_5.setEnabled(False)
-
-    def updateInfo(self, item):
-        row = self.ui.tableWidget_2.currentRow()
-        Ins_name = self.ui.tableWidget_2.item(row, 0).text()
-        Ins_type = self.ui.tableWidget_2.item(row, 1).text()
-        control_method = self.ui.listWidget_3.currentItem().text()
-
-        target = self.control_panel.read_ui.lineEdit_2.text()
-        speed = self.control_panel.read_ui.lineEdit_3.text()
-
-        # check box
-        increment = self.control_panel.read_ui.lineEdit_5.text()
-        control_list = [Ins_name, Ins_type, control_method, target, speed, increment]
-
-        if is_number(target) and is_number(speed):
-            for i, element in enumerate(control_list):
-                item.setText((i+1), element)
-            item.setText(7, str(row))
-        else:
-            self.pageTwoInformation('Control measurement - Please enter a number.')
-
-    def updateTimeMeasurement(self, item):
-        row = str(-1)
-        Ins_name = 'Time Meas'
-        Ins_type = 'Timer'
-        control_method = '-'
-
-        # TODO: restrict the the value to integer only or something related to the unit
-        target = self.ui.lineEdit_5.text()
-        speed = '-'
-        increment = '-'
-        control_list = [Ins_name, Ins_type, control_method, target, speed, increment]
-        for i, element in enumerate(control_list):
-            item.setText((i+1), element)
-        item.setText(7, row)
 
     def checkState(self):
         iterator = QTreeWidgetItemIterator(self.tree)
@@ -498,10 +502,8 @@ class MainWindow(QMainWindow):
                 checklist[0][i] = checklist[0][i-1]
             else:
                 checklist[0][i] = checklist[0][i]
-
             if checklist[2][i] == -1:
                 checklist[2][i] = 0
-
             if checklist[1][i] == 0 and checklist[5][i] == -1:
                 checklist[3][i] = checklist[5][i]
         del(checklist[5])
@@ -524,14 +526,8 @@ class MainWindow(QMainWindow):
         self.checkState()
 
     # =============================================================================
-    # Page 3
+    # Page 3 Button
     # =============================================================================
-    def procedureGo(self):
-        # save plot count
-        self.save_plot_count = 0
-        self.switchToPlotTab(2)
-        # plotlines init
-        self.createEmptyLines()
 
     def resumePause(self):
         if self.ui.pauseButton.text() == "Pause":
@@ -555,10 +551,6 @@ class MainWindow(QMainWindow):
         """ draw every n lines """
         self.choose_line_space = value
         self.renewGraph()
-
-    def pageThreeInformation(self, string):
-        self.ui.textBrowser_3.clear
-        self.ui.textBrowser_3.append(str(string))
 
     def displayCursorCrossHair(self):
         """Add crosshair lines."""
@@ -605,8 +597,9 @@ class MainWindow(QMainWindow):
         self.ui.progressBar.setMaximum(max)
 
     # =============================================================================
-    #  Start and stop function
+    #  Page 3 Start and stop function
     # =============================================================================
+
     def folderMessage(self):
         cwd = os.getcwd()
         self.folder_address = QFileDialog.getExistingDirectory(self, "Please define the folder name", cwd)
@@ -626,6 +619,13 @@ class MainWindow(QMainWindow):
             return False
         elif reply == QMessageBox.Ok:
             return True
+
+    def procedureGo(self):
+        # save plot count
+        self.save_plot_count = 0
+        self.switchToPlotTab(2)
+        # plotlines init
+        self.createEmptyLines()
 
     # =============================================================================
     # plot setting
@@ -734,6 +734,24 @@ class MainWindow(QMainWindow):
         # update y value
         for i in range(self.read_len):
             self.ui.tableWidget_5.setItem(2, (i + 1), QTableWidgetItem(f'{y_show[i]:g}'))
+
+    # =============================================================================
+    # Other
+    # =============================================================================
+
+    def pageOneInformation(self, string):
+        """put some word in the information board"""
+        self.ui.textBrowser.append(str(string))
+
+    def pageTwoInformation(self, string):
+        self.ui.textBrowser_2.append(str(string))
+
+    def pageThreeInformation(self, string):
+        self.ui.textBrowser_3.clear
+        self.ui.textBrowser_3.append(str(string))
+
+    def switchToPlotTab(self, page):
+        self.ui.tabWidget.setCurrentIndex(page)
 
 
 class ControlPanel(QDialog):

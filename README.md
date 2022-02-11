@@ -72,7 +72,6 @@ Before run this program, you need to install package below:
 - PyQtGraph
 - PyVISA
 - Pymeasure
-- VisPy
 - Numpy
 - Labdrivers
 - NIDAQmx
