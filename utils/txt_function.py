@@ -114,13 +114,20 @@ class TxtFunction(QObject):
                     f.write('\n')
                 else:
                     f.write(f'{element}\t')
-            f.write(f'Read:\n')
+            f.write(f'Control:\n')
             for element in steps[1]:
                 if element == ".":
                     f.write('\n')
                 else:
                     f.write(f'{element}\t')
-            f.write(f'File address:\n{steps[2][0]}')
+            f.write(f'Read:\n')
+            for element in steps[2]:
+                if element == ".":
+                    f.write('\n')
+                else:
+                    f.write(f'{element}\t')
+            f.write(f'File address:\n{steps[3][0]}')
+            f.write(f'\nFile name:\n{steps[4][0]}')
 
 
 if __name__ == '__main__':

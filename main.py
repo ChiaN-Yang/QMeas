@@ -59,6 +59,7 @@ class QMeasCtrl:
         file_name = f'{self.name}.txt'
         if self._view.ui.label_18.text() == '':
             self._view.folder_address = os.path.abspath(os.getcwd()) + "\\data"
+            self._view.ui.label_18.setText(self._view.folder_address)
         if self.name == '':
             self._view.messageBox("Please type the file name.")
         elif self._view.tree_info == []:

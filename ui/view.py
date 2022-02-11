@@ -76,18 +76,13 @@ class MainWindow(QMainWindow):
         # Page 2 Buttons
         self.ui.pushButton_7.clicked.connect(self.readPanelShow)
         self.read_panel.ctr_ui.pushButton_5.clicked.connect(lambda: self.readConfirm())
-        self.read_panel.ctr_ui.pushButton_5.clicked.connect(self.read_panel.close)
-        self.read_panel.ctr_ui.pushButton_6.clicked.connect(self.read_panel.close)
         self.ui.pushButton_3.clicked.connect(self.controlPanelShow)
-        self.control_panel.read_ui.pushButton_9.clicked.connect(self.addLevel)
-        self.control_panel.read_ui.pushButton_9.clicked.connect(self.control_panel.close)
-        self.control_panel.read_ui.pushButton_8.clicked.connect(self.chooseAddChild)
-        self.control_panel.read_ui.pushButton_8.clicked.connect(self.control_panel.close)
-        self.control_panel.read_ui.pushButton_6.clicked.connect(self.control_panel.close)
+        self.control_panel.read_ui.pushButton_9.clicked.connect(lambda: self.addLevel())
+        self.control_panel.read_ui.pushButton_8.clicked.connect(lambda: self.chooseAddChild())
         self.ui.pushButton_8.clicked.connect(self.deleteReadRow)
         self.ui.pushButton_9.clicked.connect(self.chooseDelete)
-        self.ui.pushButton_26.clicked.connect(self.timeAddLevel)
-        self.ui.pushButton_27.clicked.connect(self.timeAddChild)
+        self.ui.pushButton_26.clicked.connect(lambda: self.timeAddLevel())
+        self.ui.pushButton_27.clicked.connect(lambda: self.timeAddChild())
         self.ui.pushButton_4.clicked.connect(self.folderMessage)
         # check box
         self.control_panel.read_ui.checkBox.stateChanged.connect(self.checkFunctionIncrement)
@@ -156,19 +151,31 @@ class MainWindow(QMainWindow):
     # =============================================================================
 
     def getTableValues(self):
-        steps = [[],[],[]]
-        # Connection:
+        steps = [[],[],[],[],[]]
+        # 0 Connection:
         for row in range(self.ui.tableWidget.rowCount()):
             for col in range(self.ui.tableWidget.columnCount()):
                 steps[0].append(self.ui.tableWidget.item(row,col).text())
             steps[0].append(".")
-        # Read:
+        # 1 Control:
+        iterator = QTreeWidgetItemIterator(self.tree)
+        level = {'0': '-', '1': '--', '2': '--' }
+        while iterator.value():
+            item = iterator.value()
+            steps[1].append(level[item.text(0)])
+            for i in range(1,8):
+                steps[1].append(item.text(i))
+            steps[1].append(".")
+            iterator += 1
+        # 2 Read:
         for row in range(self.ui.tableWidget_4.rowCount()):
             for col in range(self.ui.tableWidget_4.columnCount()):
-                steps[1].append(self.ui.tableWidget_4.item(row,col).text())
-            steps[1].append(".")
-        # folder address:
-        steps[2].append(self.ui.label_18.text())
+                steps[2].append(self.ui.tableWidget_4.item(row,col).text())
+            steps[2].append(".")
+        # 3 folder address:
+        steps[3].append(self.ui.label_18.text())
+        # file name:
+        steps[4].append(self.ui.lineEdit_2.text())
         return steps
 
     def openRecentStep(self):
@@ -187,26 +194,45 @@ class MainWindow(QMainWindow):
             self.loadStep(steps)
 
     def loadStep(self, steps):
-        modes = {'Connection:': 0, 'Read:': 1, 'File address:': 2}
+        modes = {'Connection:': 0, 'Control:': 1, 'Read:': 2, 'File address:': 3, 'File name:': 4}
         for step in steps:
             info = step.rstrip().split('\t')
-            if info[0] == 'Connection:' or info[0] == 'Read:' or info[0] == 'File address:':
+            if info[0] in modes:
                 mode = modes[info[0]]
                 continue
             # Connection:
             if mode == 0:
                 self.connection(info[0], info[1], info[2])
                 sleep(0.5)
-            # Read:
+            # Control:
             elif mode == 1:
+                if info[0] == '-':
+                    if info[1] == 'Time Meas':
+                        self.timeAddLevel(info[4])
+                    else:
+                        self.addLevel(info[1:])
+                elif info[0] == '--':
+                    if info[1] == 'Time Meas':
+                        self.timeAddChild(info[4], self.root)
+                    else:
+                        self.chooseAddChild(info[1:], self.root)
+                elif info[0] == '---':
+                    if info[1] == 'Time Meas':
+                        self.timeAddChild(info[4], self.child1)
+                    else:
+                        self.chooseAddChild(info[1:], self.child1)
+            # Read:
+            elif mode == 2:
                 if len(info)==4:
                     self.readConfirm(info[0], info[1], info[2], info[3])
                 elif len(info)==5:
                     self.readConfirm(info[0], info[1], info[2], info[3], info[4])
             # File address:
-            elif mode == 2:
+            elif mode == 3:
                 self.folder_address = info[0]
                 self.ui.label_18.setText(info[0])
+            elif mode == 4:
+                self.ui.lineEdit_2.setText(info[0])
         self.pageOneInformation("done.")
         self.load = False
         self.switchToPlotTab(1)
@@ -345,9 +371,10 @@ class MainWindow(QMainWindow):
         else:
             self.control_panel.show()
 
-    def timeAddLevel(self):
+    def timeAddLevel(self, wait_time=""):
         """ Provide another option to do the time measurement """
-        wait_time = self.ui.lineEdit_5.text()
+        if wait_time=="":
+            wait_time = self.ui.lineEdit_5.text()
         if is_number(wait_time):
             self.root = QTreeWidgetItem(self.tree)
             self.root.setText(0, '0')
@@ -360,11 +387,12 @@ class MainWindow(QMainWindow):
             self.pageTwoInformation('Time measurement - Please enter a number.')
         self.ui.lineEdit_5.clear()
 
-    def timeAddChild(self):
+    def timeAddChild(self, wait_time="", item=""):
         """ Provide another option to do the time measurement """
-        wait_time = self.ui.lineEdit_5.text()
-        if wait_time.isnumeric():
+        if wait_time=="":
+            wait_time = self.ui.lineEdit_5.text()
             item = self.tree.currentItem()
+        if is_number(wait_time):
             self.child1 = QTreeWidgetItem(item)
             self.child1.setText(0, '1')
             self.child1.setExpanded(True)
@@ -377,7 +405,8 @@ class MainWindow(QMainWindow):
             self.pageTwoInformation('Time measurement - Please enter a number.')
         self.ui.lineEdit_5.clear()
 
-    def updateTimeMeasurement(self, item, wait_time):
+    @staticmethod
+    def updateTimeMeasurement(item, wait_time):
         row = str(-1)
         Ins_name = 'Time Meas'
         Ins_type = 'Timer'
@@ -393,8 +422,9 @@ class MainWindow(QMainWindow):
         item.setText(7, row)
 
     # treeWidget
-    def addLevel(self):
-        control_list = self.getControlList()
+    def addLevel(self, control_list=[]):
+        if control_list==[]:
+            control_list = self.getControlList()
         self.root = QTreeWidgetItem(self.tree)
         self.root.setText(0, '0')
         self.root.setFlags(self.root.flags() | Qt.ItemIsUserCheckable)
@@ -405,10 +435,11 @@ class MainWindow(QMainWindow):
         self.control_panel.read_ui.lineEdit_5.setText('0')
         self.checkState()
 
-    def chooseAddChild(self):
-        control_list = self.getControlList()
-        # QTreeWidgetItem括號內放的物件是作為基礎(root)，child會往下一層放
-        item = self.tree.currentItem()
+    def chooseAddChild(self, control_list=[], item=[]):
+        if control_list==[]:
+            control_list = self.getControlList()
+            # QTreeWidgetItem括號內放的物件是作為基礎(root)，child會往下一層放
+            item = self.tree.currentItem()
         if self.tree.indexOfTopLevelItem(item) >= 0:
             target_item = item
         else:
@@ -761,6 +792,9 @@ class ControlPanel(QDialog):
         super(ControlPanel, self).__init__()
         self.read_ui = Control_Window()
         self.read_ui.setupUi(self)
+        self.read_ui.pushButton_9.clicked.connect(self.close)
+        self.read_ui.pushButton_8.clicked.connect(self.close)
+        self.read_ui.pushButton_6.clicked.connect(self.close)
 
 
 class ReadlPanel(QDialog):
@@ -770,3 +804,5 @@ class ReadlPanel(QDialog):
         super(ReadlPanel, self).__init__()
         self.ctr_ui = Read_Window()
         self.ctr_ui.setupUi(self)
+        self.ctr_ui.pushButton_5.clicked.connect(self.close)
+        self.ctr_ui.pushButton_6.clicked.connect(self.close)
