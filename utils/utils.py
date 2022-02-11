@@ -49,4 +49,11 @@ color_group = [(230,159,0),
 def colorLoop(n):
     num = np.mod(n,len(color_group))
     return color_group[num]
-    
+
+# check if is a number
+def is_number(string):
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False

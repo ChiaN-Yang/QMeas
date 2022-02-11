@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QMainWindow, QTableWidgetItem, QDialog
 from ui import Qt_Window, Control_Window, Read_Window
 from PyQt5 import sip
-from utils import load_drivers, addtwodimdict, colorLoop
+from utils import load_drivers, addtwodimdict, colorLoop, is_number
 from nidaqmx.system import System
 import pyqtgraph as pg
 import pyqtgraph.exporters
@@ -14,7 +14,6 @@ import os
 import qdarkstyle
 import logging
 import numpy as np
-import asyncio
 
 
 class MainWindow(QMainWindow):
@@ -240,7 +239,6 @@ class MainWindow(QMainWindow):
             with open('./ui/asset/step.txt') as f:
                 steps = f.readlines()
             self.loadStep(steps)
-            self.load = False
         
     def openFileStep(self):
         file = QFileDialog.getOpenFileName(self, "Please select the file")
@@ -249,7 +247,6 @@ class MainWindow(QMainWindow):
             with open(file[0]) as f:
                 steps = f.readlines()
             self.loadStep(steps)
-            self.load = False
 
     def loadStep(self, steps):
         modes = {'Connection:': 0, 'Read:': 1, 'File address:': 2}
@@ -273,6 +270,7 @@ class MainWindow(QMainWindow):
                 self.folder_address = info[0]
                 self.ui.label_18.setText(info[0])
         self.pageOneInformation("done.")
+        self.load = False
         self.switchToPlotTab(1)
         
     # =============================================================================
@@ -324,13 +322,12 @@ class MainWindow(QMainWindow):
         # check if magnification is number
         if read_method == "Triton Temperature (AUX in 3)":
             self.instruments_magnification.append(magnification)
+        elif is_number(magnification):
+            self.instruments_magnification.append(float(magnification))
         else:
-            try:
-                mag = float(magnification)
-                self.instruments_magnification.append(mag)
-            except ValueError:
-                self.pageTwoInformation('magnification is not a number.')
-                return
+            self.pageTwoInformation('magnification is not a number.')
+            return
+                
         # Add new row if necessary
         row_len = self.ui.tableWidget_4.rowCount()
         if self.read_row_count > row_len:
@@ -359,7 +356,7 @@ class MainWindow(QMainWindow):
     def timeAddLevel(self):
         """ Provide another option to do the time measurement """
         wait_time = self.ui.lineEdit_5.text()
-        if wait_time.isnumeric():
+        if is_number(wait_time):
             self.root = QTreeWidgetItem(self.tree)
             self.root.setText(0, '0')
             self.root.setFlags(self.root.flags() | Qt.ItemIsUserCheckable)
@@ -368,8 +365,7 @@ class MainWindow(QMainWindow):
             self.updateTimeMeasurement(self.root)
             self.checkState()
         else:
-            self.pageTwoInformation(
-                'Time measurement - Please enter a number.')
+            self.pageTwoInformation('Time measurement - Please enter a number.')
         self.ui.lineEdit_5.clear()
 
     def timeAddChild(self):
@@ -432,7 +428,6 @@ class MainWindow(QMainWindow):
         Ins_type = self.ui.tableWidget_2.item(row, 1).text()
         control_method = self.ui.listWidget_3.currentItem().text()
 
-        # TODO: restrict the the value to integer only or something related to the unit
         target = self.control_panel.read_ui.lineEdit_2.text()
         speed = self.control_panel.read_ui.lineEdit_3.text()
 
@@ -440,9 +435,12 @@ class MainWindow(QMainWindow):
         increment = self.control_panel.read_ui.lineEdit_5.text()
         control_list = [Ins_name, Ins_type, control_method, target, speed, increment]
 
-        for i, element in enumerate(control_list):
-            item.setText((i+1), element)
-        item.setText(7, str(row))
+        if is_number(target) and is_number(speed):
+            for i, element in enumerate(control_list):
+                item.setText((i+1), element)
+            item.setText(7, str(row))
+        else:
+            self.pageTwoInformation('Control measurement - Please enter a number.')
 
     def updateTimeMeasurement(self, item):
         row = str(-1)
@@ -709,7 +707,6 @@ class MainWindow(QMainWindow):
         start = self.choose_line_start*self.choose_line_space
         choose_line = np.linspace(start, start+self.choose_line_space*choose_line_num, choose_line_num+1, dtype=np.int16)
         self.choose_line = set(choose_line)
-        print(choose_line_num+1)
         print(self.choose_line)
 
         try:
