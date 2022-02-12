@@ -194,7 +194,10 @@ class MainWindow(QMainWindow):
             self.loadStep(steps)
 
     def loadStep(self, steps):
-        modes = {'Connection:': 0, 'Control:': 1, 'Read:': 2, 'File address:': 3, 'File name:': 4}
+        modes = {   'Connection (Name/Type/Address) :' : 0,
+                    'Control (Level/Name/Type/Property/Target/Speed/Increment/Ins_lable) :' : 1,
+                    'Read (Name/Type/Property/Magnification/Unit) :' : 2,
+                    'File address:' : 3, 'File name:' : 4   }
         for step in steps:
             info = step.rstrip().split('\t')
             if info[0] in modes:
@@ -690,7 +693,7 @@ class MainWindow(QMainWindow):
         # setData to the PlotItems
         # TODO: The three line selection functions currently only include the second one
         if not self.switch_list[n] or (self.choose_line_num!=0 and not line_id in self.choose_line):
-            self.data_line[n].hide()
+            pass
         else:
             self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(colorLoop(n+self.color_offset), width=1))
 
@@ -728,6 +731,12 @@ class MainWindow(QMainWindow):
             for line in group.values():
                 line.hide()
 
+        for id, line in enumerate(self.data_line):
+            if self.switch_list[id]:
+                line.show()
+            else:
+                line.hide()
+
         # get choose_line_num
         self.choose_line_num = self.ui.spinBox_2.value()
         if self.choose_line_num == 0:
@@ -744,8 +753,7 @@ class MainWindow(QMainWindow):
             for curve_group in choose_line:
                 for curve_num in self.saved_data[curve_group].keys():
                     if self.switch_list[curve_num]:                    
-                        
-                            self.saved_data[curve_group][curve_num].show()
+                        self.saved_data[curve_group][curve_num].show()
         except KeyError:
             logging.exception("message")
                     

@@ -108,19 +108,19 @@ class TxtFunction(QObject):
 
     def recordSteps(self, steps):
         with open('./ui/asset/step.txt', 'w') as f:
-            f.write(f'Connection:\n')
+            f.write(f'Connection (Name/Type/Address) :\n')
             for element in steps[0]:
                 if element == ".":
                     f.write('\n')
                 else:
                     f.write(f'{element}\t')
-            f.write(f'Control:\n')
+            f.write(f'Control (Level/Name/Type/Property/Target/Speed/Increment/Ins_lable) :\n')
             for element in steps[1]:
                 if element == ".":
                     f.write('\n')
                 else:
                     f.write(f'{element}\t')
-            f.write(f'Read:\n')
+            f.write(f'Read (Name/Type/Property/Magnification/Unit) :\n')
             for element in steps[2]:
                 if element == ".":
                     f.write('\n')

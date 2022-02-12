@@ -1,5 +1,4 @@
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
-import logging
 from modpack import TimeMeasurement
 from time import sleep
 
@@ -60,15 +59,6 @@ class MeasurementQt(QObject):
         target = tree_info[6]
         speed = tree_info[7]
         increment = tree_info[8]
-        logging.info('\ntree_num', tree_num)
-        logging.info('\nchild_num', child_num)
-        logging.info('\nleve_position', leve_position)
-        logging.info('\ncheck', check)
-        logging.info('\nmethod', method)
-        logging.info('\nins_label', ins_label)
-        logging.info('\ntarget', target)
-        logging.info('\nspeed', speed)
-        logging.info('\nincredment', increment)
 
         # Know how many trees there are
         tree_total = max(tree_num) + 1
