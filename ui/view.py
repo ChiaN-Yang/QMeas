@@ -34,6 +34,7 @@ class MainWindow(QMainWindow):
         self._connectSignals()
         self._setPlotWidget()
         self._initParameters()
+        self._defaultPosition()
 
         # Set Window style
         self.ui.tableWidget.setColumnWidth(0, 300)
@@ -102,7 +103,9 @@ class MainWindow(QMainWindow):
         self.ui.actionQuit.setShortcut('Ctrl+Q')
         self.ui.actionQuit.triggered.connect(self.close)
         self.ui.actionRecent.triggered.connect(self.openRecentStep)
+        self.ui.actionRecent.setShortcut('Ctrl+R')
         self.ui.actionOpen.triggered.connect(self.openFileStep)
+        self.ui.actionOpen.setShortcut('Ctrl+F')
 
     def _setPlotWidget(self):
         """Set PyQtGraph"""
@@ -116,6 +119,15 @@ class MainWindow(QMainWindow):
         self.plt.setLabel('bottom', '   ')
         self.plt.setLabel('left', '   ')
         self.plt.setDownsampling(auto=True, mode='peak')
+
+    def _defaultPosition(self):
+        with open('./ui/asset/step.txt') as f:
+            steps = f.readlines()
+        info = steps[-3].rstrip().split('\t')
+        address = info[0]
+        self.folder_address = address
+        self.ui.label_18.setText(address)
+        self.open_folder = address
 
     def _initParameters(self):
         # pointer
@@ -641,12 +653,9 @@ class MainWindow(QMainWindow):
     # =============================================================================
 
     def folderMessage(self):
-        cwd = os.getcwd()
-        self.folder_address = QFileDialog.getExistingDirectory(self, "Please define the folder name", cwd)
-
+        self.folder_address = QFileDialog.getExistingDirectory(self, "Please define the folder name", self.open_folder)
         if self.folder_address != '':
             self.ui.label_18.setText(self.folder_address)
-            cwd = self.folder_address
 
     def messageBox(self, message):
         QMessageBox.information(self, "Wrong!.", message)
