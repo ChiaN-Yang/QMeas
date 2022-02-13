@@ -78,6 +78,7 @@ class QMeasCtrl:
         # file name
         self.full_address = self._view.folder_address + '/' + self.name
         self._view.procedureGo()
+        self._database.setUnits(self._view.units)
         # Create a worker object
         self._measurement = None
         self._measurement = MeasurementQt()
@@ -115,13 +116,13 @@ class QMeasCtrl:
 
 
 if __name__ == "__main__":
-    # Create an instance of `QApplication`
+    # Create an instance of QApplication
     app = QApplication(sys.argv)
-    # Show the calculator's GUI
+    # Show the GUI
     view = MainWindow()
     view.show()
     # Create instances of the model and the controller
     database = TxtFunction()
     controller = QMeasCtrl(view=view, database=database)
-    # Execute calculator's main loop
+    # Execute main loop
     sys.exit(app.exec_())

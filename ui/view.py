@@ -130,8 +130,6 @@ class MainWindow(QMainWindow):
         # instruments
         self.instruments = []
         self.instruments_read = []
-        self.instruments_magnification = []
-        self.options_read = []
         self.tree_info = []
 
         # PlotItem lines
@@ -159,7 +157,7 @@ class MainWindow(QMainWindow):
             steps[0].append(".")
         # 1 Control:
         iterator = QTreeWidgetItemIterator(self.tree)
-        level = {'0': '-', '1': '--', '2': '--' }
+        level = {'0': '-', '1': '--', '2': '---' }
         while iterator.value():
             item = iterator.value()
             steps[1].append(level[item.text(0)])
@@ -197,7 +195,7 @@ class MainWindow(QMainWindow):
         modes = {   'Connection (Name/Type/Address) :' : 0,
                     'Control (Level/Name/Type/Property/Target/Speed/Increment/Ins_lable) :' : 1,
                     'Read (Name/Type/Property/Magnification/Unit) :' : 2,
-                    'File address:' : 3, 'File name:' : 4   }
+                    'File address:' : 3, 'File name:' : 4, 'Created on' : -1    }
         for step in steps:
             info = step.rstrip().split('\t')
             if info[0] in modes:
@@ -324,11 +322,7 @@ class MainWindow(QMainWindow):
             magnification = self.read_panel.ctr_ui.lineEdit_2.text()
             Unit = self.read_panel.ctr_ui.lineEdit_3.text()
         # check if magnification is number
-        if read_method == "Triton Temperature (AUX in 3)":
-            self.instruments_magnification.append(magnification)
-        elif is_number(magnification):
-            self.instruments_magnification.append(float(magnification))
-        else:
+        if read_method != "Triton Temperature (AUX in 3)" and not is_number(magnification):
             self.pageTwoInformation('magnification is not a number.')
             return
                 
@@ -352,7 +346,6 @@ class MainWindow(QMainWindow):
 
         self.read_row_count += 1
         self.instruments_read.append(self.instruments[row])
-        self.options_read.append(read_method)
 
     def deleteReadRow(self):
         row = self.ui.tableWidget_4.currentRow()
@@ -360,8 +353,6 @@ class MainWindow(QMainWindow):
         self.ui.tableWidget_5.removeColumn(row+1)
         self.read_row_count -= 1
         self.instruments_read.pop(row)
-        self.options_read.pop(row)
-        self.instruments_magnification.pop(row)
 
     # =============================================================================
     # Page 2 Control
@@ -392,12 +383,19 @@ class MainWindow(QMainWindow):
 
     def timeAddChild(self, wait_time="", item=""):
         """ Provide another option to do the time measurement """
+        # When button is used
         if wait_time=="":
             wait_time = self.ui.lineEdit_5.text()
             item = self.tree.currentItem()
+        # Check if the # of childs has reached 2 (Maximum value)            
+        if item.text(0) == '2':
+            self.pageTwoInformation("Time measurement - Can't join more childs in new layer. The Maximum layers is 3.")
+            return
         if is_number(wait_time):
             self.child1 = QTreeWidgetItem(item)
-            self.child1.setText(0, '1')
+            # The child_text is its up-level item.text(0) + 1
+            child_text = str(int(item.text(0)) + 1)
+            self.child1.setText(0, child_text)
             self.child1.setExpanded(True)
             self.updateTimeMeasurement(self.child1, wait_time)
             self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
@@ -443,13 +441,21 @@ class MainWindow(QMainWindow):
             control_list = self.getControlList()
             # QTreeWidgetItem括號內放的物件是作為基礎(root)，child會往下一層放
             item = self.tree.currentItem()
+        # Check if the # of childs has reached 2 (Maximum value)
+        if item.text(0) == '2':
+            self.pageTwoInformation("Control - Can't join more childs in new layer. The Maximum layers is 3.")
+            return 
+        # Check if the current item is the father (value >= 0)
         if self.tree.indexOfTopLevelItem(item) >= 0:
             target_item = item
+        # If it's the child, the value is -1. The condition falls into else:
         else:
-            _, _, child_num, _, _, _ = self.getIndexs(item.parent())
+            _, _, child_num, _, _, _, _, _ = self.getIndexs(item.parent())
             target_item = item.parent().child(child_num - 1)
         self.child1 = QTreeWidgetItem(target_item)
-        self.child1.setText(0, '1')
+        # The child_text is its up-level item.text(0) + 1
+        child_text = str(int(item.text(0)) + 1)
+        self.child1.setText(0, child_text)
         self.child1.setExpanded(True)
         self.updateInfo(self.child1, control_list)
         self.child1.setFlags(self.child1.flags() | Qt.ItemIsUserCheckable)
@@ -660,6 +666,22 @@ class MainWindow(QMainWindow):
         self.switchToPlotTab(2)
         # plotlines init
         self.createEmptyLines()
+        self.getReadInfo()
+
+    def getReadInfo(self):
+        self.instruments_magnification = []
+        self.options_read = []
+        self.units = []   
+        for row in range(self.ui.tableWidget_4.rowCount()):
+            read_method = self.ui.tableWidget_4.item(row,2).text()
+            self.options_read.append(read_method)
+            magnification = self.ui.tableWidget_4.item(row,3).text()
+            if read_method == "Triton Temperature (AUX in 3)":
+                self.instruments_magnification.append(magnification)
+            elif is_number(magnification):
+                self.instruments_magnification.append(float(magnification))
+            unit = self.ui.tableWidget_4.item(row,4).text()
+            self.units.append(unit)
 
     # =============================================================================
     # plot setting

@@ -59,6 +59,7 @@ class MeasurementQt(QObject):
         target = tree_info[6]
         speed = tree_info[7]
         increment = tree_info[8]
+        print(f'\nControl INFO\ntree_num: {tree_num}\nchild_num: {child_num}\nleve_position: {leve_position}')
 
         # Know how many trees there are
         tree_total = max(tree_num) + 1
@@ -96,7 +97,8 @@ class MeasurementQt(QObject):
 
             if info[0] != 0:
                 for i in range(info[0]):
-                    level[level_count].append([info_tree[n+1+i][2], info_tree[n+1+i][3], info_tree[n+1+i][4], info_tree[n+1+i][5], info_tree[n+1+i][6], info_tree[n+1+i][7]])
+                    if info_tree[n+1+i][0] == -1:
+                        level[level_count].append([info_tree[n+1+i][2], info_tree[n+1+i][3], info_tree[n+1+i][4], info_tree[n+1+i][5], info_tree[n+1+i][6], info_tree[n+1+i][7]])
 
         self.control_sequence.append(level)
 
@@ -112,12 +114,15 @@ class MeasurementQt(QObject):
                 break
 
             if level[0] and level[1] and level[2]:
+                print(f'three level:\n{level[0]}\n{level[1]}\n{level[2]}')
                 self.threeLevelsTree(level)
 
             elif level[0] and level[1] and not level[2]:
+                print(f'two level:\n{level[0]}\n{level[1]}')
                 self.twoLevelsTree(level)
 
             elif level[0] and not level[1] and not level[2]:
+                print(f'one level:\n{level[0]}')
                 self.oneLevelTree(level)
 
         self.finished.emit(self.file_count)
@@ -127,12 +132,12 @@ class MeasurementQt(QObject):
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
             self.clear_progress.emit(len(linspacer))
             for value_i in linspacer:
-                self.performRecord(i, value_i, False)
+                self.performRecord(i, value_i)
                 self.signal_progress.emit()
 
                 for j in level[1]:
                     for value_j in j[0].experimentLinspacer(j[1], j[3], j[4], j[5]):
-                        self.performRecord(j, value_j, False)
+                        self.performRecord(j, value_j)
 
                         for k in level[1]:
                             for value_k in k[0].experimentLinspacer(k[1], k[3], k[4], k[5]):

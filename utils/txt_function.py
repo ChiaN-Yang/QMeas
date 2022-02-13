@@ -6,6 +6,7 @@ Created on Mon Aug 30 16:45:34 2021
 import pandas as pd
 import os
 from os.path import exists
+from datetime import datetime
 from PyQt5.QtCore import QObject
 
 
@@ -14,7 +15,11 @@ class TxtFunction(QObject):
 
     def __init__(self) -> None:
         super().__init__()
-        self.txt_count = 0   # to check if the sequence is new for creating txt
+        
+    def setUnits(self, units):
+        self.units = units
+        # to check if the sequence is new for creating txt
+        self.txt_count = 0
 
     def txtUpdate(self, sequence_num, method, name, x_show, y_show):
         # user the sequence_num to choose the txt
@@ -80,6 +85,9 @@ class TxtFunction(QObject):
             temp_txt.append(pd.read_csv(f'./data/{i}.txt', delimiter="\t"))
         # open the file and write the title first
         self.txtWriter(f'{file_name}.txt', title, 'w')
+        # open the file and writre the units
+        units_list = self.units * sequence_length
+        self.txtWriter(f'{file_name}.txt', units_list, 'a')
         # form the final dataframe from temp_txt
         if temp_txt:
             final_df = pd.concat(temp_txt, axis=1)
@@ -108,6 +116,8 @@ class TxtFunction(QObject):
 
     def recordSteps(self, steps):
         with open('./ui/asset/step.txt', 'w') as f:
+            date = str(datetime.now())[:19]
+            f.write(f'Created on\t{date}\n')
             f.write(f'Connection (Name/Type/Address) :\n')
             for element in steps[0]:
                 if element == ".":
