@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
         self.ui.actionRecent.triggered.connect(self.openRecentStep)
         self.ui.actionRecent.setShortcut('Ctrl+R')
         self.ui.actionOpen.triggered.connect(self.openFileStep)
-        self.ui.actionOpen.setShortcut('Ctrl+F')
+        self.ui.actionOpen.setShortcut('Ctrl+O')
 
     def _setPlotWidget(self):
         """Set PyQtGraph"""
@@ -189,9 +189,10 @@ class MainWindow(QMainWindow):
         return steps
 
     def openRecentStep(self):
-        if self.load:
+        RECENT_PATH = './ui/asset/step.txt'
+        if self.load and os.path.exists(RECENT_PATH):
             self.pageOneInformation("Opening recent file...")
-            with open('./ui/asset/step.txt') as f:
+            with open(RECENT_PATH) as f:
                 steps = f.readlines()
             self.loadStep(steps)
         
@@ -653,9 +654,11 @@ class MainWindow(QMainWindow):
     # =============================================================================
 
     def folderMessage(self):
-        self.folder_address = QFileDialog.getExistingDirectory(self, "Please define the folder name", self.open_folder)
-        if self.folder_address != '':
-            self.ui.label_18.setText(self.folder_address)
+        folder_address = QFileDialog.getExistingDirectory(self, "Please define the folder name", self.open_folder)
+        if folder_address != '':
+            self.ui.label_18.setText(folder_address)
+            self.open_folder = folder_address
+            self.folder_address = folder_address
 
     def messageBox(self, message):
         QMessageBox.information(self, "Wrong!.", message)

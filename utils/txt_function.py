@@ -86,7 +86,10 @@ class TxtFunction(QObject):
         # open the file and write the title first
         self.txtWriter(f'{file_name}.txt', title, 'w')
         # open the file and writre the units
-        units_list = self.units * sequence_length
+        # Example: For two read channels result, we will have the units_list as ["", "y1", "y2", "", "y1", "y2", ... ] 
+        # Add the unit of x axis (empty unit) to the units lists from read channels and multiple the units_list sequence_length
+        units_list = ([""] + self.units) * sequence_length
+        # append the units_list to the result .txt file
         self.txtWriter(f'{file_name}.txt', units_list, 'a')
         # form the final dataframe from temp_txt
         if temp_txt:
