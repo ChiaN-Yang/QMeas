@@ -18,6 +18,7 @@ import numpy as np
 
 class MainWindow(QMainWindow):
     """Main class"""
+    RECENT_PATH = './ui/asset/step.txt'
     
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -121,13 +122,14 @@ class MainWindow(QMainWindow):
         self.plt.setDownsampling(auto=True, mode='peak')
 
     def _defaultPosition(self):
-        with open('./ui/asset/step.txt') as f:
-            steps = f.readlines()
-        info = steps[-3].rstrip().split('\t')
-        address = info[0]
-        self.folder_address = address
-        self.ui.label_18.setText(address)
-        self.open_folder = address
+        if os.path.exists(self.RECENT_PATH):
+            with open('./ui/asset/step.txt') as f:
+                steps = f.readlines()
+            info = steps[-3].rstrip().split('\t')
+            address = info[0]
+            self.folder_address = address
+            self.ui.label_18.setText(address)
+            self.open_folder = address
 
     def _initParameters(self):
         # pointer
@@ -189,10 +191,9 @@ class MainWindow(QMainWindow):
         return steps
 
     def openRecentStep(self):
-        RECENT_PATH = './ui/asset/step.txt'
-        if self.load and os.path.exists(RECENT_PATH):
+        if self.load and os.path.exists(self.RECENT_PATH):
             self.pageOneInformation("Opening recent file...")
-            with open(RECENT_PATH) as f:
+            with open(self.RECENT_PATH) as f:
                 steps = f.readlines()
             self.loadStep(steps)
         
@@ -247,7 +248,7 @@ class MainWindow(QMainWindow):
                 self.ui.label_18.setText(info[0])
             elif mode == 4:
                 self.ui.lineEdit_2.setText(info[0])
-        self.pageOneInformation("done.")
+        self.pageOneInformation("Done.")
         self.load = False
         self.switchToPlotTab(1)
 
@@ -361,11 +362,14 @@ class MainWindow(QMainWindow):
         self.instruments_read.append(self.instruments[row])
 
     def deleteReadRow(self):
-        row = self.ui.tableWidget_4.currentRow()
-        self.ui.tableWidget_4.removeRow(row)
-        self.ui.tableWidget_5.removeColumn(row+1)
-        self.read_row_count -= 1
-        self.instruments_read.pop(row)
+        if self.ui.tableWidget_4.rowCount() > 1:
+            row = self.ui.tableWidget_4.currentRow()
+            self.ui.tableWidget_4.removeRow(row)
+            self.ui.tableWidget_5.removeColumn(row+1)
+            self.read_row_count -= 1
+            self.instruments_read.pop(row)
+        else:
+            self.pageTwoInformation('Deletion failed because there are currently no components')
 
     # =============================================================================
     # Page 2 Control

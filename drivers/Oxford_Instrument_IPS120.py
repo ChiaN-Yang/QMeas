@@ -5,61 +5,52 @@ from time import sleep
 import numpy as np
 
 
-class Driver(OxfordInstruments_IPS120, DriverInterface):
+class Driver(DriverInterface):
     METHOD = ['Magnetic Field']
 
     def __init__(self, visa_address):
         self.ips120 = OxfordInstruments_IPS120('IPS120',visa_address,True)
-        
-        self.ips120.switch_heater(1)
-        sleep(0.1)
-        # Set the switch heater activation state
-        # 0 - Heater Off              (close switch)
-        # 1 - Heater On if PSU=Magnet (open switch)
-        # 2 - Heater On, no checks    (open switch)
-        init_value = self.performGetValue()
-        self.ips120.field_setpoint(init_value)
-        sleep(0.1)
-        self.ips120.activity(1)
-        sleep(0.1)
+        self.first_run = True
 
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
-        pass
-        # self.setActivity(0)
-        # sleep(0.1)
-        # # Set the field activation
-        # # 0 - Hold
-        # # 1 - To Set Point
-        # # 2 - To Zero
-        # # 3 - Clamp (clamp the power supply output)
+        if self.first_run:
+            self.ips120.switch_heater(1)
+            # Set the switch heater activation state
+            # 0 - Heater Off              (close switch)
+            # 1 - Heater On if PSU=Magnet (open switch)
+            # 2 - Heater On, no checks    (open switch)
+            init_value = self.performGetValue()
+            self.ips120.field_setpoint(init_value)
+            self.ips120.activity(1)
+            # Set the field activation
+            # 0 - Hold
+            # 1 - To Set Point
+            # 2 - To Zero
+            # 3 - Clamp (clamp the power supply output)
+            self.first_run = False
 
     def performClose(self):
         """Perform the close instrument connection operation"""
+        pass
         # Set the field to zero
         # self.setActivity(2)
-        self.ips120.local()
-        sleep(0.1)
-        self.ips120.close_all()
-        sleep(0.1)
+        # self.ips120.local()
+        # self.ips120.close_all()
 
     def performSetValue(self, option, value, sweepRate=0.3):
         """Perform the Set Value instrument operation"""
         if option == 'Magnetic Field':
-            if value != np.nan:
+            if value != 'nan':
                 # Set the magnetic field set point, in Tesla
                 print('value: ', value)
                 self.target = value
                 self.ips120.field_setpoint(self.target)
-                # Set the field to Set Point
-                # print('setActivity')
-                # self.setActivity(1)
-                # sleep(0.1)
-                sleep(0.1)
                 now_value = self.performGetValue()
             else:
-                now_value = self.ips120.field()
+                now_value = self.performGetValue()
                 print('now_value', now_value, 'self.target', self.target)
+        return now_value
 
     def performGetValue(self, option='0', magnification=0):
         """Perform the Get Value instrument operation"""
@@ -73,7 +64,7 @@ class Driver(OxfordInstruments_IPS120, DriverInterface):
             if init > float(target):
                 step = -step
             result_len = len(np.arange(init, float(target), step))+1
-            result = [np.nan for _ in range(result_len)]
+            result = ['nan' for _ in range(result_len)]
             result[0] = float(target)
             return result
         elif int(speed) and increment != '0':

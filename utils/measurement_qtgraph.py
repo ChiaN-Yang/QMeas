@@ -1,6 +1,8 @@
+import logging
+from numpy import nan
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 from modpack import TimeMeasurement
-from time import sleep
+from time import sleep, time
 
 
 class MeasurementQt(QObject):
@@ -37,6 +39,7 @@ class MeasurementQt(QObject):
         self.quit_running = False
         self.quit_sweep = False
         self.quit_loop = False
+        print(f'Ins Read:\n{self.instruments_read}')
 
     def openInstruments(self):
         """open instruments"""
@@ -205,8 +208,12 @@ class MeasurementQt(QObject):
             for value_increment in instrument_info[0].experimentLinspacer(instrument_info[1], value, instrument_info[4], '0'):
                 instrument_info[0].performSetValue(instrument_info[1], value_increment)
                 sleep(0.1)
-        set_value = instrument_info[0].performSetValue(instrument_info[1], value)
-        sleep(0.1)
+        try:
+            set_value = instrument_info[0].performSetValue(instrument_info[1], value)
+        except:
+            logging.exception('set_value error')
+            set_value = nan
+
         x_show = [set_value, instrument_info[0].instrumentName(), instrument_info[1]]
         y_show = []
         name_txt = []
@@ -215,13 +222,22 @@ class MeasurementQt(QObject):
         name_txt.append(instrument_info[0].instrumentName())
         method_txt.append(instrument_info[1])
 
+        start_time = time()
         for n, instrument_read in enumerate(self.instruments_read):
-            read_value = instrument_read.performGetValue(self.options_read[n], self.magnification[n])
+            try:
+                read_value = instrument_read.performGetValue(self.options_read[n], self.magnification[n])
+            except:
+                logging.exception('read_value error') # exc_info=False
+                read_value = nan
             y_show.append(read_value)
             name_txt.append(instrument_read.instrumentName())
             method_txt.append(self.options_read[n])
             if bottom_level:
                 self.signal_plot.emit(n, set_value, read_value, self.line_count)
+        elapsed_time = time() - start_time
+        print(f'elapsed_time: {elapsed_time}')
+        if elapsed_time < 0.1:
+            sleep(0.1)
 
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):

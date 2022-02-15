@@ -43,9 +43,9 @@ class Driver(Keithley2400, DriverInterface):
     def performGetValue(self, option, magnification):
         """Perform the Get Value instrument operation"""
         if option == 'Current':
-            value = self.current[1] * magnification
+            value = float(self.current[1]) * magnification
         elif option == 'Voltage':
-            value = self.voltage[0] * magnification
+            value = float(self.voltage[0]) * magnification
         return value
 
     def local_switch(self):
