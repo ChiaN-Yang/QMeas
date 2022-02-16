@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from PyQt5 import sip
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QTreeWidgetItem, QTreeWidgetItemIterator, QMainWindow, QTableWidgetItem, QDialog
 from ui import Qt_Window, Control_Window, Read_Window
@@ -140,11 +140,13 @@ class MainWindow(QMainWindow):
         self.time_unit = 0.1  # sec
         self.progress = 0
         self.load = True
+        self.full_address = ""
 
         # instruments
         self.instruments = []
         self.instruments_read = []
         self.tree_info = []
+        self.instruments_dict = {}
 
         # PlotItem lines
         self.data_line = []
@@ -302,6 +304,8 @@ class MainWindow(QMainWindow):
                     self.ui.tableWidget_2.setItem(self.row_count - 1, 0, QTableWidgetItem(instrument_personal_name))
                     self.ui.tableWidget_2.setItem(self.row_count - 1, 1, QTableWidgetItem(instrument_type))
                     self.row_count += 1
+                    # add instrument name to dict
+                    self.instruments_dict[str(instrument_personal_name)] = instrument
 
                 except visa.VisaIOError or AttributeError as e:
                     self.pageOneInformation(f"{instrument_type} connect fail")
@@ -310,10 +314,12 @@ class MainWindow(QMainWindow):
 
     def deleteConnectedInstrument(self):
         row = self.ui.tableWidget.currentRow()
+        name = self.ui.tableWidget.item(row,0).text()
         self.ui.tableWidget.removeRow(row)
         self.ui.tableWidget_2.removeRow(row)
         self.row_count -= 1
         self.instruments.pop(row)
+        del self.instruments_dict[name]
         
     # =============================================================================
     # Page 2 Read
@@ -327,9 +333,9 @@ class MainWindow(QMainWindow):
             self.read_panel.show()
 
     def readConfirm(self, instrument_name="", instrument_type="", read_method="", magnification="", Unit=""):
-        row = self.ui.tableWidget_2.currentRow()
         if magnification=="":
             # Get the necessary info of the chosen item
+            row = self.ui.tableWidget_2.currentRow()
             instrument_name = self.ui.tableWidget_2.item(row, 0).text()
             instrument_type = self.ui.tableWidget_2.item(row, 1).text()
             read_method = self.ui.listWidget_3.currentItem().text()
@@ -357,12 +363,14 @@ class MainWindow(QMainWindow):
         # Assign the variables to the table in page 3
         self.ui.tableWidget_5.setItem(0, self.read_row_count, QTableWidgetItem(instrument_name))
         self.ui.tableWidget_5.setItem(1, self.read_row_count, QTableWidgetItem(read_method))
+        color = colorLoop(self.read_row_count-1)
+        self.ui.tableWidget_5.item(0,self.read_row_count).setForeground(QColor(color[0],color[1],color[2]))
 
         self.read_row_count += 1
-        self.instruments_read.append(self.instruments[row])
+        self.instruments_read.append(self.instruments_dict[instrument_name])
 
     def deleteReadRow(self):
-        if self.ui.tableWidget_4.rowCount() > 1:
+        if self.ui.tableWidget_4.rowCount() >= 1:
             row = self.ui.tableWidget_4.currentRow()
             self.ui.tableWidget_4.removeRow(row)
             self.ui.tableWidget_5.removeColumn(row+1)
@@ -718,11 +726,14 @@ class MainWindow(QMainWindow):
         self.data_line = []
         # line display switch
         self.switch_list = []
+        # color
+        self.color = []
 
-        for _ in range(self.read_len):
+        for i in range(self.read_len):
             self.data_line.append(self.ui.graphWidget.plot([]))
             self.y_data.append(np.array([], dtype=np.float32))
             self.switch_list.append(True)
+            self.color.append(colorLoop(i+self.color_offset))
             
     def plotUpdate(self, n, x, y_n, line_id):
         if n == 0:
@@ -733,15 +744,18 @@ class MainWindow(QMainWindow):
         if not self.switch_list[n] or (self.choose_line_num!=0 and not line_id in self.choose_line):
             pass
         else:
-            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(colorLoop(n+self.color_offset), width=1))
+            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(self.color[n], width=1))
 
     def saveLines(self, file_count):
-        for i in range(self.read_len):
-            line = self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(colorLoop(i+self.color_offset), width=1))
+        for i in range(self.read_len):       
+            line = self.ui.graphWidget.plot(self.x_data, self.y_data[i], pen=pg.mkPen(self.color[i], width=1))
             addtwodimdict(self.saved_data, file_count, i, line)
+            self.color_offset += 3
+            self.color[i] = colorLoop(i+self.color_offset)
+            if self.switch_list[i]:
+                self.ui.tableWidget_5.item(0,i+1).setForeground(QColor(self.color[i][0], self.color[i][1], self.color[i][2]))
             if not self.switch_list[i] or (self.choose_line_num!=0 and not file_count in self.choose_line):
                 line.hide()
-            self.color_offset += 3
             self.line_num_now = file_count
         
         # initialize x y data
@@ -759,8 +773,10 @@ class MainWindow(QMainWindow):
             return
         if self.switch_list[col]:
             self.switch_list[col] = False
+            self.ui.tableWidget_5.item(0,col+1).setForeground(QColor(255,255,255))
         else:
             self.switch_list[col] = True
+            self.ui.tableWidget_5.item(0,col+1).setForeground(QColor(self.color[col][0], self.color[col][1], self.color[col][2]))
         self.renewGraph()
 
     def renewGraph(self):

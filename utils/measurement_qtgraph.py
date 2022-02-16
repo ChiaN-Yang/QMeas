@@ -153,6 +153,7 @@ class MeasurementQt(QObject):
                                     return
 
                             self.signal_lines.emit(self.line_count)
+                            sleep(0.1)
                             self.line_count += 1
                             if int(k[2]):
                                 self.file_count += 1
@@ -176,6 +177,7 @@ class MeasurementQt(QObject):
                             return
 
                     self.signal_lines.emit(self.line_count)
+                    sleep(0.1)
                     self.line_count += 1
                     if int(j[2]):
                         self.file_count += 1
@@ -195,6 +197,7 @@ class MeasurementQt(QObject):
                     return
 
             self.signal_lines.emit(self.line_count)
+            sleep(0.1)
             self.line_count += 1
             if int(i[2]):
                 self.file_count += 1
@@ -206,7 +209,10 @@ class MeasurementQt(QObject):
         # instrument_info = instrument method check target speed increment
         if instrument_info[5] != '0' and instrument_info[5] != '-':
             for value_increment in instrument_info[0].experimentLinspacer(instrument_info[1], value, instrument_info[4], '0'):
-                instrument_info[0].performSetValue(instrument_info[1], value_increment)
+                try:
+                    instrument_info[0].performSetValue(instrument_info[1], value_increment)
+                except:
+                    logging.exception('increment error')
                 sleep(0.1)
         try:
             set_value = instrument_info[0].performSetValue(instrument_info[1], value)
@@ -214,6 +220,7 @@ class MeasurementQt(QObject):
             logging.exception('set_value error')
             set_value = nan
 
+        start_time = time()
         x_show = [set_value, instrument_info[0].instrumentName(), instrument_info[1]]
         y_show = []
         name_txt = []
@@ -222,7 +229,6 @@ class MeasurementQt(QObject):
         name_txt.append(instrument_info[0].instrumentName())
         method_txt.append(instrument_info[1])
 
-        start_time = time()
         for n, instrument_read in enumerate(self.instruments_read):
             try:
                 read_value = instrument_read.performGetValue(self.options_read[n], self.magnification[n])
@@ -234,14 +240,14 @@ class MeasurementQt(QObject):
             method_txt.append(self.options_read[n])
             if bottom_level:
                 self.signal_plot.emit(n, set_value, read_value, self.line_count)
-        elapsed_time = time() - start_time
-        print(f'elapsed_time: {elapsed_time}')
-        if elapsed_time < 0.1:
-            sleep(0.1)
 
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):
             self.signal_txt.emit(self.file_count, method_txt, name_txt, x_show, y_show)
+        
+        elapsed_time = round(time() - start_time, 2)
+        if elapsed_time < 0.1:
+            sleep(0.1-elapsed_time)
 
     def resumePauseMeasure(self):
         if self.stop_running == False:

@@ -23,7 +23,6 @@ class QMeasCtrl:
         self._database.moveToThread(self.exp_thread)
         # Connect signals and slots
         self._connectViewSignals()
-        self.full_address = ""
         
     def _connectViewSignals(self):
         """Connect signals and slots."""
@@ -76,7 +75,7 @@ class QMeasCtrl:
         self._database.recordSteps(self._view.getTableValues())
         copyfile('./ui/asset/step.txt', f'{self._view.folder_address}/{self.name}_measurement_process.txt')
         # file name
-        self.full_address = self._view.folder_address + '/' + self.name
+        self._view.full_address = self._view.folder_address + '/' + self.name
         self._view.procedureGo()
         self._database.setUnits(self._view.units)
         # Create a worker object
@@ -100,8 +99,8 @@ class QMeasCtrl:
         logging.info('measure stop')
         self.procedureStop()
         self.shutdownInstruments()
-        if self.full_address:
-            self._database.txtMerger(self.full_address, file_count, self._view.read_len+1)
+        if self._view.full_address:
+            self._database.txtMerger(self._view.full_address, file_count, self._view.read_len+1)
             self._database.txtDeleter(file_count)
         self.exp_thread.quit()
         self.exp_thread.wait()
