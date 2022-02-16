@@ -49,6 +49,8 @@ class Driver(DriverInterface):
                 now_value = self.performGetValue()
             else:
                 now_value = self.performGetValue()
+                if now_value == self.target:
+                    now_value = 'done'
                 print('now_value', now_value, 'self.target', self.target)
         return now_value
 

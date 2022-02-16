@@ -313,13 +313,16 @@ class MainWindow(QMainWindow):
         self.ui.lineEdit.clear()
 
     def deleteConnectedInstrument(self):
-        row = self.ui.tableWidget.currentRow()
-        name = self.ui.tableWidget.item(row,0).text()
-        self.ui.tableWidget.removeRow(row)
-        self.ui.tableWidget_2.removeRow(row)
-        self.row_count -= 1
-        self.instruments.pop(row)
-        del self.instruments_dict[name]
+        if self.ui.tableWidget.rowCount() >= 1:
+            row = self.ui.tableWidget.currentRow()
+            name = self.ui.tableWidget.item(row,0).text()
+            self.ui.tableWidget.removeRow(row)
+            self.ui.tableWidget_2.removeRow(row)
+            self.row_count -= 1
+            self.instruments.pop(row)
+            del self.instruments_dict[name]
+        else:
+            self.pageOneInformation('Deletion failed due to no component')
         
     # =============================================================================
     # Page 2 Read
@@ -377,7 +380,7 @@ class MainWindow(QMainWindow):
             self.read_row_count -= 1
             self.instruments_read.pop(row)
         else:
-            self.pageTwoInformation('Deletion failed because there are currently no components')
+            self.pageTwoInformation('Deletion failed due to no component')
 
     # =============================================================================
     # Page 2 Control
@@ -587,8 +590,11 @@ class MainWindow(QMainWindow):
 
     def chooseDelete(self):
         item = self.tree.currentItem()
-        sip.delete(item)
-        self.checkState()
+        if item:
+            sip.delete(item)
+            self.checkState()
+        else:
+            self.pageTwoInformation('Deletion failed due to no component')
 
     # =============================================================================
     # Page 3 Button

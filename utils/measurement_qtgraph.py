@@ -135,16 +135,19 @@ class MeasurementQt(QObject):
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
             self.clear_progress.emit(len(linspacer))
             for value_i in linspacer:
-                self.performRecord(i, value_i)
+                if self.performRecord(i, value_i):
+                    break
                 self.signal_progress.emit()
 
                 for j in level[1]:
                     for value_j in j[0].experimentLinspacer(j[1], j[3], j[4], j[5]):
-                        self.performRecord(j, value_j)
+                        if self.performRecord(j, value_j):
+                            break
 
                         for k in level[1]:
                             for value_k in k[0].experimentLinspacer(k[1], k[3], k[4], k[5]):
-                                self.performRecord(k, value_k, True)
+                                if self.performRecord(k, value_k, True):
+                                    break
                                 if self.quit_sweep:
                                     self.quit_sweep = False
                                     break
@@ -163,12 +166,14 @@ class MeasurementQt(QObject):
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
             self.clear_progress.emit(len(linspacer))
             for value_i in linspacer:
-                self.performRecord(i, value_i)
+                if self.performRecord(i, value_i):
+                    break
                 self.signal_progress.emit()
 
                 for j in level[1]:
                     for value_j in j[0].experimentLinspacer(j[1], j[3], j[4], j[5]):
-                        self.performRecord(j, value_j, True)
+                        if self.performRecord(j, value_j, True):
+                            break
                         if self.quit_sweep:
                             self.quit_sweep = False
                             break
@@ -187,7 +192,8 @@ class MeasurementQt(QObject):
             linspacer = i[0].experimentLinspacer(i[1], i[3], i[4], i[5])
             self.clear_progress.emit(len(linspacer))
             for value_i in linspacer:
-                self.performRecord(i, value_i, True)
+                if self.performRecord(i, value_i, True):
+                    break
                 self.signal_progress.emit()
                 if self.quit_sweep:
                     self.quit_sweep = False
@@ -210,15 +216,19 @@ class MeasurementQt(QObject):
         if instrument_info[5] != '0' and instrument_info[5] != '-':
             for value_increment in instrument_info[0].experimentLinspacer(instrument_info[1], value, instrument_info[4], '0'):
                 try:
-                    instrument_info[0].performSetValue(instrument_info[1], value_increment)
+                    incre_value = instrument_info[0].performSetValue(instrument_info[1], value_increment)
                 except:
                     logging.exception('increment error')
+                if incre_value == 'done':
+                    break
                 sleep(0.1)
         try:
             set_value = instrument_info[0].performSetValue(instrument_info[1], value)
         except:
             logging.exception('set_value error')
             set_value = nan
+        if set_value == 'done':
+            return 1
 
         start_time = time()
         x_show = [set_value, instrument_info[0].instrumentName(), instrument_info[1]]
@@ -248,6 +258,7 @@ class MeasurementQt(QObject):
         elapsed_time = round(time() - start_time, 2)
         if elapsed_time < 0.1:
             sleep(0.1-elapsed_time)
+        return 0
 
     def resumePauseMeasure(self):
         if self.stop_running == False:
