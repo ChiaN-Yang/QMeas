@@ -43,7 +43,6 @@ class Driver(DriverInterface):
         if option == 'Magnetic Field':
             if value != 'nan':
                 # Set the magnetic field set point, in Tesla
-                print('value: ', value)
                 self.target = value
                 self.ips120.field_setpoint(self.target)
                 now_value = self.performGetValue()
@@ -71,7 +70,6 @@ class Driver(DriverInterface):
             return result
         elif int(speed) and increment != '0':
             init = self.performGetValue(option, 1)
-            print('increment', init)
             if init > float(target):
                 increment = -float(increment)
             result = np.arange(init, float(target), float(increment))

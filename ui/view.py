@@ -805,7 +805,7 @@ class MainWindow(QMainWindow):
             choose_line_num = self.choose_line_num - 1
         
         start = self.choose_line_start*self.choose_line_space
-        choose_line = np.linspace(start, start+self.choose_line_space*choose_line_num, choose_line_num+1, dtype=np.int16)
+        choose_line = np.linspace(start, start+self.choose_line_space*(choose_line_num-self.choose_line_start), choose_line_num+1, dtype=np.int16)
         self.choose_line = set(choose_line)
         print(self.choose_line)
 

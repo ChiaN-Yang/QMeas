@@ -24,19 +24,19 @@
 
     依下圖所示，介面上方(Available VISA Address與instrument type區塊)：程式會自動偵測可用的I/O匯流排與驅動程式，使用者依序點儀器的位址、種類，並輸入儀器名字，按Connect即可連接儀器至程式。
 
-    ![connection interface](https://i.imgur.com/QVYu62a.png)
+    ![connection interface](https://i.imgur.com/7VUJIYb.png)
     
 2. Measurement
 
     在左上角點選已連接的儀器，在左下角會跑出對應該儀器可操作的方法。依下圖範例，如果要儀器輸出電壓，按Control會新增到右上角儀器輸出區；如果要讀取電壓，按Read則會新增到右下角儀器測量區。值得注意的是，Control部分是用add child與add sibling的方式新增儀器，利用以上兩種方法就能建立tree結構，從而編排實驗過程。
 
-    ![measurement interface](https://i.imgur.com/kZNb76J.png)
+    ![measurement interface](https://i.imgur.com/AjdLssa.png)
 
 3. Graph
 
-    觀察下圖可以發現，因為在Measurement部分設定兩個Read，圖表這邊會顯示兩條線，會以一對多的方式作圖。
+    圖表這邊會以一對多的方式作圖。
 
-    ![graph interface](https://i.imgur.com/IsX7jMN.png)
+    ![graph interface](https://i.imgur.com/5yTZuUy.png)
 
 ## 程式設計
 1. Connection

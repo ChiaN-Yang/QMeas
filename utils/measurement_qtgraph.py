@@ -112,21 +112,24 @@ class MeasurementQt(QObject):
         # open instrument
         self.openInstruments()
 
-        for level in self.control_sequence:
-            if self.quit_running:
-                break
+        try:
+            for level in self.control_sequence:
+                if self.quit_running:
+                    break
 
-            if level[0] and level[1] and level[2]:
-                print(f'three level:\n{level[0]}\n{level[1]}\n{level[2]}')
-                self.threeLevelsTree(level)
+                if level[0] and level[1] and level[2]:
+                    print(f'three level:\n{level[0]}\n{level[1]}\n{level[2]}')
+                    self.threeLevelsTree(level)
 
-            elif level[0] and level[1] and not level[2]:
-                print(f'two level:\n{level[0]}\n{level[1]}')
-                self.twoLevelsTree(level)
+                elif level[0] and level[1] and not level[2]:
+                    print(f'two level:\n{level[0]}\n{level[1]}')
+                    self.twoLevelsTree(level)
 
-            elif level[0] and not level[1] and not level[2]:
-                print(f'one level:\n{level[0]}')
-                self.oneLevelTree(level)
+                elif level[0] and not level[1] and not level[2]:
+                    print(f'one level:\n{level[0]}')
+                    self.oneLevelTree(level)
+        except:
+            logging.exception('measure error')
 
         self.finished.emit(self.file_count)
 
@@ -219,6 +222,7 @@ class MeasurementQt(QObject):
                     incre_value = instrument_info[0].performSetValue(instrument_info[1], value_increment)
                 except:
                     logging.exception('increment error')
+                    incre_value = nan
                 if incre_value == 'done':
                     break
                 sleep(0.1)
