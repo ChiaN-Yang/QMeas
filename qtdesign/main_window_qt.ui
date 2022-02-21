@@ -925,7 +925,7 @@ p, li { white-space: pre-wrap; }
           <x>10</x>
           <y>760</y>
           <width>1451</width>
-          <height>96</height>
+          <height>111</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -1304,7 +1304,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>1656</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuQuit">

@@ -14,25 +14,27 @@ class Driver(DriverInterface):
 
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
+        self.ips120.activity(0)
         if self.first_run:
             self.ips120.switch_heater(1)
             # Set the switch heater activation state
             # 0 - Heater Off              (close switch)
             # 1 - Heater On if PSU=Magnet (open switch)
             # 2 - Heater On, no checks    (open switch)
-            init_value = self.performGetValue()
-            self.ips120.field_setpoint(init_value)
-            self.ips120.activity(1)
-            # Set the field activation
-            # 0 - Hold
-            # 1 - To Set Point
-            # 2 - To Zero
-            # 3 - Clamp (clamp the power supply output)
             self.first_run = False
+        init_value = self.performGetValue()
+        self.ips120.field_setpoint(init_value)
+        self.ips120.sweeprate_field(0.2)
+        self.ips120.activity(1)
+        # Set the field activation
+        # 0 - Hold
+        # 1 - To Set Point
+        # 2 - To Zero
+        # 3 - Clamp (clamp the power supply output)
 
     def performClose(self):
         """Perform the close instrument connection operation"""
-        pass
+        self.ips120.activity(0)
         # Set the field to zero
         # self.setActivity(2)
         # self.ips120.local()
@@ -50,7 +52,6 @@ class Driver(DriverInterface):
                 now_value = self.performGetValue()
                 if now_value == self.target:
                     now_value = 'done'
-                print('now_value', now_value, 'self.target', self.target)
         return now_value
 
     def performGetValue(self, option='0', magnification=0):
@@ -58,17 +59,18 @@ class Driver(DriverInterface):
         return self.ips120.field()
 
     def experimentLinspacer(self, option, target, speed, increment):
-        if int(speed) and increment == '0':
-            time_unit = 0.1
+        if increment == '0':
+            TIME_UNIT = 0.1
+            MAG_SPEED = 12.0
             init = self.performGetValue(option, 1)
-            step = float(speed) / 3600 * time_unit
+            step = MAG_SPEED / 3600 * TIME_UNIT
             if init > float(target):
                 step = -step
             result_len = len(np.arange(init, float(target), step))+1
             result = ['nan' for _ in range(result_len)]
             result[0] = float(target)
             return result
-        elif int(speed) and increment != '0':
+        elif increment != '0':
             init = self.performGetValue(option, 1)
             if init > float(target):
                 increment = -float(increment)
@@ -78,4 +80,4 @@ class Driver(DriverInterface):
 
 
 if __name__ == '__main__':
-    mag = Driver("GPIB::25")
+    pass

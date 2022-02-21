@@ -200,7 +200,7 @@ class MainWindow(QMainWindow):
             self.loadStep(steps)
         
     def openFileStep(self):
-        file = QFileDialog.getOpenFileName(self, "Please select the file")
+        file = QFileDialog.getOpenFileName(self, "Please select the file", self.open_folder)
         if file[0] and self.load:
             self.pageOneInformation("Opening specified file...")
             with open(file[0]) as f:
@@ -212,47 +212,51 @@ class MainWindow(QMainWindow):
                     'Control (Level/Name/Type/Property/Target/Speed/Increment/Ins_lable) :' : 1,
                     'Read (Name/Type/Property/Magnification/Unit) :' : 2,
                     'File address:' : 3, 'File name:' : 4, 'Created on' : -1    }
-        for step in steps:
-            info = step.rstrip().split('\t')
-            if info[0] in modes:
-                mode = modes[info[0]]
-                continue
-            # Connection:
-            if mode == 0:
-                self.connection(info[0], info[1], info[2])
-                sleep(0.5)
-            # Control:
-            elif mode == 1:
-                if info[0] == '-':
-                    if info[1] == 'Time Meas':
-                        self.timeAddLevel(info[4])
-                    else:
-                        self.addLevel(info[1:])
-                elif info[0] == '--':
-                    if info[1] == 'Time Meas':
-                        self.timeAddChild(info[4], self.root)
-                    else:
-                        self.chooseAddChild(info[1:], self.root)
-                elif info[0] == '---':
-                    if info[1] == 'Time Meas':
-                        self.timeAddChild(info[4], self.child1)
-                    else:
-                        self.chooseAddChild(info[1:], self.child1)
-            # Read:
-            elif mode == 2:
-                if len(info)==4:
-                    self.readConfirm(info[0], info[1], info[2], info[3])
-                elif len(info)==5:
-                    self.readConfirm(info[0], info[1], info[2], info[3], info[4])
-            # File address:
-            elif mode == 3:
-                self.folder_address = info[0]
-                self.ui.label_18.setText(info[0])
-            elif mode == 4:
-                self.ui.lineEdit_2.setText(info[0])
-        self.pageOneInformation("Done.")
-        self.load = False
-        self.switchToPlotTab(1)
+        try:
+            for step in steps:
+                info = step.rstrip().split('\t')
+                if info[0] in modes:
+                    mode = modes[info[0]]
+                    continue
+                # Connection:
+                if mode == 0:
+                    self.connection(info[0], info[1], info[2])
+                    sleep(0.5)
+                # Control:
+                elif mode == 1:
+                    if info[0] == '-':
+                        if info[1] == 'Time Meas':
+                            self.timeAddLevel(info[4])
+                        else:
+                            self.addLevel(info[1:])
+                    elif info[0] == '--':
+                        if info[1] == 'Time Meas':
+                            self.timeAddChild(info[4], self.root)
+                        else:
+                            self.chooseAddChild(info[1:], self.root)
+                    elif info[0] == '---':
+                        if info[1] == 'Time Meas':
+                            self.timeAddChild(info[4], self.child1)
+                        else:
+                            self.chooseAddChild(info[1:], self.child1)
+                # Read:
+                elif mode == 2:
+                    if len(info)==4:
+                        self.readConfirm(info[0], info[1], info[2], info[3])
+                    elif len(info)==5:
+                        self.readConfirm(info[0], info[1], info[2], info[3], info[4])
+                # File address:
+                elif mode == 3:
+                    self.folder_address = info[0]
+                    self.ui.label_18.setText(info[0])
+                elif mode == 4:
+                    self.ui.lineEdit_2.setText(info[0])
+            self.pageOneInformation("Done.")
+            self.load = False
+            self.switchToPlotTab(1)
+        except:
+            logging.exception('open file failed')
+            self.pageOneInformation("Failed.")
 
     # =============================================================================
     # Page 1 Connection
@@ -679,13 +683,13 @@ class MainWindow(QMainWindow):
             self.folder_address = folder_address
 
     def messageBox(self, message):
-        QMessageBox.information(self, "Wrong!.", message)
+        QMessageBox.information(self, "Wrong!", message)
 
     def fileExist(self):
-        reply = QMessageBox.information(self, "Wrong!.", "The file has existed. Do you want to overwrite it?",
+        reply = QMessageBox.information(self, "Wrong!", "The file has existed. Do you want to overwrite it?",
                                         QMessageBox.Ok | QMessageBox.Close, QMessageBox.Close)
         if reply == QMessageBox.Close:
-            QMessageBox.information(self, "Wrong!.", "Please adjust the file name.")
+            QMessageBox.information(self, "Wrong!", "Please adjust the file name.")
             return False
         elif reply == QMessageBox.Ok:
             return True
@@ -712,6 +716,14 @@ class MainWindow(QMainWindow):
                 self.instruments_magnification.append(float(magnification))
             unit = self.ui.tableWidget_4.item(row,4).text()
             self.units.append(unit)
+
+    def stopMeasure(self):
+        reply = QMessageBox.information(self, "Warning!", "Are you sure you want to stop measuring?",
+                                        QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel)
+        if reply == QMessageBox.Cancel:
+            return False
+        elif reply == QMessageBox.Ok:
+            return True
 
     # =============================================================================
     # plot setting
@@ -742,15 +754,16 @@ class MainWindow(QMainWindow):
             self.color.append(colorLoop(i+self.color_offset))
             
     def plotUpdate(self, n, x, y_n, line_id):
-        if n == 0:
-            self.x_data = np.append(self.x_data, [x])
-        self.y_data[n] = np.append(self.y_data[n], y_n)
-        # setData to the PlotItems
-        # TODO: The three line selection functions currently only include the second one
-        if not self.switch_list[n] or (self.choose_line_num!=0 and not line_id in self.choose_line):
-            pass
-        else:
-            self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(self.color[n], width=1))
+        if not np.isnan(x):
+            if n == 0:
+                self.x_data = np.append(self.x_data, [x])
+            self.y_data[n] = np.append(self.y_data[n], y_n)
+            # setData to the PlotItems
+            # TODO: The three line selection functions currently only include the second one
+            if not self.switch_list[n] or (self.choose_line_num!=0 and not line_id in self.choose_line):
+                pass
+            else:
+                self.data_line[n].setData(self.x_data, self.y_data[n], pen=pg.mkPen(self.color[n], width=1))
 
     def saveLines(self, file_count):
         for i in range(self.read_len):       

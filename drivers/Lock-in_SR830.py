@@ -9,11 +9,14 @@ class Driver(SR830, DriverInterface):
 
     def __init__(self, visa_address):
         SR830.__init__(self, visa_address)
-        self.first_run = True
+        self.SCALE_RANGE_LEFT = 0.2
+        self.SCALE_RANGE_RIGHT = 0.8
+        self.ADJUST_SCALE_TIME = 1.5
 
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
-        pass
+        self.pos = self.SENSITIVITIES.index(self.sensitivity)
+        self.first_run = True
 
     def performClose(self):
         """Perform the close instrument connection operation"""
@@ -84,28 +87,23 @@ class Driver(SR830, DriverInterface):
 
     def autoSensitivity(self):
         """Set voltage scale to current range"""
-        scale_range_L = 0.2
-        sacle_range_R = 0.8
-        adjust_scale_time = 1.5
         if self.input_config == 'I (1 MOhm)':
             vi_factor = 1e-6
         else:
             vi_factor = 1
-        pos_1 = self.SENSITIVITIES.index(self.sensitivity)
-        percent_1 = self.magnitude / (self.sensitivity*vi_factor)
+        percent = self.magnitude / (self.sensitivity*vi_factor)
 
-        #   Auto range
-        # while (percent_1 < Scale_range_L or percent_1 > Sacle_range_R):
-        # pos_1 = self.SENSITIVITIES.index(self.sensitivity)
-        # percent_1 = self.magnitude / (self.sensitivity*vi_factor)
-        if percent_1 < scale_range_L:
-            self.sensitivity = self.SENSITIVITIES[pos_1 - 1]
-            sleep(adjust_scale_time)
-            print('\n', round(percent_1, 2), 'Sensitivity adjusted\n')
-        elif percent_1 > sacle_range_R:
-            self.sensitivity = self.SENSITIVITIES[pos_1 + 1]
-            sleep(adjust_scale_time)
-            print('\n', round(percent_1, 2), 'Sensitivity adjusted\n')
+        # Auto range
+        if percent < self.SCALE_RANGE_LEFT:
+            self.sensitivity = self.SENSITIVITIES[self.pos - 1]
+            self.pos = self.SENSITIVITIES.index(self.sensitivity)
+            sleep(self.ADJUST_SCALE_TIME)
+            print('\n', round(percent, 2), 'Sensitivity adjusted\n')
+        elif percent > self.SCALE_RANGE_RIGHT:
+            self.sensitivity = self.SENSITIVITIES[self.pos + 1]
+            self.pos = self.SENSITIVITIES.index(self.sensitivity)
+            sleep(self.ADJUST_SCALE_TIME)
+            print('\n', round(percent, 2), 'Sensitivity adjusted\n')
 
 
 if __name__ == '__main__':

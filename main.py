@@ -30,6 +30,7 @@ class QMeasCtrl:
         self._view.ui.actionQuit.triggered.connect(self.timeStop)
         self._view.ui.actionQuit.triggered.connect(app.exit)
         self._view.ui.stopButton.clicked.connect(self.procedureStop)
+        self._view.ui.pushButton_6.clicked.connect(self.procedureStop)
         self._view.ui.loopButton.clicked.connect(lambda: self._measurement.quitLoopMeasure())
         self._view.ui.sweepButton.clicked.connect(lambda: self._measurement.quitSweepMeasure())
         self._view.ui.pauseButton.clicked.connect(self.resumePause)
@@ -106,8 +107,14 @@ class QMeasCtrl:
         self.exp_thread.wait()
 
     def procedureStop(self):
-        self._measurement.stopMeasure()
-        self._view.ui.pushButton_5.setEnabled(True)
+        self._view.ui.stopButton.setEnabled(False)
+        self._view.ui.pushButton_6.setEnabled(False)
+        if self._view.stopMeasure():
+            self._measurement.stopMeasure()
+            self._view.ui.pushButton_5.setEnabled(True)
+        else:
+            self._view.ui.stopButton.setEnabled(True)
+            self._view.ui.pushButton_6.setEnabled(True)
 
     def shutdownInstruments(self):
         for i in self._measurement.instruments:

@@ -30,20 +30,20 @@ class DriverInterface(abc.ABC):
 
     def experimentLinspacer(self, option, target, speed, increment):
         time_unit = 0.1
-        if int(speed) and increment == '0':
-            init = float(self.performGetValue(option, 1))
+        init = float(self.performGetValue(option, 1))
+        target = float(target)
+        speed = int(speed)
+        increment = float(increment)
+        if speed and increment == 0:
             step = float(speed) / 3600 * time_unit
-            if init > float(target):
+            if init > target:
                 step = -step
-            result = np.arange(init, float(target), step)
-            result = list(np.append(result, float(target)))
+            result = np.arange(init, target+step, step)
             return result
-        elif int(speed) and increment != '0':
-            init = float(self.performGetValue(option, 1))
-            if init > float(target):
-                increment = -float(increment)
-            result = np.arange(init, float(target), float(increment))
-            result = list(np.append(result, float(target)))
+        elif speed and increment != 0:
+            if init > target and increment > 0:
+                increment = -increment
+            result = np.arange(init, target+increment, increment)
             return result
 
     def setProperty(self, visa_address, instrument_name, instrument_type):
