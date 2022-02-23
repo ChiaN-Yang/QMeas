@@ -6,7 +6,7 @@ import numpy as np
 
 
 class Driver(DriverInterface):
-    METHOD = ['Magnetic Field']
+    METHOD = ['Magnetic Field', 'Sweeprate Field', 'Switch heater']
 
     def __init__(self, visa_address):
         self.ips120 = OxfordInstruments_IPS120('IPS120',visa_address,True)
@@ -52,6 +52,12 @@ class Driver(DriverInterface):
                 now_value = self.performGetValue()
                 if now_value == self.target:
                     now_value = 'done'
+        elif option == 'Sweeprate Field':
+            self.ips120.sweeprate_field(value)
+            now_value = 'done'
+        elif option == 'Switch heater':
+            self.ips120.switch_heater(value)
+            now_value = 'done'
         return now_value
 
     def performGetValue(self, option='0', magnification=0):

@@ -14,6 +14,7 @@ class MeasurementQt(QObject):
     signal_lines = pyqtSignal(int)
     signal_progress = pyqtSignal()
     clear_progress = pyqtSignal(int)
+    page_information = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -119,14 +120,17 @@ class MeasurementQt(QObject):
 
                 if level[0] and level[1] and level[2]:
                     print(f'three level:\n{level[0]}\n{level[1]}\n{level[2]}')
+                    self.page_information.emit(f'Running three levels measurement:\n{level[0]}\n{level[1]}\n{level[2]}')
                     self.threeLevelsTree(level)
 
                 elif level[0] and level[1] and not level[2]:
                     print(f'two level:\n{level[0]}\n{level[1]}')
+                    self.page_information.emit(f'Running two levels measurement:\n{level[0]}\n{level[1]}')
                     self.twoLevelsTree(level)
 
                 elif level[0] and not level[1] and not level[2]:
                     print(f'one level:\n{level[0]}')
+                    self.page_information.emit(f'Running one level measurement:\n{level[0]}')
                     self.oneLevelTree(level)
         except:
             logging.exception('measure error')

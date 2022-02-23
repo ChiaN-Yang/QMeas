@@ -43,6 +43,7 @@ class QMeasCtrl:
         self._measurement.signal_lines.connect(self._view.saveLines)
         self._measurement.signal_progress.connect(self._view.setProgressBar)
         self._measurement.clear_progress.connect(self._view.clearProgressBar)
+        self._measurement.page_information.connect(self._view.pageTwoInformation)
 
     def resumePause(self):
         self._view.resumePause()
@@ -75,9 +76,7 @@ class QMeasCtrl:
         # Record experimental steps
         self._database.recordSteps(self._view.getTableValues())
         copyfile('./ui/asset/step.txt', f'{self._view.folder_address}/{self.name}_measurement_process.txt')
-        # file name
-        self._view.full_address = self._view.folder_address + '/' + self.name
-        self._view.procedureGo()
+        self._view.procedureGo(self.name)
         self._database.setUnits(self._view.units)
         # Create a worker object
         self._measurement = None
@@ -91,14 +90,13 @@ class QMeasCtrl:
         # Start the thread
         self.exp_thread.start()
         # final resets
-        self._view.ui.pushButton_5.setEnabled(False)
         self.exp_thread.finished.connect(lambda: self._view.ui.pushButton_5.setEnabled(True))
 
     def timeStop(self, file_count):
         """measure stop"""
         # time stop
         logging.info('measure stop')
-        self.procedureStop()
+        self._measurement.stopMeasure()
         self.shutdownInstruments()
         if self._view.full_address:
             self._database.txtMerger(self._view.full_address, file_count, self._view.read_len+1)

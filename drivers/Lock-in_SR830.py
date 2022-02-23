@@ -98,12 +98,10 @@ class Driver(SR830, DriverInterface):
             self.sensitivity = self.SENSITIVITIES[self.pos - 1]
             self.pos = self.SENSITIVITIES.index(self.sensitivity)
             sleep(self.ADJUST_SCALE_TIME)
-            print('\n', round(percent, 2), 'Sensitivity adjusted\n')
         elif percent > self.SCALE_RANGE_RIGHT:
             self.sensitivity = self.SENSITIVITIES[self.pos + 1]
             self.pos = self.SENSITIVITIES.index(self.sensitivity)
             sleep(self.ADJUST_SCALE_TIME)
-            print('\n', round(percent, 2), 'Sensitivity adjusted\n')
 
 
 if __name__ == '__main__':

@@ -29,16 +29,14 @@ class DriverInterface(abc.ABC):
         return self.instrument_name
 
     def experimentLinspacer(self, option, target, speed, increment):
-        time_unit = 0.1
+        TIME_UNIT = 0.1
         init = float(self.performGetValue(option, 1))
         target = float(target)
-        speed = int(speed)
+        speed = float(speed)
         increment = float(increment)
         if speed and increment == 0:
-            step = float(speed) / 3600 * time_unit
-            if init > target:
-                step = -step
-            result = np.arange(init, target+step, step)
+            step_num = int(abs(target-init)/speed*3600/TIME_UNIT)
+            result = np.linspace(init, target, step_num)
             return result
         elif speed and increment != 0:
             if init > target and increment > 0:

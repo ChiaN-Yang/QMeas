@@ -694,13 +694,17 @@ class MainWindow(QMainWindow):
         elif reply == QMessageBox.Ok:
             return True
 
-    def procedureGo(self):
+    def procedureGo(self, name):
+        # file name
+        self.full_address = self.folder_address + '/' + name
         # save plot count
         self.save_plot_count = 0
         self.switchToPlotTab(2)
         # plotlines init
         self.createEmptyLines()
         self.getReadInfo()
+        # final resets
+        self.ui.pushButton_5.setEnabled(False)
 
     def getReadInfo(self):
         self.instruments_magnification = []
@@ -814,21 +818,28 @@ class MainWindow(QMainWindow):
         self.choose_line_num = self.ui.spinBox_2.value()
         if self.choose_line_num == 0:
             choose_line_num = int(self.line_num_now)
+            display_line_num = int(choose_line_num/self.choose_line_space)+1
         else:
             choose_line_num = self.choose_line_num - 1
+            display_line_num = self.choose_line_num
         
         start = self.choose_line_start*self.choose_line_space
-        choose_line = np.linspace(start, start+self.choose_line_space*(choose_line_num-self.choose_line_start), choose_line_num+1, dtype=np.int16)
+        choose_line = np.linspace(start, start+self.choose_line_space*(int(choose_line_num/self.choose_line_space)-self.choose_line_start), display_line_num, dtype=np.int16)
         self.choose_line = set(choose_line)
         print(self.choose_line)
 
-        try:
-            for curve_group in choose_line:
-                for curve_num in self.saved_data[curve_group].keys():
-                    if self.switch_list[curve_num]:                    
-                        self.saved_data[curve_group][curve_num].show()
-        except KeyError:
-            logging.exception("message")
+        if self.saved_data:
+            try:
+                self.rePlotData(choose_line)      
+            except KeyError:
+                logging.exception("renewGraph error")
+
+    def rePlotData(self, choose_line):
+        for curve_group in choose_line:
+            for curve_num in self.saved_data[curve_group].keys():
+                if self.switch_list[curve_num]:                    
+                    self.saved_data[curve_group][curve_num].show()
+
                     
     # =============================================================================
     # axis setting

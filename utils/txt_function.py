@@ -82,7 +82,8 @@ class TxtFunction(QObject):
         # creat a empty list name temp_txt to append every sub txt file
         temp_txt = []
         for i in range(sequence_length):
-            temp_txt.append(pd.read_csv(f'./data/{i}.txt', delimiter="\t"))
+            if exists(f'./data/{i}.txt'):
+                temp_txt.append(pd.read_csv(f'./data/{i}.txt', delimiter="\t"))
         # open the file and write the title first
         self.txtWriter(f'{file_name}.txt', title, 'w')
         # open the file and writre the units
