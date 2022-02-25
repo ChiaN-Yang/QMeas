@@ -27,7 +27,7 @@ class QMeasCtrl:
     def _connectViewSignals(self):
         """Connect signals and slots."""
         self._view.ui.pushButton_5.clicked.connect(self.timeGo)
-        self._view.ui.actionQuit.triggered.connect(self.timeStop)
+        self._view.ui.actionQuit.triggered.connect(lambda: self._measurement.stopMeasure())
         self._view.ui.actionQuit.triggered.connect(app.exit)
         self._view.ui.stopButton.clicked.connect(self.procedureStop)
         self._view.ui.pushButton_6.clicked.connect(self.procedureStop)
@@ -57,7 +57,7 @@ class QMeasCtrl:
             be created.
         """
         self.name = self._view.ui.lineEdit_2.text()
-        file_name = f'{self.name}.txt'
+        file_name = f'{self.name}.csv'
         if self._view.ui.label_18.text() == '':
             self._view.folder_address = os.path.abspath(os.getcwd()) + "\\data"
             self._view.ui.label_18.setText(self._view.folder_address)
@@ -75,6 +75,7 @@ class QMeasCtrl:
         """"measure start"""
         # Record experimental steps
         self._database.recordSteps(self._view.getTableValues())
+        self._database.txtDeleter()
         copyfile('./ui/asset/step.txt', f'{self._view.folder_address}/{self.name}_measurement_process.txt')
         self._view.procedureGo(self.name)
         self._database.setUnits(self._view.units)
@@ -100,7 +101,6 @@ class QMeasCtrl:
         self.shutdownInstruments()
         if self._view.full_address:
             self._database.txtMerger(self._view.full_address, file_count, self._view.read_len+1)
-            self._database.txtDeleter(file_count)
         self.exp_thread.quit()
         self.exp_thread.wait()
 

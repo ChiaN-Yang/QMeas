@@ -5,6 +5,8 @@ Created on Mon Aug 30 16:45:34 2021
 """
 import pandas as pd
 import os
+import csv
+import glob
 from os.path import exists
 from datetime import datetime
 from PyQt5.QtCore import QObject
@@ -84,26 +86,29 @@ class TxtFunction(QObject):
         for i in range(sequence_length):
             if exists(f'./data/{i}.txt'):
                 temp_txt.append(pd.read_csv(f'./data/{i}.txt', delimiter="\t"))
-        # open the file and write the title first
-        self.txtWriter(f'{file_name}.txt', title, 'w')
         # open the file and writre the units
         # Example: For two read channels result, we will have the units_list as ["", "y1", "y2", "", "y1", "y2", ... ] 
         # Add the unit of x axis (empty unit) to the units lists from read channels and multiple the units_list sequence_length
         units_list = ([""] + self.units) * sequence_length
-        # append the units_list to the result .txt file
-        self.txtWriter(f'{file_name}.txt', units_list, 'a')
+        output_name = f'{file_name}.csv'
+        # open the file and write the title and units
+        with open(output_name, 'w', newline='') as header_csv:
+            writer = csv.writer(header_csv)
+            writer.writerow(title)
+            writer.writerow(units_list)
         # form the final dataframe from temp_txt
         if temp_txt:
             final_df = pd.concat(temp_txt, axis=1)
             # write the dataframe to the same txt file
-            final_df.to_csv(f'{file_name}.txt', header=True, index=False, sep='\t', mode='a')
+            final_df.to_csv(output_name, header=True, index=False, mode='a')
 
-    def txtDeleter(self, sequence_length):
-        # Check if the next file is incompleted
-        if exists(f'./data/{sequence_length}.txt'):
-            sequence_length += 1
-        for i in range(sequence_length):
-            os.remove(f"./data/{i}.txt")
+    def txtDeleter(self):
+        txt_files = glob.glob('./data/[0-9].txt')
+        for file in txt_files:
+            try:
+                os.remove(file)
+            except OSError as e:
+                print(f"Error:{ e.strerror}")
 
     def txtWriter(self, txtname, txtdata, option):
         # open file with name "txtname"
