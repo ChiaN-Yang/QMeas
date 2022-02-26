@@ -141,6 +141,7 @@ class MainWindow(QMainWindow):
         self.progress = 0
         self.load = True
         self.full_address = ""
+        self.open_folder = os.getcwd()
 
         # instruments
         self.instruments = []

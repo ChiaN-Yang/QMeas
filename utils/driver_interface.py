@@ -37,12 +37,11 @@ class DriverInterface(abc.ABC):
         if speed and increment == 0:
             step_num = int(abs(target-init)/speed*3600/TIME_UNIT)
             result = np.linspace(init, target, step_num)
-            return result
         elif speed and increment != 0:
             if init > target and increment > 0:
                 increment = -increment
             result = np.arange(init, target+increment, increment)
-            return result
+        return result
 
     def setProperty(self, visa_address, instrument_name, instrument_type):
         self.instrument_name = instrument_name

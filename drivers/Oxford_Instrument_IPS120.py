@@ -65,24 +65,23 @@ class Driver(DriverInterface):
         return self.ips120.field()
 
     def experimentLinspacer(self, option, target, speed, increment):
-        if increment == '0':
-            TIME_UNIT = 0.1
-            MAG_SPEED = 12.0
-            init = self.performGetValue(option, 1)
-            step = MAG_SPEED / 3600 * TIME_UNIT
-            if init > float(target):
-                step = -step
-            result_len = len(np.arange(init, float(target), step))+1
+        TIME_UNIT = 0.1
+        init = float(self.performGetValue(option, 1))
+        target = float(target)
+        MAG_SPEED = 12.0
+        increment = float(increment)
+        if option == 'Sweeprate Field' or 'Switch heater':
+            return [int(target)]
+        if increment == 0:
+            step_num = int(abs(target-init)/MAG_SPEED*3600/TIME_UNIT)
+            result_len = len(np.linspace(init, target, step_num))
             result = ['nan' for _ in range(result_len)]
-            result[0] = float(target)
-            return result
-        elif increment != '0':
-            init = self.performGetValue(option, 1)
-            if init > float(target):
-                increment = -float(increment)
-            result = np.arange(init, float(target), float(increment))
-            result = list(np.append(result, float(target)))
-            return result
+            result[0] = target
+        elif increment != 0:
+            if init > target and increment > 0:
+                increment = -increment
+            result = np.arange(init, target+increment, increment)
+        return result
 
 
 if __name__ == '__main__':
