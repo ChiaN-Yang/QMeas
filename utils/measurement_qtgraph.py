@@ -112,6 +112,11 @@ class MeasurementQt(QObject):
 
         # open instrument
         self.openInstruments()
+        self.name_txt = ['control_name']
+        self.method_txt = ['control_method']
+        for n, instrument_read in enumerate(self.instruments_read):
+            self.name_txt.append(instrument_read.instrumentName())
+            self.method_txt.append(self.options_read[n])
 
         try:
             for level in self.control_sequence:
@@ -253,11 +258,9 @@ class MeasurementQt(QObject):
         start_time = time()
         x_show = [set_value, instrument_info[0].instrumentName(), instrument_info[1]]
         y_show = []
-        name_txt = []
-        method_txt = []
 
-        name_txt.append(instrument_info[0].instrumentName())
-        method_txt.append(instrument_info[1])
+        self.name_txt[0] = instrument_info[0].instrumentName()
+        self.method_txt[0] = instrument_info[1]
 
         for n, instrument_read in enumerate(self.instruments_read):
             try:
@@ -266,14 +269,12 @@ class MeasurementQt(QObject):
                 logging.exception('read_value error') # exc_info=False
                 read_value = nan
             y_show.append(read_value)
-            name_txt.append(instrument_read.instrumentName())
-            method_txt.append(self.options_read[n])
             if bottom_level:
                 self.signal_plot.emit(n, set_value, read_value, self.line_count)
 
         self.signal_axis.emit(x_show, y_show)
         if int(instrument_info[2]):
-            self.signal_txt.emit(self.file_count, method_txt, name_txt, x_show, y_show)
+            self.signal_txt.emit(self.file_count, self.method_txt, self.name_txt, x_show, y_show)
         
         elapsed_time = round(time() - start_time, 2)
         if elapsed_time < 0.1:

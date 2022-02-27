@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 30 16:45:34 2021
-@author: Tsung-Lin
-"""
 import pandas as pd
 import os
 import csv
 import glob
-from os.path import exists
 from datetime import datetime
 from PyQt5.QtCore import QObject
 
@@ -20,12 +15,10 @@ class TxtFunction(QObject):
         
     def setUnits(self, units):
         self.units = units
-        # to check if the sequence is new for creating txt
-        self.txt_count = 0
 
     def txtUpdate(self, sequence_num, method, name, x_show, y_show):
         # user the sequence_num to choose the txt
-        txtname = f'./data/{sequence_num}.txt'
+        txtname = f'./data/{sequence_num}.csv'
 
         def txtCreat(method, name):
             """ creat a new txt """
@@ -44,7 +37,6 @@ class TxtFunction(QObject):
 
         def txtSaver(x_show, y_show):
             # copy y_show list to temp_data
-            # 我在這裡應該已經把y_show指派給temp_data
             temp_data = y_show.copy()
             # insert the x value to the y side
             temp_data.insert(0, x_show[0])
@@ -52,13 +44,12 @@ class TxtFunction(QObject):
             self.txtWriter(txtname, temp_data, 'a')
 
         # if the seq_num equals to txt_count, it means it has to creat a new txt before writing
-        if sequence_num == self.txt_count:
-            self.txt_count += 1
-            # creat empty txt
-            txtCreat(method, name)
+        if os.path.exists(txtname):
             # write the data
             txtSaver(x_show, y_show)
         else:
+            # creat empty txt
+            txtCreat(method, name)
             # write the data
             txtSaver(x_show, y_show)
 
@@ -69,9 +60,8 @@ class TxtFunction(QObject):
     def txtMerger(self, file_name, sequence_length, channel_num):
         # channel_num is the total number of reading channel + 1 X channel
         # we get the channel number from y_show + 1
-        
         # Check if the next file is incompleted
-        if exists(f'./data/{sequence_length}.txt'):
+        if os.path.exists(f'./data/{sequence_length}.csv'):
             sequence_length += 1
         # creat a empty list named title to record <CHA> S1C1 S1C2....
         title = []
@@ -84,8 +74,8 @@ class TxtFunction(QObject):
         # creat a empty list name temp_txt to append every sub txt file
         temp_txt = []
         for i in range(sequence_length):
-            if exists(f'./data/{i}.txt'):
-                temp_txt.append(pd.read_csv(f'./data/{i}.txt', delimiter="\t"))
+            if os.path.exists(f'./data/{i}.csv'):
+                temp_txt.append(pd.read_csv(f'./data/{i}.csv'))
         # open the file and writre the units
         # Example: For two read channels result, we will have the units_list as ["", "y1", "y2", "", "y1", "y2", ... ] 
         # Add the unit of x axis (empty unit) to the units lists from read channels and multiple the units_list sequence_length
@@ -103,25 +93,17 @@ class TxtFunction(QObject):
             final_df.to_csv(output_name, header=True, index=False, mode='a')
 
     def txtDeleter(self):
-        txt_files = glob.glob('./data/[0-9].txt')
+        txt_files = glob.glob('./data/*[0-9].csv')
         for file in txt_files:
-            try:
-                os.remove(file)
-            except OSError as e:
-                print(f"Error:{ e.strerror}")
+            os.remove(file)
 
     def txtWriter(self, txtname, txtdata, option):
         # open file with name "txtname"
-        # write data "txtdata" in and perform \n if necessary
         # option can be 'a' or 'w' depending the way of usage
-        with open(txtname, option) as f:
-            for i, element in enumerate(txtdata):
-                if i == len(txtdata) - 1:
-                    # write the last element and \n
-                    f.write(f'{element}\n')
-                else:
-                    # write the every element. sep = \tab
-                    f.write(f'{element}\t')
+        with open(txtname, option, newline='') as data_csv:
+            writer = csv.writer(data_csv)
+            writer.writerow(txtdata)
+        
 
     def recordSteps(self, steps):
         with open('./ui/asset/step.txt', 'w') as f:
@@ -150,21 +132,9 @@ class TxtFunction(QObject):
 
 
 if __name__ == '__main__':
-    x_show = [0, 'SR830', 'frequency']
-    y_show = [1, 2, 3]
-    sequence_num = 2
-    # [[first sequence]]
-    # [[first sequence X, Y, Y, Y      ],[Second sequence X, Y, Y, Y     ]]
-    name = ['SR830', 'SR830', 'SR830', 'SR830']
-    method = ['frequency', 'phase', 'frequency', 'phase']
-
+    channel_num = 9
+    sequence_length = 37
+    file_name = 'B+-8(0.5)  Vtg=+-15V  SD 9-5  Rxx 6-7  Rxy 8-10  T1.6K 3'
     txt = TxtFunction()
-    txt.txtUpdate(sequence_num, method, name, x_show, y_show)
-
-    file_name = 'test_merge'
-    sequence_length = 1
-    channel_num = 4
+    txt.units = ['']
     txt.txtMerger(file_name, sequence_length, channel_num)
-
-    # name = [['SR830','SR830','SR830','SR830'],['SR830','SR830','SR830','SR830']]
-    # method = [['frequency', 'phase', 'frequency', 'phase'], ['magnitude', 'phase_1', 'magnitude', 'phase_1']]

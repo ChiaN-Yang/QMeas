@@ -1,5 +1,4 @@
 from utils import DriverInterface
-# from modpack import IPS120
 from qcodes_contrib_drivers.drivers.Oxford.IPS120 import OxfordInstruments_IPS120
 from time import sleep
 import numpy as np
@@ -10,18 +9,16 @@ class Driver(DriverInterface):
 
     def __init__(self, visa_address):
         self.ips120 = OxfordInstruments_IPS120('IPS120',visa_address,True)
-        self.first_run = True
 
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
         self.ips120.activity(0)
-        if self.first_run:
+        if self.ips120.switch_heater() != self.ips120._GET_STATUS_SWITCH_HEATER[1]:
             self.ips120.switch_heater(1)
             # Set the switch heater activation state
             # 0 - Heater Off              (close switch)
             # 1 - Heater On if PSU=Magnet (open switch)
             # 2 - Heater On, no checks    (open switch)
-            self.first_run = False
         init_value = self.performGetValue()
         self.ips120.field_setpoint(init_value)
         self.ips120.sweeprate_field(0.2)
@@ -35,6 +32,7 @@ class Driver(DriverInterface):
     def performClose(self):
         """Perform the close instrument connection operation"""
         self.ips120.activity(0)
+        self.ips120.close()
         # Set the field to zero
         # self.setActivity(2)
         # self.ips120.local()
@@ -70,13 +68,16 @@ class Driver(DriverInterface):
         target = float(target)
         MAG_SPEED = 12.0
         increment = float(increment)
-        if option == 'Sweeprate Field' or 'Switch heater':
+        if option == 'Sweeprate Field' or option =='Switch heater':
             return [int(target)]
         if increment == 0:
             step_num = int(abs(target-init)/MAG_SPEED*3600/TIME_UNIT)
             result_len = len(np.linspace(init, target, step_num))
-            result = ['nan' for _ in range(result_len)]
-            result[0] = target
+            if result_len:
+                result = ['nan' for _ in range(result_len)]
+                result[0] = target
+            else:
+                result = [target]   
         elif increment != 0:
             if init > target and increment > 0:
                 increment = -increment
