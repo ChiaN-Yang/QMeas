@@ -1,6 +1,5 @@
 from utils import DriverInterface
 from qcodes_contrib_drivers.drivers.Oxford.IPS120 import OxfordInstruments_IPS120
-from time import sleep
 import numpy as np
 
 
@@ -12,7 +11,7 @@ class Driver(DriverInterface):
 
     def performOpen(self):
         """Perform the operation of opening the instrument connection"""
-        self.ips120.activity(0)
+        self.ips120.hold()
         if self.ips120.switch_heater() != self.ips120._GET_STATUS_SWITCH_HEATER[1]:
             self.ips120.switch_heater(1)
             # Set the switch heater activation state
@@ -22,7 +21,7 @@ class Driver(DriverInterface):
         init_value = self.performGetValue()
         self.ips120.field_setpoint(init_value)
         self.ips120.sweeprate_field(0.2)
-        self.ips120.activity(1)
+        self.ips120.to_setpoint()
         # Set the field activation
         # 0 - Hold
         # 1 - To Set Point
@@ -31,7 +30,7 @@ class Driver(DriverInterface):
 
     def performClose(self):
         """Perform the close instrument connection operation"""
-        self.ips120.activity(0)
+        self.ips120.hold()
         self.ips120.close()
         # Set the field to zero
         # self.setActivity(2)
@@ -44,8 +43,8 @@ class Driver(DriverInterface):
             if value != 'nan':
                 # Set the magnetic field set point, in Tesla
                 self.target = value
-                self.ips120.field_setpoint(self.target)
                 now_value = self.performGetValue()
+                self.ips120.field_setpoint(self.target)
             else:
                 now_value = self.performGetValue()
                 if now_value == self.target:

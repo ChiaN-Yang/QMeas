@@ -25,11 +25,8 @@ class TxtFunction(QObject):
             # generate the title_list to be a header in the txt
             title_list = []
             for i in range(len(name)):
-                # get name and method
-                temp_name = name[i]
-                temp_method = method[i]
                 # reconstruct them as name_method, e.g., SR830_Frequency
-                temp_title = temp_name + '_' + temp_method
+                temp_title = f'{name[i]}_{method[i]}'
                 # append the title_list
                 title_list.append(temp_title)
 
@@ -70,7 +67,7 @@ class TxtFunction(QObject):
                 if k == 0:
                     title.append('<CHA>')
                 else:
-                    title.append('S%dC%d' % (j+1, k))
+                    title.append(f'S{j+1}C{k}')
         # creat a empty list name temp_txt to append every sub txt file
         temp_txt = []
         for i in range(sequence_length):

@@ -2,7 +2,7 @@
 <a href="#"><img src="https://img.shields.io/badge/python-v3.9+-blue.svg?logo=python&style=for-the-badge" /></a>
 
 ## 摘要
-這是一套儀器控制和自動化測量軟體，所要控制的儀器包括稀釋冷凍機 (Dilution refrigerator – a system that operates a hundredth of a degree above absolute zero)、超導磁鐵機(superconducting magnet)、鎖相放大器(Lock-In Amplifier)等電流電壓量測設備。軟體的主要功能為控制儀器輸出、預先安排儀器未來將輸出或讀取的物理量、將儀器的讀值進行實時作圖(real-time plot)。
+這是一套儀器控制和自動化測量軟體，所要控制的儀器包括稀釋冷凍機 (Dilution refrigerator – a system that operates a hundredth of a degree above absolute zero)、超導磁鐵機(superconducting magnet)、鎖相放大器(Lock-In Amplifier)、Source Measure Unit設備。軟體的主要功能為控制儀器輸出、預先安排儀器未來將輸出或讀取的物理量、將儀器的讀值進行實時作圖(real-time plot)。
 
 ## 程式特色
 - 任意的新增儀器：我們打造可擴充式模組，新增新儀器不需更改程式碼
