@@ -99,8 +99,11 @@ class QMeasCtrl:
         logging.info('measure stop')
         self._measurement.stopMeasure()
         self.shutdownInstruments()
-        if self._view.full_address:
-            self._database.txtMerger(self._view.full_address, file_count, self._view.read_len+1)
+        # Save current view here (auto plot save)
+        self._view.plotSave()
+        # Merge data
+        if self._view.folder_address:
+            self._database.txtMerger(f'{self._view.folder_address}/{self.name}', file_count, self._view.read_len+1)
         self.exp_thread.quit()
         self.exp_thread.wait()
 

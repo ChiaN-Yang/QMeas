@@ -140,7 +140,6 @@ class MainWindow(QMainWindow):
         self.time_unit = 0.1  # sec
         self.progress = 0
         self.load = True
-        self.full_address = ""
         self.open_folder = os.getcwd()
 
         # instruments
@@ -655,7 +654,7 @@ class MainWindow(QMainWindow):
     def plotSave(self):
         """ save figure from page3 """
         exporter = pyqtgraph.exporters.ImageExporter(self.plt.scene())
-        exporter.export(self.full_address + '_%d.png' % self.save_plot_count)
+        exporter.export(self.folder_address + '/%s_%d.png' % (self.ui.lineEdit_2.text(), self.save_plot_count))
         QMessageBox.information(self, "Done.", "The figure No.%d has been saved." % self.save_plot_count)
         self.save_plot_count += 1
 
@@ -696,8 +695,6 @@ class MainWindow(QMainWindow):
             return True
 
     def procedureGo(self, name):
-        # file name
-        self.full_address = self.folder_address + '/' + name
         # save plot count
         self.save_plot_count = 0
         self.switchToPlotTab(2)

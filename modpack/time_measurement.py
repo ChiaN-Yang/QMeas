@@ -6,6 +6,9 @@ class TimeMeasurement:
         self.time = int(time)
         self.instrument_name = 'Time Meas'
 
+    def __str__(self):
+        return self.instrument_name
+
     def performOpen(self, option):
         """Perform the operation of opening the instrument connection"""
         pass

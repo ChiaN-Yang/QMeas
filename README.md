@@ -31,6 +31,9 @@
 
 ![program structure](https://i.imgur.com/ueL3XPM.png)
 
+## Flow Chart
+![Flow chart](https://i.imgur.com/RaUkrsd.png)
+
 ## 結果與展示
 詳細過程可以參考[影片](https://youtu.be/omZaGmend-w)，以下將由圖片分段說明。
 1. Connection
