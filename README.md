@@ -11,8 +11,7 @@
 - 快速讀取過去實驗：執行實驗當下將儲存您的實驗排程，此檔案可以直接匯入
 - 自動切換檔位：使用者可決定是否讓程式自動運算讀值並切換到適合的檔位
 - 意外存檔：要是使用者意外關閉程式，程式會保留資料暫存檔，不需再重新量測
-- 由物理系博士協助撰寫驅動程式，保證儀器與樣品安全
-- 未來將推出DataViewer，讓使用者做各種數值分析
+- 保證樣品安全：避免因設定錯誤導致儀器產生pulse而傷害樣品
 
 ## 程式目標
 此程式需要具備以下功能：
@@ -32,7 +31,7 @@
 ![program structure](https://i.imgur.com/ueL3XPM.png)
 
 ## Flow Chart
-![Flow chart](https://i.imgur.com/RaUkrsd.png)
+![Flow chart](https://i.imgur.com/y2yFStr.png)
 
 ## 結果與展示
 詳細過程可以參考[影片](https://youtu.be/omZaGmend-w)，以下將由圖片分段說明。
