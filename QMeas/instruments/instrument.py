@@ -12,12 +12,12 @@ class InstrumentDriver(abc.ABC):
     def __init__(self):
         super().__init__()
         self.log = logging.getLogger('Instrument')
-        self.instrument_name = None
-        self.instrument_type = None
-        self.instrument_visa = None
+        self.name = None
+        self.type = None
+        self.address = None
 
     def __str__(self):
-        return self.instrument_name
+        return self.name
 
     @abc.abstractmethod
     def perform_open(self) -> None:
@@ -82,6 +82,6 @@ class InstrumentDriver(abc.ABC):
 
     def set_property(self, visa_address, instrument_name, instrument_type):
         """Set instrument property."""
-        self.instrument_name = instrument_name
-        self.instrument_type = instrument_type
-        self.instrument_visa = visa_address
+        self.name = instrument_name
+        self.type = instrument_type
+        self.address = visa_address

@@ -7,8 +7,8 @@ class Driver(InstrumentDriver):
     """ This class implements the NI cDAQ driver"""
     METHOD = ['ao0', 'ao1', 'ao2', 'ao3']
 
-    def __init__(self, visa_address):
-        self.address = visa_address
+    def __init__(self):
+        super().__init__()
         self.__set_voltage_zero()
 
     def __set_voltage_zero(self):
@@ -29,7 +29,7 @@ class Driver(InstrumentDriver):
     def perform_close(self):
         pass
 
-    def perform_set_value(self, option, value, sweepRate=0.0):
+    def perform_set_value(self, option, value, sweep_rate=0.0):
         with nidaqmx.Task() as task:
             task.ao_channels.add_ao_voltage_chan(f'{self.address}/{option}')
             task.write(value, auto_start=True)

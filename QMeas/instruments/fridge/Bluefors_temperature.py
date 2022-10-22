@@ -1,38 +1,37 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue May  4 20:19:18 2021
-
-@author: Tsung-Lin
+"""Module Bluefors temperature.
 
 Progress:
-    1. Successfully extract the temperature data from the log file.
-    2. The log files are loaded from the NAs address.
+    Successfully extract the temperature data from the log file.
+    The log files are loaded from the NAs address.
 """
-
-
-from utils import DriverInterface
-from modpack import BlueFors
 import os
+from ..instrument import InstrumentDriver
+from ..modpack import BlueFors
 
 
-class Driver(DriverInterface):
-    METHOD = ['CH 1 50K',
-              'CH 2  4K',
-              'CH 3 Magnet',
-              'CH 5 Still',
-              'CH 8 MXC',
-              'CH 1 Probe']
+class Driver(InstrumentDriver):
+    """Class Bluefors temperature
 
-    def __init__(self, visa_address):
-        # The logfiles are loaded from NAS address. Please adjust this part if
-        # you are using another computer.
-        fridge_folder_path = "E:\\DATA\\Bluefors_log\\192.168.0.116"
-        probe_folder_path = "E:\\DATA\\Bluefors_log\\192.168.0.115"
-        if not os.path.isdir(fridge_folder_path) and os.path.isdir(probe_folder_path):
-            print("Failed to find the file. Please check the file address.")
-        else:
+    Note:
+        The logfiles are loaded from NAS address.
+    """
+    # Please adjust this part if you are using another computer.
+    FRIDGE_FOLDER_PATH = "E:\\DATA\\Bluefors_log\\192.168.0.116"
+    PROBE_FOLDER_PATH = "E:\\DATA\\Bluefors_log\\192.168.0.115"
+    CMETHOD = [
+            'CH 1 50K',
+            'CH 2 4K',
+            'CH 3 Magnet',
+            'CH 5 Still',
+            'CH 8 MXC',
+            'CH 1 Probe'
+    ]
+
+    def __init__(self):
+        super().__init__()
+        if os.path.isdir(self.FRIDGE_FOLDER_PATH) and os.path.isdir(self.PROBE_FOLDER_PATH):
             self.bf_fridge = BlueFors('bf_fridge',
-                                      folder_path=fridge_folder_path,
+                                      folder_path=self.FRIDGE_FOLDER_PATH,
                                       channel_vacuum_can=1,
                                       channel_pumping_line=2,
                                       channel_compressor_outlet=3,
@@ -46,7 +45,7 @@ class Driver(DriverInterface):
                                       channel_mixing_chamber=8)
 
             self.bf_probe = BlueFors('bf_probe',
-                                     folder_path=probe_folder_path,
+                                     folder_path=self.PROBE_FOLDER_PATH,
                                      channel_vacuum_can=1,
                                      channel_pumping_line=2,
                                      channel_compressor_outlet=3,
@@ -58,39 +57,34 @@ class Driver(DriverInterface):
                                      channel_magnet=3,
                                      channel_still=5,
                                      channel_mixing_chamber=8)
+        else:
+            self.log.error("Failed to find the file. Please check the file address.")
 
-    def performOpen(self):
-        """Perform the operation of opening the instrument connection"""
+    def perform_open(self):
         pass
 
-    def performClose(self):
-        """Perform the close instrument connection operation"""
+    def perform_close(self):
         self.bf_fridge.close_all()
         self.bf_probe.close_all()
 
-    def performSetValue(self, option, value, sweepRate=0.0):
+    def perform_set_value(self, option, value, sweep_rate):
         pass
 
-    def performGetValue(self, option='0', magnification=1):
-        """Perform the Get Value instrument operation"""
-        # add the command of current field here
-        # e.g.
-        if option == 'CH 1 Probe':
-            probe_channel_num = 1
-            value = self.bf_probe.get_temperature(probe_channel_num)
-        elif option == 'CH 1 50K':
-            channel_num = 1
-            value = self.bf_fridge.get_temperature(channel_num)
-        elif option == 'CH 2  4K':
-            channel_num = 2
-            value = self.bf_fridge.get_temperature(channel_num)
-        elif option == 'CH 3 Magnet':
-            channel_num = 3
-            value = self.bf_fridge.get_temperature(channel_num)
-        elif option == 'CH 5 Still':
-            channel_num = 5
-            value = self.bf_fridge.get_temperature(channel_num)
-        elif option == 'CH 8 MXC':
-            channel_num = 8
-            value = self.bf_fridge.get_temperature(channel_num)
+    def perform_get_value(self, option, magnification):
+        # TODO: add the command of current field here.
+        match option:
+            case 'CH 1 Probe':
+                value = self.bf_probe.get_temperature(1)
+            case 'CH 1 50K':
+                value = self.bf_fridge.get_temperature(1)
+            case 'CH 2 4K':
+                value = self.bf_fridge.get_temperature(2)
+            case 'CH 3 Magnet':
+                value = self.bf_fridge.get_temperature(3)
+            case 'CH 5 Still':
+                value = self.bf_fridge.get_temperature(5)
+            case 'CH 8 MXC':
+                value = self.bf_fridge.get_temperature(8)
+            case option:
+                self.log.error(f'Option {option} can not be processed')
         return float(value)
