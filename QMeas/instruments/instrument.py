@@ -2,7 +2,7 @@ import numpy as np
 import abc
 
 
-class DriverInterface(abc.ABC):
+class InstrumentDriver(abc.ABC):
     METHOD = []
 
     @abc.abstractmethod

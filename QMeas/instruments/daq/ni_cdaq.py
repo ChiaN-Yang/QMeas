@@ -1,8 +1,9 @@
-from utils import DriverInterface
+"""Driver NI cDAQ"""
+from ..instrument import InstrumentDriver
 import nidaqmx
 
 
-class Driver(DriverInterface):
+class Driver(InstrumentDriver):
     """ This class implements the NI cDAQ driver"""
     METHOD = ['ao0', 'ao1', 'ao2', 'ao3']
 
