@@ -1,36 +1,37 @@
-import numpy as np
+"""Module instrument driver interface"""
 import abc
+import numpy as np
 
 
 class InstrumentDriver(abc.ABC):
     METHOD = []
 
     @abc.abstractmethod
-    def performOpen(self):
+    def perform_open(self):
         """Perform the operation of opening the instrument connection"""
         return NotImplemented
 
     @abc.abstractmethod
-    def performClose(self):
+    def perform_close(self):
         """Perform the close instrument connection operation"""
         return NotImplemented
 
     @abc.abstractmethod
-    def performSetValue(self):
+    def perform_set_value(self, option, value, sweepRate):
         """Perform the Set Value instrument operation"""
         return NotImplemented
 
     @abc.abstractmethod
-    def performGetValue(self):
+    def perform_get_value(self, option, magnification):
         """Perform the Get Value instrument operation"""
         return NotImplemented
 
     def __str__(self):
         return self.instrument_name
 
-    def experimentLinspacer(self, option, target, speed, increment):
+    def experiment_linspacer(self, option, target, speed, increment):
         TIME_UNIT = 0.1
-        init = float(self.performGetValue(option, 1))
+        init = float(self.perform_get_value(option, 1))
         target = float(target)
         speed = float(speed)
         increment = float(increment)
@@ -43,10 +44,7 @@ class InstrumentDriver(abc.ABC):
             result = np.arange(init, target+increment, increment)
         return result
 
-    def setProperty(self, visa_address, instrument_name, instrument_type):
+    def set_property(self, visa_address, instrument_name, instrument_type):
         self.instrument_name = instrument_name
         self.instrument_type = instrument_type
         self.instrument_VISA_add = visa_address
-
-    def instrumentName(self):
-        return self.instrument_name

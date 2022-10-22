@@ -1,6 +1,6 @@
 """Driver NI cDAQ"""
-from ..instrument import InstrumentDriver
 import nidaqmx
+from ..instrument import InstrumentDriver
 
 
 class Driver(InstrumentDriver):
@@ -9,47 +9,32 @@ class Driver(InstrumentDriver):
 
     def __init__(self, visa_address):
         self.address = visa_address
+        self.__set_voltage_zero()
+
+    def __set_voltage_zero(self):
         with nidaqmx.Task() as task:
-            task.ao_channels.add_ao_voltage_chan(f"{self.address}/ao0")
-            task.ao_channels.add_ao_voltage_chan(f"{self.address}/ao1")
-            task.ao_channels.add_ao_voltage_chan(f"{self.address}/ao2")
-            task.ao_channels.add_ao_voltage_chan(f"{self.address}/ao3")
+            for channel in self.METHOD:
+                task.ao_channels.add_ao_voltage_chan(f'{self.address}/{channel}')
             task.write([[0], [0], [0], [0]], auto_start=True)
-        self.value = 0
+        self.value = {
+                self.METHOD[0]: 0,
+                self.METHOD[2]: 0,
+                self.METHOD[2]: 0,
+                self.METHOD[3]: 0
+        }
 
-    def performOpen(self):
-        """Perform the operation of opening the instrument connection"""
+    def perform_open(self):
         pass
 
-    def performClose(self):
-        """Perform the close instrument connection operation"""
+    def perform_close(self):
         pass
 
-    def performSetValue(self, option, value, sweepRate=0.0):
-        """Perform the Set Value instrument operation"""
-        if option == 'ao0':
-            with nidaqmx.Task() as task:
-                task.ao_channels.add_ao_voltage_chan(f"{self.address}/ao0")
-                task.write(value, auto_start=True)
-        elif option == 'ao1':
-            with nidaqmx.Task() as task:
-                task.ao_channels.add_ao_voltage_chan(f"{self.address}/ao1")
-                task.write(value, auto_start=True)
-        elif option == 'ao2':
-            with nidaqmx.Task() as task:
-                task.ao_channels.add_ao_voltage_chan(f"{self.address}/ao2")
-                task.write(value, auto_start=True)
-        elif option == 'ao3':
-            with nidaqmx.Task() as task:
-                task.ao_channels.add_ao_voltage_chan(f"{self.address}/ao3")
-                task.write(value, auto_start=True)
-        self.value = value
+    def perform_set_value(self, option, value, sweepRate=0.0):
+        with nidaqmx.Task() as task:
+            task.ao_channels.add_ao_voltage_chan(f'{self.address}/{option}')
+            task.write(value, auto_start=True)
+        self.value[option] = value
         return value
 
-    def performGetValue(self, option, magnification):
-        """Perform the Get Value instrument operation"""
-        return self.value
-
-
-if __name__ == '__main__':
-    pass
+    def perform_get_value(self, option, magnification):
+        return self.value[option]
