@@ -1,6 +1,4 @@
 data
-drivers/__pycache__
-modpack/__pycache__
-ui/__pycache__
+.vscode
+__pycache__
 ui/asset/step.txt
-utils/__pycache__

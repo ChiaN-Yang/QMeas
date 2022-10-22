@@ -30,10 +30,13 @@ class Driver(InstrumentDriver):
         pass
 
     def perform_set_value(self, option, value, sweep_rate=0.0):
-        with nidaqmx.Task() as task:
-            task.ao_channels.add_ao_voltage_chan(f'{self.address}/{option}')
-            task.write(value, auto_start=True)
-        self.value[option] = value
+        if option in self.METHOD:
+            with nidaqmx.Task() as task:
+                task.ao_channels.add_ao_voltage_chan(f'{self.address}/{option}')
+                task.write(value, auto_start=True)
+            self.value[option] = value
+        else:
+            self.log.error(f'Option {option} can not be processed')
         return value
 
     def perform_get_value(self, option, magnification):

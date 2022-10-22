@@ -56,7 +56,7 @@ class InstrumentDriver(abc.ABC):
         """
         return NotImplemented
 
-    def set_point(self, option: str, target: float, speed: float, increment: float) -> list:
+    def setpoints(self, option: str, target: float, speed: float, increment: float) -> list:
         """Create arithmetic progression for set value function.
 
         Args:
