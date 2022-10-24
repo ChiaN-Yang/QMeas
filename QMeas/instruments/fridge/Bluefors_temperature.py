@@ -9,7 +9,7 @@ from ..instrument import InstrumentDriver
 from ..modpack import BlueFors
 
 
-class Driver(InstrumentDriver):
+class BlueforsTemperature(InstrumentDriver):
     """Class Bluefors temperature
 
     Note:

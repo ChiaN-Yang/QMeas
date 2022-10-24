@@ -1,2 +1,2 @@
 """Init DAQ"""
-from .ni_cdaq import Driver
+from .ni_cdaq import NiCdaq
