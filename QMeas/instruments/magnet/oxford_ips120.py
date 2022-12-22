@@ -9,7 +9,7 @@ class OxfordIps120(Magnet):
 
     def __init__(self, visa_address):
         super().__init__()
-        self.ips120 = OxfordInstruments_IPS120('IPS120',visa_address,True)
+        self.ips120 = OxfordInstruments_IPS120('IPS120', visa_address, True)
 
     def perform_open(self):
         self.ips120.hold()

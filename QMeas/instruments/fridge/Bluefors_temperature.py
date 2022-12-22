@@ -5,8 +5,8 @@ Progress:
     The log files are loaded from the NAs address.
 """
 import os
+from qcodes_contrib_drivers.drivers.BlueFors.BlueFors import BlueFors
 from ..instrument import InstrumentDriver
-from ..modpack import BlueFors
 
 
 class BlueforsTemperature(InstrumentDriver):
