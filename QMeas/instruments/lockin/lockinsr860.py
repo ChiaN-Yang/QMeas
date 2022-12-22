@@ -1,64 +1,36 @@
-from utils import DriverInterface
 from qcodes.instrument_drivers.stanford_research.SR860 import SR860
+from ..instrument import InstrumentDriver
 from time import sleep
 
 
-class Driver(DriverInterface):
+class Driver(InstrumentDriver):
     """ This class implements the Lock-in SR860 driver"""
-    METHOD = ['Voltage', 'Frequency',
-              'Magnitude(R)', 'Magnitude(X)', 'Phase', 'Analog in 1', 'Analog in 2', 'DC']
+    METHOD = ['Voltage', 'Frequency', 'Magnitude(R)', 'Magnitude(X)',
+              'Phase', 'Analog in 1', 'Analog in 2', 'DC']
 
     def __init__(self, visa_address):
         self.sr860 = SR860("lockin", visa_address)
+        self.CONTROL = {
+            'Voltage': self.sr860.amplitude,
+            'Frequency': self.sr860.frequency,
+            'Magnitude(R)': self.sr860.R,
+            'Magnitude(X)': self.sr860.X,
+            'Phase': self.sr860.phase,
+            'Analog in 1': self.sr860.aux_in0,
+            'Analog in 2': self.sr860.aux_in1,
+            'DC': self.sr860.sine_outdc
+        }
 
-    def performOpen(self):
-        """Perform the operation of opening the instrument connection"""
+    def perform_open(self):
         pass
 
-    def performClose(self):
-        """Perform the close instrument connection operation"""
+    def perform_close(self):
         self.sr860.close()
 
-    def performSetValue(self, option, value, sweepRate=0.0):
-        """Perform the Set Value instrument operation"""
-        if option == 'Voltage':
-            self.sr860.amplitude(value)
-        elif option == 'Frequency':
-            self.sr860.frequency(value)
-        elif option == 'Magnitude(R)':
-            self.sr860.R(value)
-        elif option == 'Magnitude(X)':
-            self.sr860.X(value)
-        elif option == 'Phase':
-            self.sr860.phase(value)
-        elif option == 'Analog in 1':
-            self.sr860.aux_in0(value)
-        elif option == 'Analog in 2':
-            self.sr860.aux_in1(value)
-        elif option == 'DC':
-            self.sr860.sine_outdc(value)
+    def perform_set_value(self, option, value, sweepRate=0.0):
+        self.CONTROL[option](value)
         return value
 
-    def performGetValue(self, option, magnification):
-        """Perform the Get Value instrument operation"""
-        if option == 'Voltage':
-            value = self.sr860.amplitude()
-        elif option == 'Frequency':
-            value = self.sr860.frequency()
-        elif option == 'Magnitude(R)':
-            value = self.sr860.R()
-        elif option == 'Magnitude(X)':
-            value = self.sr860.X()
-        elif option == 'Phase':
-            value = self.sr860.phase()
-        elif option == 'Analog in 1':
-            value = self.sr860.aux_in0()
-        elif option == 'Analog in 2':
-            value = self.sr860.aux_in1()
-        elif option == 'DC':
-            value = self.sr860.sine_outdc()
+    def perform_get_value(self, option, magnification):
+        value = self.CONTROL[option]()
         return value * magnification
-
-
-if __name__ == '__main__':
-    pass

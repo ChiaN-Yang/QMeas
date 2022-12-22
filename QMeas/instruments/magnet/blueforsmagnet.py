@@ -47,8 +47,8 @@ class Driver(Magnet):
         self.magnet.close()
 
     def set_magnetic(self, value: float) -> float:
-        self.magnet.write(f'CONFigure:FIELD:TARGet {value}') # set target
-        self.magnet.write('RAMP') # ramp mode
+        self.magnet.write(f'CONFigure:FIELD:TARGet {value}')  # set target
+        self.magnet.write('RAMP')  # ramp mode
 
     def get_magnetic(self):
         value = float(self.magnet.query('FIELD:MAGnet?'))

@@ -1,54 +1,36 @@
-from utils import DriverInterface
 from pymeasure.instruments.signalrecovery.dsp7265 import DSP7265
+from ..instrument import InstrumentDriver
 
 
-class Driver(DSP7265, DriverInterface):
+class Driver(DSP7265, InstrumentDriver):
     """This class implements the Lock-in DSP7265 driver"""
     METHOD = ['Voltage', 'Frequency', 'Current', 'Phase']
 
     def __init__(self, visa_address):
-        try:
-            super().__init__(visa_address)
-        except AttributeError:
-            pass
+        super().__init__(visa_address)
+        self.CONTROL = {
+            'Voltage': self.voltage,
+            'Frequency': self.frequency,
+            'Current': self.mag,
+            'Phase': self.phase
+        }
 
-    def performOpen(self):
-        """Perform the operation of opening the instrument connection"""
+    def perform_open(self):
         pass
 
-    def performClose(self):
-        """Perform the close instrument connection operation"""
+    def perform_close(self):
         self.shutdown()
 
-    def performSetValue(self, option, value, sweepRate=0.0):
-        """Perform the Set Value instrument operation"""
-        if option == 'Voltage':
-            self.voltage = value
-            return self.performGetValue(option, 1)
-        elif option == 'Frequency':
-            self.frequency = value
-        elif option == 'Current':
-            self.current = value
-        elif option == 'Phase':
-            self.phase = value
+    def perform_set_value(self, option, value, sweepRate=0.0):
+        self.CONTROL[option] = value
         return value
 
-    def performGetValue(self, option, magnification):
-        """Perform the Get Value instrument operation"""
-        if option == 'Voltage':
-            value = self.mag
-        elif option == 'Frequency':
-            value = self.frequency
-        elif option == 'Current':
-            value = self.mag
-        elif option == 'Phase':
-            value = self.phase-0.63
+    def perform_get_value(self, option, magnification):
+        value = self.CONTROL[option]
+        if option == 'Phase':
+            value -= 0.63
         return value * magnification
 
 
 if __name__ == '__main__':
     test = Driver("GPIB::6")
-    print(test.voltage)
-    print(test.frequency)
-    print(test.mag)
-    print(test.x)

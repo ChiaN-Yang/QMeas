@@ -39,7 +39,7 @@ class Magnet(InstrumentDriver):
         Args:
             value (float): The set value.
         """
-        return
+        return NotImplemented
 
     @abc.abstractmethod
     def set_sweeprate_field(self, value: float) -> float:
