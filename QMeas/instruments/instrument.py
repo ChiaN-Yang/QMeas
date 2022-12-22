@@ -2,6 +2,7 @@
 import abc
 import logging
 import numpy as np
+import importlib
 
 
 class InstrumentDriver(abc.ABC):
@@ -85,3 +86,13 @@ class InstrumentDriver(abc.ABC):
         self.name = instrument_name
         self.type = instrument_type
         self.address = visa_address
+
+    @staticmethod
+    def select(instrument_type, instrument_name, visa_address):
+        log = logging.Logger(__name__)
+        instrument = importlib.import_module(
+                f'.{instrument_name}', package=f'qmeas.instrument.{instrument_type}')
+        module = getattr(instrument, 'Driver')
+        instance = module(visa_address)
+        log.debug(f'Selecting {instrument_name} using {visa_address}')
+        return instance
