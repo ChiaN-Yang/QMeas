@@ -4,6 +4,7 @@ from time import sleep
 
 
 class Driver(DriverInterface):
+    """ This class implements the Lock-in SR860 driver"""
     METHOD = ['Voltage', 'Frequency',
               'Magnitude(R)', 'Magnitude(X)', 'Phase', 'Analog in 1', 'Analog in 2', 'DC']
 

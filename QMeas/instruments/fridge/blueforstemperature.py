@@ -9,8 +9,8 @@ from qcodes_contrib_drivers.drivers.BlueFors.BlueFors import BlueFors
 from ..instrument import InstrumentDriver
 
 
-class BlueforsTemperature(InstrumentDriver):
-    """Class Bluefors temperature
+class Driver(InstrumentDriver):
+    """This class implements the Bluefors temperature driver
 
     Note:
         The logfiles are loaded from NAS address.

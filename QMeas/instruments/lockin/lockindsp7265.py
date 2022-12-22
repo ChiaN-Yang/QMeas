@@ -3,6 +3,7 @@ from pymeasure.instruments.signalrecovery.dsp7265 import DSP7265
 
 
 class Driver(DSP7265, DriverInterface):
+    """This class implements the Lock-in DSP7265 driver"""
     METHOD = ['Voltage', 'Frequency', 'Current', 'Phase']
 
     def __init__(self, visa_address):

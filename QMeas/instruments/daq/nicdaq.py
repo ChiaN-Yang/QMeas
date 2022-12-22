@@ -3,7 +3,7 @@ import nidaqmx
 from ..instrument import InstrumentDriver
 
 
-class NiCdaq(InstrumentDriver):
+class Driver(InstrumentDriver):
     """ This class implements the NI cDAQ driver"""
     METHOD = ['ao0', 'ao1', 'ao2', 'ao3']
 

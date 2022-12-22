@@ -3,7 +3,7 @@ from qcodes_contrib_drivers.drivers.Oxford.IPS120 import OxfordInstruments_IPS12
 from .magnet import Magnet
 
 
-class OxfordIps120(Magnet):
+class Driver(Magnet):
     """Class Oxford Instrument IPS120"""
     METHOD = ['Magnetic Field', 'Sweeprate Field', 'Switch heater']
 

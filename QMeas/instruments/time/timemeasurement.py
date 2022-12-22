@@ -2,7 +2,8 @@ import numpy as np
 from ..instrument import InstrumentDriver
 
 
-class TimeMeasurement(InstrumentDriver):
+class Driver(InstrumentDriver):
+    """ This class implements the Time Measurement driver"""
     def __init__(self, time):
         self.time = int(time)
         self.instrument_name = 'Time Meas'

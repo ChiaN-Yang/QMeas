@@ -4,6 +4,7 @@ from time import sleep
 
 
 class Driver(SR830, DriverInterface):
+    """ This class implements the Lock-in SR830 driver"""
     METHOD = ['Voltage', 'Frequency', 'Magnitude(R)', 'Magnitude(X)', 'Phase', 'Analog in 1', 'Analog in 2',
               'Magnitude(R) with auto sensitivity', 'Magnitude(X) with auto sensitivity','Triton Temperature (AUX in 3)']
 

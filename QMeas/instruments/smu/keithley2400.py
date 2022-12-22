@@ -4,7 +4,7 @@ from pymeasure.instruments import Instrument
 from pymeasure.instruments.validators import strict_discrete_set
 
 
-class Keithley2400(Keithley2400, InstrumentDriver):
+class Driver(Keithley2400, InstrumentDriver):
     METHOD = ['Current', 'Current with Auto-range', 'Voltage']
 
     current_auto_range = Instrument.control(

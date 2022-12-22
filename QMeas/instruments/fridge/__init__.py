@@ -1,2 +1,2 @@
 """Init fridge"""
-from .bluefors_temperature import BlueforsTemperature
+from .blueforstemperature import Driver

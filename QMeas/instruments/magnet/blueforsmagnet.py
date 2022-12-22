@@ -20,7 +20,7 @@ import pyvisa as visa
 from .magnet import Magnet
 
 
-class BlueforsMagnet(Magnet):
+class Driver(Magnet):
     """Class Bluefors AMI magnet"""
 
     def __init__(self):

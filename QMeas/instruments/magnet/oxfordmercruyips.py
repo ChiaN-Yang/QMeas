@@ -1,9 +1,8 @@
 """Module Oxford Instrument mercruy IPS"""
 from .magnet import Magnet
-from ..modpack import MercuryIps
 
 
-class OxfordMercruyIps(MercuryIps, Magnet):
+class Driver(Magnet):
     """Class Oxford Instrument mercruy IPS"""
     METHOD = ['Magnetic field', 'current']
 
